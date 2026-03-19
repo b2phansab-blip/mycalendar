@@ -2,91 +2,76 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Bazi Daily</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bazi Focus Pro</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Bazi Daily">
+    <meta name="apple-mobile-web-app-title" content="Bazi Focus">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1a237e">
-
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Bazi Daily Focus","short_name":"BaziDaily","start_url":".","display":"standalone","background_color":"#f0f2f5","theme_color":"#1a237e"}'>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Bazi Daily Focus","short_name":"BaziFocus","start_url":".","display":"standalone","background_color":"#f0f2f5","theme_color":"#1a237e"}'>
 
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root { --primary: #1a237e; --heng: #2e7d32; --mid: #f57f17; --bad: #c62828; --bg: #f0f2f5; }
-        
-        /* ปรับแต่งเพื่อความรู้สึกเหมือนแอป */
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
-        body { 
-            font-family: 'Sarabun', sans-serif; 
-            background-color: var(--bg); 
-            margin: 0; 
-            padding-bottom: 80px;
-            user-select: none; /* ห้ามคลุมดำเพื่อให้เหมือนแอป */
-            overscroll-behavior-y: contain; /* กันดึงหน้าจอแล้วรีเฟรช */
-        }
-        
-        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-        
-        /* Date Picker Top */
-        .top-selector { background: white; padding: 12px; border-radius: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #eee; }
-        input[type="date"] { padding: 8px; border-radius: 10px; border: 1px solid #ddd; font-family: 'Sarabun'; font-size: 1em; color: var(--primary); outline: none; background: #fdfdfd; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); margin: 0; padding-bottom: 90px; user-select: none; overscroll-behavior-y: contain; }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; padding-top: env(safe-area-inset-top, 20px); }
 
-        /* Tab Navigation */
-        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); display: flex; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); z-index: 1000; backdrop-filter: blur(10px); padding-bottom: env(safe-area-inset-bottom); }
-        .tab-item { flex: 1; padding: 12px 0; text-align: center; cursor: pointer; color: #999; font-weight: 600; font-size: 0.85em; transition: 0.2s; }
-        .tab-item.active { color: var(--primary); }
-        .tab-item.active::after { content: ''; display: block; width: 5px; height: 5px; background: var(--primary); border-radius: 50%; margin: 4px auto 0; }
+        .top-selector { background: white; padding: 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #eee; }
+        input[type="date"] { padding: 10px; border-radius: 12px; border: 1px solid #ddd; font-family: 'Sarabun'; font-size: 1em; color: var(--primary); outline: none; background: #fafafa; width: 160px; }
 
-        /* View Content */
-        .view-content { display: none; }
-        .view-content.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* Status Panel */
-        .status-panel { text-align: center; margin-bottom: 15px; background: white; padding: 15px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid #eee; }
-        #clock { font-size: 1.6em; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
+        .status-panel { text-align: center; margin-bottom: 15px; background: white; padding: 15px; border-radius: 20px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        #clock { font-size: 1.8em; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
         .status-tag { padding: 4px 14px; border-radius: 20px; color: white; display: inline-block; margin-top: 6px; font-size: 0.8em; font-weight: 600; }
 
-        /* Daily Card */
-        .card { background: white; border-radius: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0; }
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.98); display: flex; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 10px); backdrop-filter: blur(10px); }
+        .tab-item { flex: 1; padding: 15px 0; text-align: center; cursor: pointer; color: #aaa; font-weight: 600; font-size: 0.9em; position: relative; }
+        .tab-item.active { color: var(--primary); }
+        .tab-item.active::after { content: ''; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; background: var(--primary); border-radius: 0 0 5px 5px; }
+
+        .view-content { display: none; }
+        .view-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        #month-alert { padding: 12px; border-radius: 18px; margin-bottom: 15px; font-size: 0.85em; display: none; border-left: 6px solid; line-height: 1.4; }
+        .alert-danger { background: #fff1f0; color: #cf1322; border-color: #ff4d4f; }
+        .alert-warning { background: #fffbe6; color: #d48806; border-color: #ffc53d; }
+
+        .card { background: white; border-radius: 30px; box-shadow: 0 12px 35px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0; }
         .card-header { padding: 25px 20px; color: white; text-align: center; }
         .card-header.heng { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
         .card-header.mid { background: linear-gradient(135deg, #f57f17, #ffca28); }
         .card-header.bad { background: linear-gradient(135deg, #c62828, #ef5350); }
-        .card-header h2 { margin: 0; font-size: 1.5em; letter-spacing: 1px; }
-        .card-header p { margin: 6px 0 0; font-size: 0.9em; opacity: 0.85; }
+        .card-header h2 { margin: 0; font-size: 1.6em; }
+        .card-header p { margin: 6px 0 0; font-size: 1em; opacity: 0.9; }
         
-        .card-content { padding: 22px; }
-        .section { margin-bottom: 16px; border-bottom: 1px solid #f8f8f8; padding-bottom: 12px; }
-        .section:last-child { border-bottom: none; }
-        .label { font-size: 0.75em; color: #aaa; display: block; margin-bottom: 4px; font-weight: 600; }
-        .val { font-size: 1em; color: #222; line-height: 1.6; }
+        .card-content { padding: 25px; }
+        .section { margin-bottom: 18px; border-bottom: 1px solid #f8f8f8; padding-bottom: 12px; }
+        .label { font-size: 0.75em; color: #bbb; display: block; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        .val { font-size: 1.05em; color: #333; line-height: 1.6; }
         .good-val { color: var(--heng); font-weight: 600; }
         .bad-val { color: var(--bad); font-weight: 600; }
 
-        /* Monthly Calendar */
-        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; background: white; padding: 12px; border-radius: 15px; border: 1px solid #eee; }
         .calendar-table { width: 100%; background: white; border-radius: 20px; overflow: hidden; border-collapse: collapse; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-        .calendar-table th { padding: 12px; background: #fafafa; font-size: 0.75em; color: #888; border-bottom: 1px solid #eee; }
+        .calendar-table th { padding: 12px; background: #fafafa; font-size: 0.75em; color: #999; border-bottom: 1px solid #eee; }
         .calendar-table td { width: 14.28%; height: 85px; border: 0.5px solid #f5f5f5; vertical-align: top; padding: 6px; cursor: pointer; position: relative; }
         .cal-date { font-size: 0.85em; font-weight: 600; color: #444; }
         .cal-type { font-size: 0.6em; position: absolute; bottom: 8px; left: 4px; right: 4px; text-align: center; padding: 3px; color: white; border-radius: 6px; font-weight: 600; }
         .cal-type.heng { background: var(--heng); }
         .cal-type.mid { background: var(--mid); }
         .cal-type.bad { background: var(--bad); }
-        .cal-today { background: #f0f4ff; }
-        .cal-today .cal-date { color: var(--primary); }
+        .cal-today { background: #fffde7; border: 2.5px solid var(--primary) !important; z-index: 5; }
 
-        /* List Styling */
-        .list-item { background: white; padding: 16px; border-radius: 16px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 6px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
+        .list-item { background: white; padding: 16px; border-radius: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 7px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        .list-item.is-today { border: 2px solid var(--primary); transform: scale(1.02); box-shadow: 0 5px 15px rgba(26,35,126,0.1); }
         .list-item.heng { border-left-color: var(--heng); }
         .list-item.mid { border-left-color: var(--mid); }
         .list-item.bad { border-left-color: var(--bad); }
         
-        button.btn-nav { border: none; background: #eee; padding: 8px 15px; border-radius: 10px; font-weight: 600; color: #555; }
+        button.nav-btn { border: none; background: #e8eaf6; color: var(--primary); padding: 15px; border-radius: 18px; font-weight: 600; font-family: 'Sarabun'; flex: 1; font-size: 1em; }
+        button.nav-btn.primary { background: var(--primary); color: white; }
     </style>
 </head>
 <body>
@@ -94,33 +79,29 @@
 <div class="container">
     <div id="daily-tab" class="view-content active">
         <div class="top-selector">
-            <span style="font-size: 0.85em; font-weight: 600; color: #666;">เลือกวันที่:</span>
-            <input type="date" id="main-date-picker" onchange="jumpToDate(this.value)">
+            <span style="font-size: 0.85em; font-weight: 600; color: #555;">เลือกล่วงหน้า:</span>
+            <input type="date" id="main-picker" onchange="jumpDate(this.value)">
         </div>
-        
         <div class="status-panel">
             <div id="clock">00:00:00</div>
             <div id="status-display"></div>
         </div>
-
         <div id="daily-card-container"></div>
-        
         <div style="display:flex; gap:12px; margin-top:20px;">
-            <button onclick="moveDate(-1)" style="flex:1; padding:15px; border-radius:15px; border:none; background:#e8eaf6; color:var(--primary); font-weight:600; font-family:'Sarabun';">เมื่อวาน</button>
-            <button onclick="moveDate(1)" style="flex:1; padding:15px; border-radius:15px; border:none; background:var(--primary); color:white; font-weight:600; font-family:'Sarabun';">พรุ่งนี้</button>
+            <button class="nav-btn" onclick="moveDate(-1)">เมื่อวาน</button>
+            <button class="nav-btn primary" onclick="moveDate(1)">พรุ่งนี้</button>
         </div>
     </div>
 
     <div id="monthly-tab" class="view-content">
-        <div class="cal-header">
-            <button class="btn-nav" onclick="changeMonth(-1)">◀</button>
+        <div id="month-alert"></div>
+        <div class="cal-header" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:15px; margin-bottom:12px; border:1px solid #eee;">
+            <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:1.2em;">◀</button>
             <h3 id="cal-month-title" style="margin:0; font-size: 1.1em; color: var(--primary);">มีนาคม 2026</h3>
-            <button class="btn-nav" onclick="changeMonth(1)">▶</button>
+            <button onclick="changeMonth(1)" style="border:none; background:none; font-size:1.2em;">▶</button>
         </div>
         <table class="calendar-table" id="calendar-body">
-            <thead>
-                <tr><th>อา</th><th>จ</th><th>อ</th><th>พ</th><th>พฤ</th><th>ศ</th><th>ส</th></tr>
-            </thead>
+            <thead><tr><th>อา</th><th>จ</th><th>อ</th><th>พ</th><th>พฤ</th><th>ศ</th><th>ส</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
@@ -132,29 +113,29 @@
 </div>
 
 <nav class="tab-bar">
-    <div class="tab-item active" onclick="switchTab('daily-tab', this)">รายวัน</div>
-    <div class="tab-item" onclick="switchTab('monthly-tab', this)">รายเดือน</div>
-    <div class="tab-item" onclick="switchTab('yearly-tab', this)">รายปี</div>
+    <div class="tab-item active" onclick="switchTab('daily-tab', this, true)">รายวัน</div>
+    <div class="tab-item" onclick="switchTab('monthly-tab', this, true)">รายเดือน</div>
+    <div class="tab-item" onclick="switchTab('yearly-tab', this, true)">รายปี</div>
 </nav>
 
 <script>
-    let currentViewDate = new Date(2026, 2, 20); 
-    let calendarMonth = 2; 
-    let calendarYear = 2026;
+    let currentViewDate = new Date(); 
+    let calendarMonth = currentViewDate.getMonth();
+    let calendarYear = currentViewDate.getFullYear();
 
     const patterns = [
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'วันจัดการระบบ & วางแผน: ทำงานรูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ทิศตะวันตกเฉียงใต้', time: '15:00 - 16:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'วันเปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ทิศตะวันตก', time: '17:00 - 18:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'วันจัดการระบบ: สรุปแผนงาน หรือหาข้อมูลสร้างบ้าน', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 (ชงซ้อนดวง)' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันจัดการระบบ: เหมาะกับงานเอกสาร หรืองานรูทีน', num: '2, 7', badNum: '4, 9', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศตะวันตกเฉียงเหนือ', time: '21:00 - 22:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันคู่มิตร & เสน่ห์: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ทิศตะวันออก', badDir: 'ทิศเหนือ', time: '23:00 - 00:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'วันจัดการระบบ: เหมาะกับงานทั่วไป งดตัดสินใจเรื่องเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'วันจัดการระบบ: หาไอเดียใหม่ๆ ศึกษาเรื่อง Quiet Luxury', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศตะวันออกเฉียงเหนือ', time: '03:00 - 04:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'วันจัดการระบบ: เคลียร์งานค้างคาให้เสร็จสิ้น', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ', badDir: 'ทิศตะวันออก', time: '05:00 - 06:59' },
-        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'วันเคลียร์พลังงาน: พักผ่อน ดูอนิเมะ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศตะวันออกเฉียงใต้', time: '07:00 - 08:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'วันเปิดคลังสมบัติ: ปิดดีลธุรกิจ ซื้อของใหญ่ คุยสถาปนิก', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศตะวันออกเฉียงใต้', time: '09:00 - 10:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'วันจัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศใต้', time: '11:00 - 12:59' },
-        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'วันเคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ทิศตะวันออก', badDir: 'ทิศตะวันตกเฉียงใต้', time: '13:00 - 14:59' }
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'จัดการระบบ: ทำงานรูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '15:00 - 16:59' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตก', time: '17:00 - 18:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: สรุปแผนงาน หรือหาข้อมูลสร้างบ้าน', num: '0, 5', badNum: '1, 6', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 (ชงซ้อนดวง)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'จัดการระบบ: เหมาะกับงานเอกสาร หรืองานรูทีน', num: '2, 7', badNum: '4, 9', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '21:00 - 22:59' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันคู่มิตร: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ตะวันออก', badDir: 'เหนือ', time: '23:00 - 00:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: เหมาะกับงานทั่วไป งดตัดสินใจเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: หาไอเดียใหม่ๆ ศึกษาเรื่อง Quiet Luxury', num: '4, 9', badNum: '3, 8', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '03:00 - 04:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: เคลียร์งานค้างคาให้เสร็จสิ้น', num: '4, 9', badNum: '3, 8', dir: 'เหนือ', badDir: 'ทิศตะวันออก', time: '05:00 - 06:59' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูอนิเมะ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '07:00 - 08:59' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เปิดคลังสมบัติ: ปิดดีลธุรกิจ ซื้อของใหญ่ คุยสถาปนิก', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '09:00 - 10:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ใต้', time: '11:00 - 12:59' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59' }
     ];
 
     function getPattern(date) {
@@ -164,84 +145,140 @@
         return patterns[idx < 0 ? idx + 12 : idx];
     }
 
-    function switchTab(tabId, el) {
+    // เพิ่มตัวแปร resetToToday เป็น false (ถ้าไม่ได้ระบุ)
+    function switchTab(tabId, el, resetToToday = false) {
         document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         el.classList.add('active');
-        if(tabId === 'monthly-tab') renderCalendar();
-        if(tabId === 'yearly-tab') renderYearly();
+
+        // ถ้ารีเซ็ตให้เด้งกลับวันปัจจุบัน (เช่น การกดจากเมนูด้านล่าง)
+        if(resetToToday) {
+            const now = new Date();
+            if(tabId === 'daily-tab') {
+                currentViewDate = now;
+            } else if(tabId === 'monthly-tab') {
+                calendarMonth = now.getMonth();
+                calendarYear = now.getFullYear();
+            }
+        }
+
+        // Render หน้าต่างๆ ตามปกติ
+        if(tabId === 'daily-tab') {
+            renderDaily();
+        } else if(tabId === 'monthly-tab') {
+            renderCalendar();
+        } else if(tabId === 'yearly-tab') {
+            renderYearly();
+            if(resetToToday) {
+                setTimeout(() => {
+                    const todayItem = document.querySelector('.list-item.is-today');
+                    if(todayItem) todayItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+        }
     }
 
     function renderDaily() {
         const p = getPattern(currentViewDate);
         const container = document.getElementById('daily-card-container');
-        const dateStr = currentViewDate.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
-        
+        const dStr = currentViewDate.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
         container.innerHTML = `
             <div class="card">
-                <div class="card-header ${p.type}">
-                    <h2>${p.title}</h2>
-                    <p>${dateStr}</p>
-                </div>
+                <div class="card-header ${p.type}"><h2>${p.title}</h2><p>${dStr}</p></div>
                 <div class="card-content">
                     <div class="section"><span class="label">1. สีมงคล / สีชง</span><div class="val">มงคล: <span class="good-val">${p.color}</span> | ชง: <span class="bad-val">${p.badColor}</span></div></div>
-                    <div class="section"><span class="label">2. พลังงานและสิ่งที่ควรทำ</span><div class="val">${p.act}</div></div>
-                    <div class="section"><span class="label">3. เลขมงคล / เลขชง</span><div class="val">มงคล: <span class="good-val">${p.num}</span> | ชง: <span class="bad-val">${p.badNum}</span></div></div>
+                    <div class="section"><span class="label">2. พลังงานและกิจกรรมแนะนำ</span><div class="val">${p.act}</div></div>
+                    <div class="section"><span class="label">3. เลขโดด / มงคล / ชง</span><div class="val">มงคล: <span class="good-val">${p.num}</span> | ชง: <span class="bad-val">${p.badNum}</span></div></div>
                     <div class="section"><span class="label">4. ทิศมงคล / ทิศชง</span><div class="val">มงคล: <span class="good-val">${p.dir}</span> | ชง: <span class="bad-val">${p.badDir}</span></div></div>
-                    <div class="section"><span class="label">5. เวลาชง</span><div class="val">ประจำวัน: <span class="bad-val">${p.time} น.</span><br><small>ส่วนตัว: 01:00-02:59, 19:00-20:59</small></div></div>
+                    <div class="section"><span class="label">5. เวลาชง</span><div class="val">ประจำวัน: <span class="bad-val">${p.time} น.</span><br><small>ชงส่วนตัว: 01:00-02:59, 19:00-20:59</small></div></div>
                 </div>
             </div>`;
-        document.getElementById('main-date-picker').value = currentViewDate.toISOString().split('T')[0];
+        document.getElementById('main-picker').value = currentViewDate.toISOString().split('T')[0];
     }
 
     function renderCalendar() {
         const title = document.getElementById('cal-month-title');
+        const alertBox = document.getElementById('month-alert');
         const body = document.querySelector('#calendar-body tbody');
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         title.innerText = `${monthNames[calendarMonth]} ${calendarYear + 543}`;
+        
+        alertBox.style.display = 'block';
+        if (calendarMonth === 0) { 
+            alertBox.className = 'alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนฉลู (ชงปีเกิด):</b> 5 ม.ค. - 3 ก.พ.";
+        } else if (calendarMonth === 9) { 
+            alertBox.className = 'alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนจอ (ชงคลังมะโรง):</b> 8 ต.ค. - 6 พ.ย.";
+        } else if (calendarMonth === 6) { 
+            alertBox.className = 'alert-warning'; alertBox.innerHTML = "🟡 <b>เดือนมะแม (ทับปีเกิด):</b> 7 ก.ค. - 6 ส.ค.";
+        } else { alertBox.style.display = 'none'; }
+
         body.innerHTML = '';
         let firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
-        let daysInMonth = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+        let days = new Date(calendarYear, calendarMonth + 1, 0).getDate();
         let date = 1;
         for (let i = 0; i < 6; i++) {
             let row = document.createElement('tr');
             for (let j = 0; j < 7; j++) {
                 let cell = document.createElement('td');
-                if (i === 0 && j < firstDay || date > daysInMonth) {
-                    row.appendChild(cell);
-                } else {
+                if (i === 0 && j < firstDay || date > days) { row.appendChild(cell); }
+                else {
                     let d = new Date(calendarYear, calendarMonth, date);
                     let p = getPattern(d);
-                    let isToday = d.toDateString() === new Date().toDateString();
                     cell.innerHTML = `<span class="cal-date">${date}</span><div class="cal-type ${p.type}">${p.title.split(' ')[1]}</div>`;
-                    if(isToday) cell.classList.add('cal-today');
-                    cell.onclick = () => { currentViewDate = d; renderDaily(); switchTab('daily-tab', document.querySelectorAll('.tab-item')[0]); };
+                    if(d.toDateString() === new Date().toDateString()) cell.classList.add('cal-today');
+                    
+                    // เมื่อกดจากปฏิทิน ให้ส่งค่า false เพื่อไม่ให้มันรีเซ็ตกลับเป็นวันนี้
+                    cell.onclick = () => { 
+                        currentViewDate = d; 
+                        switchTab('daily-tab', document.querySelectorAll('.tab-item')[0], false); 
+                    };
+                    
                     row.appendChild(cell);
                     date++;
                 }
             }
             body.appendChild(row);
-            if (date > daysInMonth) break;
+            if (date > days) break;
         }
     }
 
     function renderYearly() {
         const list = document.getElementById('yearly-list');
         list.innerHTML = '';
+        const todayStr = new Date().toDateString();
         for(let i = 0; i < 365; i++) {
             let d = new Date(2026, 2, 19 + i);
             let p = getPattern(d);
-            list.innerHTML += `<div class="list-item ${p.type}" onclick="currentViewDate=new Date(${d.getTime()}); renderDaily(); switchTab('daily-tab', document.querySelectorAll('.tab-item')[0])">
+            let isToday = d.toDateString() === todayStr;
+            
+            // เมื่อกดจากรายปี ให้ส่งค่า false เพื่อไม่ให้มันรีเซ็ตกลับเป็นวันนี้
+            list.innerHTML += `<div class="list-item ${p.type} ${isToday?'is-today':''}" onclick="currentViewDate=new Date(${d.getTime()}); switchTab('daily-tab', document.querySelectorAll('.tab-item')[0], false)">
                 <span><strong>${d.getDate()} ${d.toLocaleDateString('th-TH',{month:'short'})}</strong> ${d.getFullYear()+543}</span>
                 <span>${p.title.split(' ')[1]}</span>
             </div>`;
         }
     }
 
-    function jumpToDate(val) { if(val) { currentViewDate = new Date(val); renderDaily(); } }
-    function changeMonth(n) { calendarMonth += n; if(calendarMonth<0){calendarMonth=11;calendarYear--;} if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar(); }
-    function moveDate(n) { currentViewDate.setDate(currentViewDate.getDate()+n); renderDaily(); }
+    // ฟังก์ชันเปลี่ยนวันที่แบบไม่รีเซ็ต tab
+    function jumpDate(val) { 
+        if(val) { 
+            currentViewDate = new Date(val); 
+            renderDaily(); 
+        } 
+    }
+    
+    function changeMonth(n) { 
+        calendarMonth += n; 
+        if(calendarMonth<0){calendarMonth=11;calendarYear--;} 
+        if(calendarMonth>11){calendarMonth=0;calendarYear++;} 
+        renderCalendar(); 
+    }
+    
+    function moveDate(n) { 
+        currentViewDate.setDate(currentViewDate.getDate()+n); 
+        renderDaily(); 
+    }
 
     setInterval(() => {
         const now = new Date();
