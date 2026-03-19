@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ปฏิทินดวงรายปี 2026 (Bazi)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; background-color: #f0f2f5; padding: 20px; color: #333; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        h1 { text-align: center; color: #1a237e; margin-bottom: 10px; font-size: 1.8em; }
+        
+        .alert-box { background-color: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; border: 1px solid #ffeeba; margin-bottom: 20px; text-align: center; line-height: 1.6; }
+        .month-clash-alert { background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; border: 1px solid #f5c6cb; margin-bottom: 20px; text-align: center; font-weight: 600; display: none; }
+        
+        /* สไตล์แถบแท็บแบบเลื่อนได้ (Scrollable Tabs) สำหรับมือถือ */
+        .tabs-wrapper { overflow-x: auto; white-space: nowrap; padding-bottom: 15px; margin-bottom: 20px; scrollbar-width: thin; }
+        .tabs { display: flex; gap: 10px; width: max-content; margin: 0 auto; }
+        .tab-btn { background-color: #e0e0e0; border: none; padding: 10px 20px; border-radius: 25px; font-family: inherit; font-size: 1em; font-weight: 600; color: #555; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0,0,0,0.1); flex: 0 0 auto; }
+        .tab-btn:hover { background-color: #d5d5d5; }
+        .tab-btn.active { background-color: #1a237e; color: white; box-shadow: 0 4px 8px rgba(26, 35, 126, 0.3); }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; border: 1px solid #e0e0e0; display: none; }
+        .header { padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 1.1em; }
+        .header.heng { background-color: #2e7d32; }
+        .header.mid { background-color: #f57f17; }
+        .header.ng { background-color: #c62828; }
+        .content { padding: 15px; font-size: 0.95em; line-height: 1.6; }
+        .content p { margin: 8px 0; border-bottom: 1px dashed #eee; padding-bottom: 8px; }
+        .content p:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+        .good { color: #2e7d32; font-weight: 600; }
+        .bad { color: #c62828; font-weight: 600; font-size: 0.9em; }
+        .personal-clash { background-color: #ffebee; padding: 6px 10px; border-radius: 6px; display: inline-block; margin-top: 5px; border: 1px solid #ffcdd2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ปฏิทินดวงรายปี 2026 (Bazi)</h1>
+        <div class="alert-box">
+            <strong>⚠️ กฎเหล็กประจำตัว (ใช้ได้ทุกวัน)</strong><br>
+            ทิศรับทรัพย์หลัก: <strong>ทิศเหนือ, ทิศตะวันออก</strong>
+        </div>
+
+        <div id="month-clash-warning" class="month-clash-alert"></div>
+
+        <div class="tabs-wrapper">
+            <div class="tabs" id="tabs-container">
+                </div>
+        </div>
+
+        <div class="grid" id="calendar-grid"></div>
+    </div>
+
+    <script>
+        // ข้อมูลตั้งต้น 12 วัน
+        const patterns = [
+            { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของชิ้นใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตก', time: '17:00 - 18:59 น.' },
+            { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: รูทีน วางแผนทริป หาเรฟบ้าน', num: '0, 5', badNum: '1, 6', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 น. (ชงซ้อน)' },
+            { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'จัดการระบบ: รูทีน วางแผนทริป หาเรฟบ้าน', num: '2, 7', badNum: '4, 9', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '21:00 - 22:59 น.' },
+            { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'คู่มิตร & เสน่ห์: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ตะวันออก', badDir: 'เหนือ', time: '23:00 - 00:59 น.' },
+            { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: รูทีน วางแผนทริป หาเรฟบ้าน', num: '0, 5', badNum: '1, 6', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '19:00 - 20:59 น.' },
+            { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: รูทีน วางแผนทริป หาเรฟบ้าน', num: '4, 9', badNum: '3, 8', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '03:00 - 04:59 น.' },
+            { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: รูทีน วางแผนทริป หาเรฟบ้าน', num: '4, 9', badNum: '3, 8', dir: 'เหนือ', badDir: 'ตะวันออก', time: '05:00 - 06:59 น.' },
+            { type: 'ng', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูซีรีส์ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '07:00 - 08:59 น.' },
+            { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของชิ้นใหญ่', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '09:00 - 10:59 น.' },
+            { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: รูทีน วางแผนทริป หาเรฟบ้าน', num: '1, 6', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ใต้', time: '11:00 - 12:59 น.' },
+            { type: 'ng', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูซีรีส์ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59 น.' },
+            { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'จัดการระบบ: รูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '15:00 - 16:59 น.' }
+        ];
+
+        const monthNames = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+        const tabsContainer = document.getElementById('tabs-container');
+        const grid = document.getElementById('calendar-grid');
+        const clashWarning = document.getElementById('month-clash-warning');
+
+        // 1. สร้างปุ่มเมนู 12 เดือน
+        for(let m = 0; m < 12; m++) {
+            let btn = document.createElement('button');
+            btn.className = 'tab-btn';
+            btn.dataset.month = m;
+            btn.innerText = monthNames[m];
+            tabsContainer.appendChild(btn);
+        }
+
+        // 2. สร้างการ์ดตลอดทั้งปี 2026 (365 วัน)
+        const startDate = new Date(2026, 0, 1); // เริ่ม 1 มกราคม 2026
+        
+        for(let i = 0; i < 365; i++) {
+            let currentDate = new Date(startDate);
+            currentDate.setDate(startDate.getDate() + i);
+            
+            let currentMonthIndex = currentDate.getMonth(); 
+            let day = currentDate.getDate();
+            let month = monthNames[currentMonthIndex];
+            
+            // สูตรคำนวณ Pattern: วันที่ 20 มี.ค. (วันที่ 78 ของปี) จะต้องตรงกับ patterns[0]
+            // ดังนั้น 1 ม.ค. จะตรงกับ patterns[6] พอดี
+            let p = patterns[(i + 6) % 12]; 
+            
+            let cardHTML = `
+                <div class="card" data-month="${currentMonthIndex}">
+                    <div class="header ${p.type}">
+                        <span>📅 ${day} ${month} 2026</span>
+                        <span>${p.title}</span>
+                    </div>
+                    <div class="content">
+                        <p>🎨 <strong>สีมงคล:</strong> <span class="good">${p.color}</span> <span class="bad">| ชง: ${p.badColor}</span></p>
+                        <p>💼 <strong>พลังวันนี้:</strong> ${p.act}</p>
+                        <p>🔢 <strong>เลขโดด:</strong> <span class="good">${p.num}</span> <span class="bad">| ชง: ${p.badNum}</span></p>
+                        <p>🧭 <strong>ทิศมงคล:</strong> <span class="good">${p.dir}</span> <span class="bad">| ชง: ${p.badDir}</span></p>
+                        <p>⏳ <strong>เวลาชงประจำวัน:</strong> <span class="bad">${p.time}</span><br>
+                           <span class="bad personal-clash">⚠️ ชงส่วนตัว (ทุกวัน): 01:00-02:59 และ 19:00-20:59 น.</span>
+                        </p>
+                    </div>
+                </div>
+            `;
+            grid.innerHTML += cardHTML;
+        }
+
+        // 3. ระบบจัดการคลิกเพื่อสลับเดือน
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const allCards = document.querySelectorAll('.card');
+
+        function switchTab(monthIndex) {
+            monthIndex = parseInt(monthIndex);
+            
+            // เปลี่ยนสีปุ่มที่ถูกเลือก
+            tabBtns.forEach(btn => {
+                if(parseInt(btn.dataset.month) === monthIndex) {
+                    btn.classList.add('active');
+                    btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+                } else {
+                    btn.classList.remove('active');
+                }
+            });
+
+            // แสดงเฉพาะการ์ดของเดือนนั้น
+            allCards.forEach(card => {
+                if(parseInt(card.dataset.month) === monthIndex) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // แสดงคำเตือนถ้าเป็นเดือนชง (มกราคม=0, ตุลาคม=9)
+            if (monthIndex === 0) {
+                clashWarning.innerHTML = "⚠️ <strong>เดือนชง (มกราคม - เดือนฉลู):</strong> ปะทะปีเกิด (มะแม) ระวังเรื่องสุขภาพ ผู้ใหญ่ และอุบัติเหตุจุกจิก";
+                clashWarning.style.display = 'block';
+            } else if (monthIndex === 9) {
+                clashWarning.innerHTML = "⚠️ <strong>เดือนชง (ตุลาคม - เดือนจอ):</strong> ปะทะฐานการเงิน/การงาน (มะโรง) งดลงทุนก้อนใหญ่ เซ็นสัญญา หรือแตกหักกับคนรอบข้าง";
+                clashWarning.style.display = 'block';
+            } else {
+                clashWarning.style.display = 'none';
+            }
+        }
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                switchTab(this.dataset.month);
+            });
+        });
+
+        // 4. ตั้งค่าให้เปิดเดือนปัจจุบันอัตโนมัติ
+        const currentSystemMonth = new Date().getMonth();
+        switchTab(currentSystemMonth);
+
+    </script>
+</body>
+</html>
