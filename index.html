@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bazi Focus Pro</title>
+    <title>Bazi Focus Pro (Lunar Edition)</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -35,9 +35,13 @@
         .view-content.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        #month-alert { padding: 12px; border-radius: 18px; margin-bottom: 15px; font-size: 0.85em; display: none; border-left: 6px solid; line-height: 1.4; }
+        /* Alert Boxes */
+        .alert-box { padding: 15px; border-radius: 20px; margin-bottom: 15px; font-size: 0.85em; display: none; border-left: 6px solid; line-height: 1.6; }
         .alert-danger { background: #fff1f0; color: #cf1322; border-color: #ff4d4f; }
         .alert-warning { background: #fffbe6; color: #d48806; border-color: #ffc53d; }
+        .alert-success { background: #f6ffed; color: #2e7d32; border-color: #81c784; }
+        .alert-box h4 { margin: 0 0 5px 0; font-size: 1.1em; }
+        .alert-box ul { margin: 5px 0 0; padding-left: 20px; }
 
         .card { background: white; border-radius: 30px; box-shadow: 0 12px 35px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0; }
         .card-header { padding: 25px 20px; color: white; text-align: center; }
@@ -94,10 +98,10 @@
     </div>
 
     <div id="monthly-tab" class="view-content">
-        <div id="month-alert"></div>
+        <div id="month-alert" class="alert-box"></div>
         <div class="cal-header" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:15px; margin-bottom:12px; border:1px solid #eee;">
             <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:1.2em;">◀</button>
-            <h3 id="cal-month-title" style="margin:0; font-size: 1.1em; color: var(--primary);">มีนาคม 2026</h3>
+            <h3 id="cal-month-title" style="margin:0; font-size: 1.1em; color: var(--primary); text-align: center;">มีนาคม 2026</h3>
             <button onclick="changeMonth(1)" style="border:none; background:none; font-size:1.2em;">▶</button>
         </div>
         <table class="calendar-table" id="calendar-body">
@@ -107,7 +111,8 @@
     </div>
 
     <div id="yearly-tab" class="view-content">
-        <h3 style="text-align:center; color: var(--primary); margin-bottom: 20px;">คัมภีร์สรุปดวง 365 วัน</h3>
+        <h3 style="text-align:center; color: var(--primary); margin-bottom: 15px;">สรุปดวง 365 วัน</h3>
+        <div id="year-alert-banner" class="alert-box"></div>
         <div id="yearly-list"></div>
     </div>
 </div>
@@ -124,19 +129,64 @@
     let calendarYear = currentViewDate.getFullYear();
 
     const patterns = [
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'จัดการระบบ: ทำงานรูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '15:00 - 16:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตก', time: '17:00 - 18:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: สรุปแผนงาน หรือหาข้อมูลสร้างบ้าน', num: '0, 5', badNum: '1, 6', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 (ชงซ้อนดวง)' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'จัดการระบบ: เหมาะกับงานเอกสาร หรืองานรูทีน', num: '2, 7', badNum: '4, 9', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '21:00 - 22:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันคู่มิตร: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ตะวันออก', badDir: 'เหนือ', time: '23:00 - 00:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: เหมาะกับงานทั่วไป งดตัดสินใจเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: หาไอเดียใหม่ๆ ศึกษาเรื่อง Quiet Luxury', num: '4, 9', badNum: '3, 8', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '03:00 - 04:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: เคลียร์งานค้างคาให้เสร็จสิ้น', num: '4, 9', badNum: '3, 8', dir: 'เหนือ', badDir: 'ทิศตะวันออก', time: '05:00 - 06:59' },
-        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูอนิเมะ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '07:00 - 08:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เปิดคลังสมบัติ: ปิดดีลธุรกิจ ซื้อของใหญ่ คุยสถาปนิก', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '09:00 - 10:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ใต้', time: '11:00 - 12:59' },
-        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'เหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59' }
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'จัดการระบบ: ทำงานรูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '15:00 - 16:59' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตก', time: '17:00 - 18:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: สรุปแผนงาน หรือหาข้อมูลสร้างบ้าน', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 (ชงซ้อนดวง)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'จัดการระบบ: เหมาะกับงานเอกสาร หรืองานรูทีน', num: '2, 7', badNum: '4, 9', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '21:00 - 22:59' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันคู่มิตร: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ตะวันออก', badDir: 'ทิศเหนือ', time: '23:00 - 00:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: ทำงานทั่วไป งดตัดสินใจเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: หาไอเดียใหม่ๆ ศึกษาเรื่อง Quiet Luxury', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '03:00 - 04:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: เคลียร์งานค้างคาให้เสร็จสิ้น', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ', badDir: 'ตะวันออก', time: '05:00 - 06:59' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูอนิเมะ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '07:00 - 08:59' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เปิดคลังสมบัติ: ปิดดีลธุรกิจ ซื้อของใหญ่ คุยสถาปนิก', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '09:00 - 10:59' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ทิศใต้', time: '11:00 - 12:59' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59' }
     ];
+
+    // ข้อมูลวันตรุษจีน (Lunar New Year) ปี 2025 - 2030
+    const lunarNewYears = {
+        2025: new Date(2025, 0, 29).getTime(), // 29 ม.ค. 2025 (ปีมะเส็ง)
+        2026: new Date(2026, 1, 17).getTime(), // 17 ก.พ. 2026 (ปีมะเมีย)
+        2027: new Date(2027, 1, 6).getTime(),  // 6 ก.พ. 2027 (ปีมะแม)
+        2028: new Date(2028, 0, 26).getTime(), // 26 ม.ค. 2028 (ปีวอก)
+        2029: new Date(2029, 1, 13).getTime(), // 13 ก.พ. 2029 (ปีระกา)
+        2030: new Date(2030, 1, 3).getTime()   // 3 ก.พ. 2030 (ปีจอ)
+    };
+
+    // คำนวณปีนักษัตรตามวันตรุษจีนที่แท้จริง
+    function getLunarYear(date) {
+        let year = date.getFullYear();
+        let targetLNY = lunarNewYears[year];
+        
+        // ถ้าเป็นปีที่อยู่นอกฐานข้อมูล ให้คำนวณแบบหยาบๆ (เปลี่ยน 1 ก.พ.)
+        if (!targetLNY) {
+            return (date.getMonth() === 0) ? year - 1 : year;
+        }
+
+        // ถ้าวันที่ที่เช็ค ยังมาไม่ถึงวันตรุษจีนของปีนั้น ถือว่าเป็นนักษัตรของปีที่แล้ว
+        if (date.getTime() < targetLNY) {
+            return year - 1;
+        }
+        return year;
+    }
+
+    function getYearZodiac(lunarYear) {
+        const zodiacs = [
+            { name: 'ชวด', status: 'warning', text: 'ปีชงร่วม (ไท้ส่วย)', desc: '✅ <b>ควรทำ:</b> รักษาคอนเนคชั่น ทำบุญไหว้พระ<br>⚠️ <b>ควรระวัง:</b> มีเรื่องจุกจิกกวนใจ สุขภาพเล็กๆ น้อยๆ' },
+            { name: 'ฉลู', status: 'danger', text: 'ปีชง 100% (ปะทะปีเกิด)', desc: '✅ <b>ควรทำ:</b> ชะลอการลงทุนใหญ่ เน้นแก้ปัญหาเก่า<br>⚠️ <b>ควรระวัง:</b> อุบัติเหตุ สุขภาพกะทันหัน งดเสี่ยงโชค' },
+            { name: 'ขาล', status: 'normal', text: 'ปีปกติ (ผ่านไปได้ด้วยดี)', desc: '✅ <b>ควรทำ:</b> ทำตามแผนเดิม วางแผนงานระยะยาว<br>⚠️ <b>ควรระวัง:</b> ไม่ประมาทในการใช้ชีวิต' },
+            { name: 'เถาะ', status: 'good', text: 'ปีสมพงษ์ ซาฮะ (ปีทอง)', desc: '✅ <b>ควรทำ:</b> ลุยธุรกิจใหม่ สร้างบ้าน ขยายกิจการ<br>⚠️ <b>ควรระวัง:</b> ระวังคนอิจฉาเพราะโดดเด่นเกินไป' },
+            { name: 'มะโรง', status: 'warning', text: 'ปีชงร่วม/ทับคลัง', desc: '✅ <b>ควรทำ:</b> จัดระเบียบการเงินใหม่ ซื้ออสังหาเก็บ<br>⚠️ <b>ควรระวัง:</b> บริวารสร้างปัญหา ทะเลาะกับผู้ใหญ่' },
+            { name: 'มะเส็ง', status: 'normal', text: 'ปีปกติ (ทรงตัว)', desc: '✅ <b>ควรทำ:</b> พัฒนาทักษะใหม่ๆ หาคอนเนคชั่น<br>⚠️ <b>ควรระวัง:</b> ค่อยเป็นค่อยไป อย่าใจร้อน' },
+            { name: 'มะเมีย', status: 'good', text: 'ปีคู่มิตร โดดเด่นสุดยอด', desc: '✅ <b>ควรทำ:</b> ผู้ใหญ่อุปถัมภ์ เหมาะเจรจา ปิดดีลใหญ่ สร้างแบรนด์<br>⚠️ <b>ควรระวัง:</b> ใช้เงินเกินตัวเพราะหาได้เยอะ' },
+            { name: 'มะแม', status: 'warning', text: 'ปีทับเกิด (กดดัน)', desc: '✅ <b>ควรทำ:</b> ปลีกวิเวก นั่งสมาธิ โฟกัสเป้าหมาย<br>⚠️ <b>ควรระวัง:</b> เครียด คิดมาก กดดันตัวเอง ทะเลาะกับคนใกล้ชิด' },
+            { name: 'วอก', status: 'normal', text: 'ปีปกติ (ราบรื่น)', desc: '✅ <b>ควรทำ:</b> เดินทางไกล ขยายตลาด<br>⚠️ <b>ควรระวัง:</b> ค่าใช้จ่ายแฝง' },
+            { name: 'ระกา', status: 'normal', text: 'ปีปกติ (มั่นคง)', desc: '✅ <b>ควรทำ:</b> สร้างรากฐานให้แน่นขึ้น<br>⚠️ <b>ควรระวัง:</b> ปัญหาด้านเอกสาร' },
+            { name: 'จอ', status: 'danger', text: 'ปีชงคลังสมบัติ', desc: '✅ <b>ควรทำ:</b> เก็บเงินสด ไม่ปล่อยกู้ ซื้อของชิ้นใหญ่แก้เคล็ด<br>⚠️ <b>ควรระวัง:</b> การเงินรั่วไหล โปรเจกต์สะดุด บริวารออก' },
+            { name: 'กุน', status: 'good', text: 'ปีสมพงษ์ ซาฮะ', desc: '✅ <b>ควรทำ:</b> ขยับขยายได้ดี มีคนคอยซัพพอร์ต ทำโปรเจกต์ใหญ่<br>⚠️ <b>ควรระวัง:</b> ไม่มีเรื่องน่าห่วง' }
+        ];
+        return zodiacs[(lunarYear - 4) % 12];
+    }
 
     function getPattern(date) {
         const start = new Date(2026, 2, 19);
@@ -145,30 +195,21 @@
         return patterns[idx < 0 ? idx + 12 : idx];
     }
 
-    // เพิ่มตัวแปร resetToToday เป็น false (ถ้าไม่ได้ระบุ)
     function switchTab(tabId, el, resetToToday = false) {
         document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
         document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         el.classList.add('active');
 
-        // ถ้ารีเซ็ตให้เด้งกลับวันปัจจุบัน (เช่น การกดจากเมนูด้านล่าง)
         if(resetToToday) {
             const now = new Date();
-            if(tabId === 'daily-tab') {
-                currentViewDate = now;
-            } else if(tabId === 'monthly-tab') {
-                calendarMonth = now.getMonth();
-                calendarYear = now.getFullYear();
-            }
+            if(tabId === 'daily-tab') { currentViewDate = now; } 
+            else if(tabId === 'monthly-tab') { calendarMonth = now.getMonth(); calendarYear = now.getFullYear(); }
         }
 
-        // Render หน้าต่างๆ ตามปกติ
-        if(tabId === 'daily-tab') {
-            renderDaily();
-        } else if(tabId === 'monthly-tab') {
-            renderCalendar();
-        } else if(tabId === 'yearly-tab') {
+        if(tabId === 'daily-tab') { renderDaily(); } 
+        else if(tabId === 'monthly-tab') { renderCalendar(); } 
+        else if(tabId === 'yearly-tab') { 
             renderYearly();
             if(resetToToday) {
                 setTimeout(() => {
@@ -202,16 +243,29 @@
         const alertBox = document.getElementById('month-alert');
         const body = document.querySelector('#calendar-body tbody');
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        title.innerText = `${monthNames[calendarMonth]} ${calendarYear + 543}`;
         
+        // เช็คปีนักษัตรโดยอิงวันตรุษจีนของเดือนนั้น (ใช้วันที่ 15 ของเดือนเป็นเกณฑ์เช็ค)
+        let tempDate = new Date(calendarYear, calendarMonth, 15);
+        let lunarY = getLunarYear(tempDate);
+        const z = getYearZodiac(lunarY);
+        let zIcon = z.status === 'good' ? '🟢' : (z.status === 'danger' ? '🔴' : (z.status === 'warning' ? '🟡' : '⚪'));
+        
+        title.innerHTML = `${monthNames[calendarMonth]} ${calendarYear + 543}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ปี${z.name} : ${z.text.split('(')[0]} ${zIcon}</span>`;
+        
+        // การแจ้งเตือนเดือนชง
         alertBox.style.display = 'block';
         if (calendarMonth === 0) { 
-            alertBox.className = 'alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนฉลู (ชงปีเกิด):</b> 5 ม.ค. - 3 ก.พ.";
+            alertBox.className = 'alert-box alert-danger'; 
+            alertBox.innerHTML = "🔴 <b>เดือนฉลู (ชงปีเกิด 100%):</b><br>ระวังสุขภาพและอุบัติเหตุ (ช่วงมกราคม - ต้นกุมภาพันธ์)";
         } else if (calendarMonth === 9) { 
-            alertBox.className = 'alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนจอ (ชงคลังมะโรง):</b> 8 ต.ค. - 6 พ.ย.";
+            alertBox.className = 'alert-box alert-danger'; 
+            alertBox.innerHTML = "🔴 <b>เดือนจอ (ชงคลังมะโรง):</b><br>ระวังเรื่องเงิน การงาน และบริวาร (ช่วงตุลาคม - ต้นพฤศจิกายน)";
         } else if (calendarMonth === 6) { 
-            alertBox.className = 'alert-warning'; alertBox.innerHTML = "🟡 <b>เดือนมะแม (ทับปีเกิด):</b> 7 ก.ค. - 6 ส.ค.";
-        } else { alertBox.style.display = 'none'; }
+            alertBox.className = 'alert-box alert-warning'; 
+            alertBox.innerHTML = "🟡 <b>เดือนมะแม (ทับปีเกิด):</b><br>ระวังเรื่องอารมณ์ ความคิดมาก (ช่วงกรกฎาคม - ต้นสิงหาคม)";
+        } else { 
+            alertBox.style.display = 'none'; 
+        }
 
         body.innerHTML = '';
         let firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
@@ -228,12 +282,10 @@
                     cell.innerHTML = `<span class="cal-date">${date}</span><div class="cal-type ${p.type}">${p.title.split(' ')[1]}</div>`;
                     if(d.toDateString() === new Date().toDateString()) cell.classList.add('cal-today');
                     
-                    // เมื่อกดจากปฏิทิน ให้ส่งค่า false เพื่อไม่ให้มันรีเซ็ตกลับเป็นวันนี้
                     cell.onclick = () => { 
                         currentViewDate = d; 
                         switchTab('daily-tab', document.querySelectorAll('.tab-item')[0], false); 
                     };
-                    
                     row.appendChild(cell);
                     date++;
                 }
@@ -245,14 +297,28 @@
 
     function renderYearly() {
         const list = document.getElementById('yearly-list');
+        const banner = document.getElementById('year-alert-banner');
+        
+        // คำนวณปีนักษัตรแบบอิงตรุษจีน
+        let lunarY = getLunarYear(currentViewDate);
+        const z = getYearZodiac(lunarY);
+        
+        banner.style.display = 'block';
+        if (z.status === 'good') { banner.className = 'alert-box alert-success'; } 
+        else if (z.status === 'danger') { banner.className = 'alert-box alert-danger'; } 
+        else { banner.className = 'alert-box alert-warning'; }
+
+        banner.innerHTML = `<h4>${z.status==='good'?'🟢':z.status==='danger'?'🔴':'🟡'} ภาพรวมนักษัตร ${lunarY} (ปี${z.name})</h4>
+                            <strong>${z.text}</strong>
+                            <div>${z.desc}</div>`;
+
         list.innerHTML = '';
         const todayStr = new Date().toDateString();
         for(let i = 0; i < 365; i++) {
-            let d = new Date(2026, 2, 19 + i);
+            let d = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), currentViewDate.getDate() + i);
             let p = getPattern(d);
             let isToday = d.toDateString() === todayStr;
             
-            // เมื่อกดจากรายปี ให้ส่งค่า false เพื่อไม่ให้มันรีเซ็ตกลับเป็นวันนี้
             list.innerHTML += `<div class="list-item ${p.type} ${isToday?'is-today':''}" onclick="currentViewDate=new Date(${d.getTime()}); switchTab('daily-tab', document.querySelectorAll('.tab-item')[0], false)">
                 <span><strong>${d.getDate()} ${d.toLocaleDateString('th-TH',{month:'short'})}</strong> ${d.getFullYear()+543}</span>
                 <span>${p.title.split(' ')[1]}</span>
@@ -260,25 +326,9 @@
         }
     }
 
-    // ฟังก์ชันเปลี่ยนวันที่แบบไม่รีเซ็ต tab
-    function jumpDate(val) { 
-        if(val) { 
-            currentViewDate = new Date(val); 
-            renderDaily(); 
-        } 
-    }
-    
-    function changeMonth(n) { 
-        calendarMonth += n; 
-        if(calendarMonth<0){calendarMonth=11;calendarYear--;} 
-        if(calendarMonth>11){calendarMonth=0;calendarYear++;} 
-        renderCalendar(); 
-    }
-    
-    function moveDate(n) { 
-        currentViewDate.setDate(currentViewDate.getDate()+n); 
-        renderDaily(); 
-    }
+    function jumpDate(val) { if(val) { currentViewDate = new Date(val); renderDaily(); } }
+    function changeMonth(n) { calendarMonth += n; if(calendarMonth<0){calendarMonth=11;calendarYear--;} if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar(); }
+    function moveDate(n) { currentViewDate.setDate(currentViewDate.getDate()+n); renderDaily(); }
 
     setInterval(() => {
         const now = new Date();
