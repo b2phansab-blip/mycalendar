@@ -41,12 +41,13 @@
         .alert-box h4 { margin: 0 0 5px 0; font-size: 1.1em; }
 
         .card { background: white; border-radius: 30px; box-shadow: 0 12px 35px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0; }
-        .card-header { padding: 25px 20px; color: white; text-align: center; }
+        .card-header { padding: 25px 20px; color: white; text-align: center; position: relative; }
         .card-header.heng { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
         .card-header.mid { background: linear-gradient(135deg, #f57f17, #ffca28); }
         .card-header.bad { background: linear-gradient(135deg, #c62828, #ef5350); }
         .card-header h2 { margin: 0; font-size: 1.6em; }
-        .card-header p { margin: 6px 0 0; font-size: 1em; opacity: 0.9; }
+        .card-header p { margin: 10px 0 0; font-size: 1em; opacity: 0.95; }
+        .zodiac-badge { background: rgba(255,255,255,0.25); padding: 3px 12px; border-radius: 15px; font-size: 0.85em; display: inline-block; margin-top: 5px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         
         .card-content { padding: 25px; }
         .section { margin-bottom: 18px; border-bottom: 1px solid #f8f8f8; padding-bottom: 12px; }
@@ -66,11 +67,12 @@
         .cal-type.bad { background: var(--bad); }
         .cal-today { background: #fffde7; border: 2.5px solid var(--primary) !important; z-index: 5; }
 
-        .list-item { background: white; padding: 16px; border-radius: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 7px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
+        .list-item { background: white; padding: 16px; border-radius: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 7px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.02); align-items: center; }
         .list-item.is-today { border: 2px solid var(--primary); transform: scale(1.02); box-shadow: 0 5px 15px rgba(26,35,126,0.1); }
         .list-item.heng { border-left-color: var(--heng); }
         .list-item.mid { border-left-color: var(--mid); }
         .list-item.bad { border-left-color: var(--bad); }
+        .list-zodiac { font-size: 0.8em; color: #777; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
         
         button.nav-btn { border: none; background: #e8eaf6; color: var(--primary); padding: 15px; border-radius: 18px; font-weight: 600; font-family: 'Sarabun'; flex: 1; font-size: 1em; }
         button.nav-btn.primary { background: var(--primary); color: white; }
@@ -99,7 +101,7 @@
         <div id="month-alert" class="alert-box"></div>
         <div class="cal-header" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:15px; margin-bottom:12px; border:1px solid #eee;">
             <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:1.2em;">◀</button>
-            <h3 id="cal-month-title" style="margin:0; font-size: 1.1em; color: var(--primary); text-align: center;">มีนาคม 2026</h3>
+            <h3 id="cal-month-title" style="margin:0; font-size: 1.1em; color: var(--primary); text-align: center;">เดือน...</h3>
             <button onclick="changeMonth(1)" style="border:none; background:none; font-size:1.2em;">▶</button>
         </div>
         <table class="calendar-table" id="calendar-body">
@@ -126,21 +128,31 @@
     let calendarMonth = currentViewDate.getMonth();
     let calendarYear = currentViewDate.getFullYear();
 
-    // อัปเดตไอเทมใหม่ทั้งหมด เน้นการปรับสมดุลธาตุ (ธาตุน้ำ ธาตุไฟ ธาตุดิน ธาตุทอง ธาตุไม้)
     const patterns = [
         { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'จัดการระบบ: ทำงานรูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '15:00 - 16:59', item: 'หินมงคลโทนสีน้ำเงิน (เช่น Lapis Lazuli) หรือ ของใช้ที่มีลวดลายคลื่นน้ำ' },
         { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตก', time: '17:00 - 18:59', item: 'ปากกาโลหะสีเงิน/ทอง หรือ แว่นตากันแดดเลนส์สีชา (เสริมพลังธาตุไฟและทอง)' },
         { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: สรุปแผนงาน หรือหาข้อมูลสร้างบ้าน', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 (ชงซ้อนดวง)', item: 'สมุดปกสีเขียวเหนี่ยวทรัพย์ หรือ สร้อยข้อมือลูกปัดไม้หอม' },
         { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'จัดการระบบ: เหมาะกับงานเอกสาร หรืองานรูทีน', num: '2, 7', badNum: '4, 9', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '21:00 - 22:59', item: 'ขวดน้ำเก็บอุณหภูมิสแตนเลส หรือ พวงกุญแจโลหะทรงกลม (เสริมความลื่นไหล)' },
         { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันคู่มิตร: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ตะวันออก', badDir: 'ทิศเหนือ', time: '23:00 - 00:59', item: 'เข็มกลัดประดับคริสตัล หรือ แหวนเงินเกลี้ยงสวมนิ้วชี้ (เสริมเสน่ห์และอำนาจ)' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: ทำงานทั่วไป งดตัดสินใจเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)', item: 'ผ้าเช็ดหน้าลวดลายธรรมชาติ หรือ น้ำหอมกลิ่นพรรณไม้ (ลดความตึงเครียด)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: ทำงานทั่วไป งดตัดสินใจเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)', item: 'เสื้อผ้าคัตติ้งเนี้ยบสีเอิร์ธโทน หรือ น้ำหอมกลิ่นพรรณไม้' },
         { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: หาไอเดียใหม่ๆ ศึกษาเรื่อง Quiet Luxury', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '03:00 - 04:59', item: 'ต่างหู/คลิปหนีบไทเทเนียม หรือ นาฬิกาสายหน้าปัดเหลี่ยม (เสริมความมั่นคง)' },
         { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: เคลียร์งานค้างคาให้เสร็จสิ้น', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ', badDir: 'ทิศตะวันออก', time: '05:00 - 06:59', item: 'กระเป๋าใส่เหรียญทรงสี่เหลี่ยม หรือ สร้อยคอจี้รูปดาว' },
         { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูอนิเมะ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '07:00 - 08:59', item: 'พกหินควอตซ์ใส (Clear Quartz) หรือ กำไลหยก (ปัดเป่าและล้างพลังงานลบ)' },
         { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เปิดคลังสมบัติ: ปิดดีลธุรกิจ ซื้อของใหญ่ คุยสถาปนิก', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '09:00 - 10:59', item: 'เครื่องประดับที่มีประกายสะท้อนแสง หรือ กระเป๋าสตางค์ใบยาวสีเรียบ' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ทิศใต้', time: '11:00 - 12:59', item: 'แฟ้มเอกสารสีโทนเย็น หรือ นาฬิกาหน้าปัดทรงกลม (เสริมความสมูทของระบบงาน)' },
-        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59', item: 'เครื่องรางหยินหยาง หรือ สเปรย์น้ำแร่พกพา (ธาตุน้ำช่วยดับความร้อนรุ่มและปะทะ)' }
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ทิศใต้', time: '11:00 - 12:59', item: 'แฟ้มเอกสารสีโทนเย็น หรือ นาฬิกาหน้าปัดทรงกลม (เสริมความสมูท)' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59', item: 'เครื่องรางหยินหยาง หรือ สเปรย์น้ำแร่พกพา (ลดปะทะ)' }
     ];
+
+    const monthZodiacNames = ['ฉลู', 'ขาล', 'เถาะ', 'มะโรง', 'มะเส็ง', 'มะเมีย', 'มะแม', 'วอก', 'ระกา', 'จอ', 'กุน', 'ชวด'];
+    const dayZodiacNames = ['วอก', 'ระกา', 'จอ', 'กุน', 'ชวด', 'ฉลู', 'ขาล', 'เถาะ', 'มะโรง', 'มะเส็ง', 'มะเมีย', 'มะแม'];
+
+    // คำนวณวันนักษัตร (อิงจาก 19 มี.ค. 2026 เป็นวันวอก)
+    function getDayZodiac(date) {
+        const start = new Date(2026, 2, 19); 
+        const diff = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
+        let idx = diff % 12;
+        return dayZodiacNames[idx < 0 ? idx + 12 : idx];
+    }
 
     const lunarNewYears = {
         2025: new Date(2025, 0, 29).getTime(),
@@ -154,32 +166,32 @@
     function getLunarYear(date) {
         let year = date.getFullYear();
         let targetLNY = lunarNewYears[year];
-        if (!targetLNY) { return (date.getMonth() === 0) ? year - 1 : year; }
-        if (date.getTime() < targetLNY) { return year - 1; }
+        if (!targetLNY) return (date.getMonth() === 0) ? year - 1 : year;
+        if (date.getTime() < targetLNY) return year - 1;
         return year;
     }
 
     function getYearZodiac(lunarYear) {
         const zodiacs = [
-            { name: 'ชวด', status: 'warning', text: 'ปีชงร่วม (ไท้ส่วย)', desc: '✅ <b>ควรทำ:</b> รักษาคอนเนคชั่น ทำบุญไหว้พระ<br>⚠️ <b>ควรระวัง:</b> มีเรื่องจุกจิกกวนใจ สุขภาพเล็กๆ น้อยๆ' },
-            { name: 'ฉลู', status: 'danger', text: 'ปีชง 100% (ปะทะปีเกิด)', desc: '✅ <b>ควรทำ:</b> ชะลอการลงทุนใหญ่ เน้นแก้ปัญหาเก่า<br>⚠️ <b>ควรระวัง:</b> อุบัติเหตุ สุขภาพกะทันหัน งดเสี่ยงโชค' },
-            { name: 'ขาล', status: 'normal', text: 'ปีปกติ (ผ่านไปได้ด้วยดี)', desc: '✅ <b>ควรทำ:</b> ทำตามแผนเดิม วางแผนงานระยะยาว<br>⚠️ <b>ควรระวัง:</b> ไม่ประมาทในการใช้ชีวิต' },
-            { name: 'เถาะ', status: 'good', text: 'ปีสมพงษ์ ซาฮะ (ปีทอง)', desc: '✅ <b>ควรทำ:</b> ลุยธุรกิจใหม่ สร้างบ้าน ขยายกิจการ<br>⚠️ <b>ควรระวัง:</b> ระวังคนอิจฉาเพราะโดดเด่นเกินไป' },
-            { name: 'มะโรง', status: 'warning', text: 'ปีชงร่วม/ทับคลัง', desc: '✅ <b>ควรทำ:</b> จัดระเบียบการเงินใหม่ ซื้ออสังหาเก็บ<br>⚠️ <b>ควรระวัง:</b> บริวารสร้างปัญหา ทะเลาะกับผู้ใหญ่' },
-            { name: 'มะเส็ง', status: 'normal', text: 'ปีปกติ (ทรงตัว)', desc: '✅ <b>ควรทำ:</b> พัฒนาทักษะใหม่ๆ หาคอนเนคชั่น<br>⚠️ <b>ควรระวัง:</b> ค่อยเป็นค่อยไป อย่าใจร้อน' },
-            { name: 'มะเมีย', status: 'good', text: 'ปีคู่มิตร โดดเด่นสุดยอด', desc: '✅ <b>ควรทำ:</b> ผู้ใหญ่อุปถัมภ์ เหมาะเจรจา ปิดดีลใหญ่ สร้างแบรนด์<br>⚠️ <b>ควรระวัง:</b> ใช้เงินเกินตัวเพราะหาได้เยอะ' },
-            { name: 'มะแม', status: 'warning', text: 'ปีทับเกิด (กดดัน)', desc: '✅ <b>ควรทำ:</b> ปลีกวิเวก นั่งสมาธิ โฟกัสเป้าหมาย<br>⚠️ <b>ควรระวัง:</b> เครียด คิดมาก กดดันตัวเอง ทะเลาะกับคนใกล้ชิด' },
-            { name: 'วอก', status: 'normal', text: 'ปีปกติ (ราบรื่น)', desc: '✅ <b>ควรทำ:</b> เดินทางไกล ขยายตลาด<br>⚠️ <b>ควรระวัง:</b> ค่าใช้จ่ายแฝง' },
-            { name: 'ระกา', status: 'normal', text: 'ปีปกติ (มั่นคง)', desc: '✅ <b>ควรทำ:</b> สร้างรากฐานให้แน่นขึ้น<br>⚠️ <b>ควรระวัง:</b> ปัญหาด้านเอกสาร' },
-            { name: 'จอ', status: 'danger', text: 'ปีชงคลังสมบัติ', desc: '✅ <b>ควรทำ:</b> เก็บเงินสด ไม่ปล่อยกู้ ซื้อของชิ้นใหญ่แก้เคล็ด<br>⚠️ <b>ควรระวัง:</b> การเงินรั่วไหล โปรเจกต์สะดุด บริวารออก' },
-            { name: 'กุน', status: 'good', text: 'ปีสมพงษ์ ซาฮะ', desc: '✅ <b>ควรทำ:</b> ขยับขยายได้ดี มีคนคอยซัพพอร์ต ทำโปรเจกต์ใหญ่<br>⚠️ <b>ควรระวัง:</b> ไม่มีเรื่องน่าห่วง' }
+            { name: 'ชวด', status: 'warning', text: 'ปีชงร่วม (ไท้ส่วย)' },
+            { name: 'ฉลู', status: 'danger', text: 'ปีชง 100% (ปะทะปีเกิด)' },
+            { name: 'ขาล', status: 'normal', text: 'ปีปกติ (ผ่านไปได้ด้วยดี)' },
+            { name: 'เถาะ', status: 'good', text: 'ปีสมพงษ์ ซาฮะ (ปีทอง)' },
+            { name: 'มะโรง', status: 'warning', text: 'ปีชงร่วม/ทับคลัง' },
+            { name: 'มะเส็ง', status: 'normal', text: 'ปีปกติ (ทรงตัว)' },
+            { name: 'มะเมีย', status: 'good', text: 'ปีคู่มิตร โดดเด่นสุดยอด' },
+            { name: 'มะแม', status: 'warning', text: 'ปีทับเกิด (กดดัน)' },
+            { name: 'วอก', status: 'normal', text: 'ปีปกติ (ราบรื่น)' },
+            { name: 'ระกา', status: 'normal', text: 'ปีปกติ (มั่นคง)' },
+            { name: 'จอ', status: 'danger', text: 'ปีชงคลังสมบัติ' },
+            { name: 'กุน', status: 'good', text: 'ปีสมพงษ์ ซาฮะ' }
         ];
         return zodiacs[(lunarYear - 4) % 12];
     }
 
     function getPattern(date) {
         const start = new Date(2026, 2, 19);
-        const diff = Math.floor((date.getTime() - start.getTime()) / 86400000);
+        const diff = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
         let idx = diff % 12;
         return patterns[idx < 0 ? idx + 12 : idx];
     }
@@ -211,11 +223,16 @@
 
     function renderDaily() {
         const p = getPattern(currentViewDate);
+        const dZodiac = getDayZodiac(currentViewDate);
         const container = document.getElementById('daily-card-container');
         const dStr = currentViewDate.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
+        
         container.innerHTML = `
             <div class="card">
-                <div class="card-header ${p.type}"><h2>${p.title}</h2><p>${dStr}</p></div>
+                <div class="card-header ${p.type}">
+                    <h2>${p.title}</h2>
+                    <p>${dStr}<br><span class="zodiac-badge">วัน${dZodiac}</span></p>
+                </div>
                 <div class="card-content">
                     <div class="section"><span class="label">1. สีมงคล / สีชง</span><div class="val">มงคล: <span class="good-val">${p.color}</span> | ชง: <span class="bad-val">${p.badColor}</span></div></div>
                     <div class="section"><span class="label">2. พลังงานและกิจกรรมแนะนำ</span><div class="val">${p.act}</div></div>
@@ -239,7 +256,9 @@
         const z = getYearZodiac(lunarY);
         let zIcon = z.status === 'good' ? '🟢' : (z.status === 'danger' ? '🔴' : (z.status === 'warning' ? '🟡' : '⚪'));
         
-        title.innerHTML = `${monthNames[calendarMonth]} ${calendarYear + 543}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ปี${z.name} : ${z.text.split('(')[0]} ${zIcon}</span>`;
+        // เพิ่มเดือนนักษัตร
+        const mZodiac = monthZodiacNames[calendarMonth];
+        title.innerHTML = `เดือน${mZodiac} (${monthNames[calendarMonth]}) ${calendarYear + 543}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ปี${z.name} : ${z.text.split('(')[0]} ${zIcon}</span>`;
         
         alertBox.style.display = 'block';
         if (calendarMonth === 0) { 
@@ -296,18 +315,21 @@
         else { banner.className = 'alert-box alert-warning'; }
 
         banner.innerHTML = `<h4>${z.status==='good'?'🟢':z.status==='danger'?'🔴':'🟡'} ภาพรวมนักษัตร ${lunarY} (ปี${z.name})</h4>
-                            <strong>${z.text}</strong>
-                            <div>${z.desc}</div>`;
+                            <strong>${z.text}</strong>`;
 
         list.innerHTML = '';
         const todayStr = new Date().toDateString();
         for(let i = 0; i < 365; i++) {
             let d = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), currentViewDate.getDate() + i);
             let p = getPattern(d);
+            let dZodiac = getDayZodiac(d);
             let isToday = d.toDateString() === todayStr;
             
             list.innerHTML += `<div class="list-item ${p.type} ${isToday?'is-today':''}" onclick="currentViewDate=new Date(${d.getTime()}); switchTab('daily-tab', document.querySelectorAll('.tab-item')[0], false)">
-                <span><strong>${d.getDate()} ${d.toLocaleDateString('th-TH',{month:'short'})}</strong> ${d.getFullYear()+543}</span>
+                <div>
+                    <strong>${d.getDate()} ${d.toLocaleDateString('th-TH',{month:'short'})}</strong> 
+                    <span class="list-zodiac">วัน${dZodiac}</span>
+                </div>
                 <span>${p.title.split(' ')[1]}</span>
             </div>`;
         }
