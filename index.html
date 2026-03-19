@@ -3,14 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Bazi Focus Pro (Lunar Edition)</title>
+    <title>Bazi Focus Pro</title>
     
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bazi Focus">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#1a237e">
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Bazi Daily Focus","short_name":"BaziFocus","start_url":".","display":"standalone","background_color":"#f0f2f5","theme_color":"#1a237e"}'>
 
     <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
@@ -35,13 +34,11 @@
         .view-content.active { display: block; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Alert Boxes */
         .alert-box { padding: 15px; border-radius: 20px; margin-bottom: 15px; font-size: 0.85em; display: none; border-left: 6px solid; line-height: 1.6; }
         .alert-danger { background: #fff1f0; color: #cf1322; border-color: #ff4d4f; }
         .alert-warning { background: #fffbe6; color: #d48806; border-color: #ffc53d; }
         .alert-success { background: #f6ffed; color: #2e7d32; border-color: #81c784; }
         .alert-box h4 { margin: 0 0 5px 0; font-size: 1.1em; }
-        .alert-box ul { margin: 5px 0 0; padding-left: 20px; }
 
         .card { background: white; border-radius: 30px; box-shadow: 0 12px 35px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0; }
         .card-header { padding: 25px 20px; color: white; text-align: center; }
@@ -57,6 +54,7 @@
         .val { font-size: 1.05em; color: #333; line-height: 1.6; }
         .good-val { color: var(--heng); font-weight: 600; }
         .bad-val { color: var(--bad); font-weight: 600; }
+        .item-val { color: var(--primary); font-weight: 600; }
 
         .calendar-table { width: 100%; background: white; border-radius: 20px; overflow: hidden; border-collapse: collapse; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .calendar-table th { padding: 12px; background: #fafafa; font-size: 0.75em; color: #999; border-bottom: 1px solid #eee; }
@@ -128,45 +126,36 @@
     let calendarMonth = currentViewDate.getMonth();
     let calendarYear = currentViewDate.getFullYear();
 
+    // อัปเดตไอเทมใหม่ทั้งหมด เน้นการปรับสมดุลธาตุ (ธาตุน้ำ ธาตุไฟ ธาตุดิน ธาตุทอง ธาตุไม้)
     const patterns = [
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'จัดการระบบ: ทำงานรูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '15:00 - 16:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตก', time: '17:00 - 18:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: สรุปแผนงาน หรือหาข้อมูลสร้างบ้าน', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 (ชงซ้อนดวง)' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'จัดการระบบ: เหมาะกับงานเอกสาร หรืองานรูทีน', num: '2, 7', badNum: '4, 9', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '21:00 - 22:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันคู่มิตร: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ตะวันออก', badDir: 'ทิศเหนือ', time: '23:00 - 00:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: ทำงานทั่วไป งดตัดสินใจเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: หาไอเดียใหม่ๆ ศึกษาเรื่อง Quiet Luxury', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '03:00 - 04:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: เคลียร์งานค้างคาให้เสร็จสิ้น', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ', badDir: 'ตะวันออก', time: '05:00 - 06:59' },
-        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูอนิเมะ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '07:00 - 08:59' },
-        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เปิดคลังสมบัติ: ปิดดีลธุรกิจ ซื้อของใหญ่ คุยสถาปนิก', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '09:00 - 10:59' },
-        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ทิศใต้', time: '11:00 - 12:59' },
-        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59' }
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'จัดการระบบ: ทำงานรูทีน วางแผนทริป หาเรฟบ้าน', num: '3, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '15:00 - 16:59', item: 'หินมงคลโทนสีน้ำเงิน (เช่น Lapis Lazuli) หรือ ของใช้ที่มีลวดลายคลื่นน้ำ' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ฟ้า', badColor: 'เหลือง/น้ำตาล', act: 'เปิดคลังสมบัติ: นัดคุยธุรกิจ ปิดดีล ซื้อของใหญ่', num: '1, 3, 6, 8', badNum: '0, 5', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตก', time: '17:00 - 18:59', item: 'ปากกาโลหะสีเงิน/ทอง หรือ แว่นตากันแดดเลนส์สีชา (เสริมพลังธาตุไฟและทอง)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: สรุปแผนงาน หรือหาข้อมูลสร้างบ้าน', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '19:00 - 20:59 (ชงซ้อนดวง)', item: 'สมุดปกสีเขียวเหนี่ยวทรัพย์ หรือ สร้อยข้อมือลูกปัดไม้หอม' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'จัดการระบบ: เหมาะกับงานเอกสาร หรืองานรูทีน', num: '2, 7', badNum: '4, 9', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงเหนือ', time: '21:00 - 22:59', item: 'ขวดน้ำเก็บอุณหภูมิสแตนเลส หรือ พวงกุญแจโลหะทรงกลม (เสริมความลื่นไหล)' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, น้ำเงิน', badColor: 'ขาว/เงิน', act: 'วันคู่มิตร: นัดเดท ทาน Fine Dining สร้างคอนเนคชั่น', num: '2, 5, 7, 8', badNum: '4, 9', dir: 'ตะวันออก', badDir: 'ทิศเหนือ', time: '23:00 - 00:59', item: 'เข็มกลัดประดับคริสตัล หรือ แหวนเงินเกลี้ยงสวมนิ้วชี้ (เสริมเสน่ห์และอำนาจ)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, เขียว', badColor: 'ดำ/น้ำเงิน', act: 'จัดการระบบ: ทำงานทั่วไป งดตัดสินใจเงินก้อนโต', num: '0, 5', badNum: '1, 6', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '01:00 - 02:59 (ชงซ้อนดวง)', item: 'ผ้าเช็ดหน้าลวดลายธรรมชาติ หรือ น้ำหอมกลิ่นพรรณไม้ (ลดความตึงเครียด)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: หาไอเดียใหม่ๆ ศึกษาเรื่อง Quiet Luxury', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงเหนือ', time: '03:00 - 04:59', item: 'ต่างหู/คลิปหนีบไทเทเนียม หรือ นาฬิกาสายหน้าปัดเหลี่ยม (เสริมความมั่นคง)' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'แดง, ชมพู', badColor: 'เขียว', act: 'จัดการระบบ: เคลียร์งานค้างคาให้เสร็จสิ้น', num: '4, 9', badNum: '3, 8', dir: 'ทิศเหนือ', badDir: 'ทิศตะวันออก', time: '05:00 - 06:59', item: 'กระเป๋าใส่เหรียญทรงสี่เหลี่ยม หรือ สร้อยคอจี้รูปดาว' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: พักผ่อน ดูอนิเมะ ออกกำลังกาย โฮมสปา', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '07:00 - 08:59', item: 'พกหินควอตซ์ใส (Clear Quartz) หรือ กำไลหยก (ปัดเป่าและล้างพลังงานลบ)' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เปิดคลังสมบัติ: ปิดดีลธุรกิจ ซื้อของใหญ่ คุยสถาปนิก', num: '1, 3, 6, 8', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันออกเฉียงใต้', time: '09:00 - 10:59', item: 'เครื่องประดับที่มีประกายสะท้อนแสง หรือ กระเป๋าสตางค์ใบยาวสีเรียบ' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'จัดการระบบ: เคลียร์งาน สรุปยอด วางแผนรายสัปดาห์', num: '1, 6', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ทิศใต้', time: '11:00 - 12:59', item: 'แฟ้มเอกสารสีโทนเย็น หรือ นาฬิกาหน้าปัดทรงกลม (เสริมความสมูทของระบบงาน)' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'ฟ้า, ขาว', badColor: 'แดง/ชมพู', act: 'เคลียร์พลังงาน: งดตัดสินใจเรื่องใหญ่ พักผ่อนชาร์จแบต', num: '4, 9 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ, ตะวันออก', badDir: 'ตะวันตกเฉียงใต้', time: '13:00 - 14:59', item: 'เครื่องรางหยินหยาง หรือ สเปรย์น้ำแร่พกพา (ธาตุน้ำช่วยดับความร้อนรุ่มและปะทะ)' }
     ];
 
-    // ข้อมูลวันตรุษจีน (Lunar New Year) ปี 2025 - 2030
     const lunarNewYears = {
-        2025: new Date(2025, 0, 29).getTime(), // 29 ม.ค. 2025 (ปีมะเส็ง)
-        2026: new Date(2026, 1, 17).getTime(), // 17 ก.พ. 2026 (ปีมะเมีย)
-        2027: new Date(2027, 1, 6).getTime(),  // 6 ก.พ. 2027 (ปีมะแม)
-        2028: new Date(2028, 0, 26).getTime(), // 26 ม.ค. 2028 (ปีวอก)
-        2029: new Date(2029, 1, 13).getTime(), // 13 ก.พ. 2029 (ปีระกา)
-        2030: new Date(2030, 1, 3).getTime()   // 3 ก.พ. 2030 (ปีจอ)
+        2025: new Date(2025, 0, 29).getTime(),
+        2026: new Date(2026, 1, 17).getTime(),
+        2027: new Date(2027, 1, 6).getTime(), 
+        2028: new Date(2028, 0, 26).getTime(),
+        2029: new Date(2029, 1, 13).getTime(),
+        2030: new Date(2030, 1, 3).getTime()  
     };
 
-    // คำนวณปีนักษัตรตามวันตรุษจีนที่แท้จริง
     function getLunarYear(date) {
         let year = date.getFullYear();
         let targetLNY = lunarNewYears[year];
-        
-        // ถ้าเป็นปีที่อยู่นอกฐานข้อมูล ให้คำนวณแบบหยาบๆ (เปลี่ยน 1 ก.พ.)
-        if (!targetLNY) {
-            return (date.getMonth() === 0) ? year - 1 : year;
-        }
-
-        // ถ้าวันที่ที่เช็ค ยังมาไม่ถึงวันตรุษจีนของปีนั้น ถือว่าเป็นนักษัตรของปีที่แล้ว
-        if (date.getTime() < targetLNY) {
-            return year - 1;
-        }
+        if (!targetLNY) { return (date.getMonth() === 0) ? year - 1 : year; }
+        if (date.getTime() < targetLNY) { return year - 1; }
         return year;
     }
 
@@ -233,6 +222,7 @@
                     <div class="section"><span class="label">3. เลขโดด / มงคล / ชง</span><div class="val">มงคล: <span class="good-val">${p.num}</span> | ชง: <span class="bad-val">${p.badNum}</span></div></div>
                     <div class="section"><span class="label">4. ทิศมงคล / ทิศชง</span><div class="val">มงคล: <span class="good-val">${p.dir}</span> | ชง: <span class="bad-val">${p.badDir}</span></div></div>
                     <div class="section"><span class="label">5. เวลาชง</span><div class="val">ประจำวัน: <span class="bad-val">${p.time} น.</span><br><small>ชงส่วนตัว: 01:00-02:59, 19:00-20:59</small></div></div>
+                    <div class="section" style="border-bottom:none; margin-bottom:0;"><span class="label">6. ไอเทมเสริมพลังธาตุประจำวัน</span><div class="val item-val">✨ ${p.item}</div></div>
                 </div>
             </div>`;
         document.getElementById('main-picker').value = currentViewDate.toISOString().split('T')[0];
@@ -244,7 +234,6 @@
         const body = document.querySelector('#calendar-body tbody');
         const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
         
-        // เช็คปีนักษัตรโดยอิงวันตรุษจีนของเดือนนั้น (ใช้วันที่ 15 ของเดือนเป็นเกณฑ์เช็ค)
         let tempDate = new Date(calendarYear, calendarMonth, 15);
         let lunarY = getLunarYear(tempDate);
         const z = getYearZodiac(lunarY);
@@ -252,7 +241,6 @@
         
         title.innerHTML = `${monthNames[calendarMonth]} ${calendarYear + 543}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ปี${z.name} : ${z.text.split('(')[0]} ${zIcon}</span>`;
         
-        // การแจ้งเตือนเดือนชง
         alertBox.style.display = 'block';
         if (calendarMonth === 0) { 
             alertBox.className = 'alert-box alert-danger'; 
@@ -299,7 +287,6 @@
         const list = document.getElementById('yearly-list');
         const banner = document.getElementById('year-alert-banner');
         
-        // คำนวณปีนักษัตรแบบอิงตรุษจีน
         let lunarY = getLunarYear(currentViewDate);
         const z = getYearZodiac(lunarY);
         
