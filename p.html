@@ -4,7 +4,363 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Bazi Focus Pro</title>
+    <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bazi Focus Pro</title>
     
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Bazi Focus">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a237e">
+
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #1a237e; --heng: #2e7d32; --mid: #f57f17; --bad: #c62828; --bg: #f0f2f5; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); margin: 0; padding-bottom: 90px; user-select: none; overscroll-behavior-y: contain; }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; padding-top: env(safe-area-inset-top, 20px); }
+
+        .top-selector { background: white; padding: 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #eee; }
+        input[type="date"] { padding: 10px; border-radius: 12px; border: 1px solid #ddd; font-family: 'Sarabun'; font-size: 1em; color: var(--primary); outline: none; background: #fafafa; width: 160px; }
+
+        .status-panel { text-align: center; margin-bottom: 15px; background: white; padding: 15px; border-radius: 20px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        #clock { font-size: 1.8em; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
+        .status-tag { padding: 4px 14px; border-radius: 20px; color: white; display: inline-block; margin-top: 6px; font-size: 0.8em; font-weight: 600; }
+
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.98); display: flex; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 10px); backdrop-filter: blur(10px); }
+        .tab-item { flex: 1; padding: 15px 0; text-align: center; cursor: pointer; color: #aaa; font-weight: 600; font-size: 0.9em; position: relative; }
+        .tab-item.active { color: var(--primary); }
+        .tab-item.active::after { content: ''; position: absolute; top: 0; left: 25%; right: 25%; height: 3px; background: var(--primary); border-radius: 0 0 5px 5px; }
+
+        .view-content { display: none; }
+        .view-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+        .alert-box { padding: 15px; border-radius: 20px; margin-bottom: 15px; font-size: 0.85em; display: none; border-left: 6px solid; line-height: 1.6; }
+        .alert-danger { background: #fff1f0; color: #cf1322; border-color: #ff4d4f; }
+        .alert-warning { background: #fffbe6; color: #d48806; border-color: #ffc53d; }
+        .alert-success { background: #f6ffed; color: #2e7d32; border-color: #81c784; }
+        .alert-box h4 { margin: 0 0 5px 0; font-size: 1.1em; }
+
+        .card { background: white; border-radius: 30px; box-shadow: 0 12px 35px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0; }
+        .card-header { padding: 25px 20px; color: white; text-align: center; position: relative; }
+        .card-header.heng { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
+        .card-header.mid { background: linear-gradient(135deg, #f57f17, #ffca28); }
+        .card-header.bad { background: linear-gradient(135deg, #c62828, #ef5350); }
+        .card-header h2 { margin: 0; font-size: 1.6em; }
+        .card-header p { margin: 10px 0 0; font-size: 1em; opacity: 0.95; }
+        .zodiac-badge { background: rgba(255,255,255,0.25); padding: 3px 12px; border-radius: 15px; font-size: 0.85em; display: inline-block; margin-top: 5px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        .card-content { padding: 25px; }
+        .section { margin-bottom: 18px; border-bottom: 1px solid #f8f8f8; padding-bottom: 12px; }
+        .label { font-size: 0.75em; color: #bbb; display: block; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        .val { font-size: 1.05em; color: #333; line-height: 1.6; }
+        .good-val { color: var(--heng); font-weight: 600; }
+        .bad-val { color: var(--bad); font-weight: 600; }
+        .item-val { color: var(--primary); font-weight: 600; }
+
+        .calendar-table { width: 100%; background: white; border-radius: 20px; overflow: hidden; border-collapse: collapse; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .calendar-table th { padding: 12px; background: #fafafa; font-size: 0.75em; color: #999; border-bottom: 1px solid #eee; }
+        .calendar-table td { width: 14.28%; height: 85px; border: 0.5px solid #f5f5f5; vertical-align: top; padding: 6px; cursor: pointer; position: relative; }
+        .cal-date { font-size: 0.85em; font-weight: 600; color: #444; }
+        .cal-type { font-size: 0.6em; position: absolute; bottom: 8px; left: 4px; right: 4px; text-align: center; padding: 3px; color: white; border-radius: 6px; font-weight: 600; }
+        .cal-type.heng { background: var(--heng); }
+        .cal-type.mid { background: var(--mid); }
+        .cal-type.bad { background: var(--bad); }
+        .cal-today { background: #fffde7; border: 2.5px solid var(--primary) !important; z-index: 5; }
+
+        .list-item { background: white; padding: 16px; border-radius: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 7px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.02); align-items: center; }
+        .list-item.is-today { border: 2px solid var(--primary); transform: scale(1.02); box-shadow: 0 5px 15px rgba(26,35,126,0.1); }
+        .list-item.heng { border-left-color: var(--heng); }
+        .list-item.mid { border-left-color: var(--mid); }
+        .list-item.bad { border-left-color: var(--bad); }
+        .list-zodiac { font-size: 0.8em; color: #777; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+        
+        button.nav-btn { border: none; background: #e8eaf6; color: var(--primary); padding: 15px; border-radius: 18px; font-weight: 600; font-family: 'Sarabun'; flex: 1; font-size: 1em; }
+        button.nav-btn.primary { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="daily-tab" class="view-content active">
+        <div class="top-selector">
+            <span style="font-size: 0.85em; font-weight: 600; color: #555;">เลือกล่วงหน้า:</span>
+            <input type="date" id="main-picker" onchange="jumpDate(this.value)">
+        </div>
+        <div class="status-panel">
+            <div id="clock">00:00:00</div>
+            <div id="status-display"></div>
+        </div>
+        <div id="daily-card-container"></div>
+        <div style="display:flex; gap:12px; margin-top:20px;">
+            <button class="nav-btn" onclick="moveDate(-1)">เมื่อวาน</button>
+            <button class="nav-btn primary" onclick="moveDate(1)">พรุ่งนี้</button>
+        </div>
+    </div>
+
+    <div id="monthly-tab" class="view-content">
+        <div id="month-alert" class="alert-box"></div>
+        <div class="cal-header" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:15px; margin-bottom:12px; border:1px solid #eee;">
+            <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:1.2em;">◀</button>
+            <h3 id="cal-month-title" style="margin:0; font-size: 1.1em; color: var(--primary); text-align: center;">เดือน...</h3>
+            <button onclick="changeMonth(1)" style="border:none; background:none; font-size:1.2em;">▶</button>
+        </div>
+        <table class="calendar-table" id="calendar-body">
+            <thead><tr><th>อา</th><th>จ</th><th>อ</th><th>พ</th><th>พฤ</th><th>ศ</th><th>ส</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div id="yearly-tab" class="view-content">
+        <h3 style="text-align:center; color: var(--primary); margin-bottom: 15px;">สรุปดวง 365 วัน</h3>
+        <div id="year-alert-banner" class="alert-box"></div>
+        <div id="yearly-list"></div>
+    </div>
+</div>
+
+<nav class="tab-bar">
+    <div class="tab-item active" onclick="switchTab('daily-tab', this, true)">รายวัน</div>
+    <div class="tab-item" onclick="switchTab('monthly-tab', this, true)">รายเดือน</div>
+    <div class="tab-item" onclick="switchTab('yearly-tab', this, true)">รายปี</div>
+</nav>
+
+<script>
+    let currentViewDate = new Date(); 
+    let calendarMonth = currentViewDate.getMonth();
+    let calendarYear = currentViewDate.getFullYear();
+
+    // ลำดับดัชนี (Index) อิงตามตัวแปร dayZodiacNames: 
+    // 0=วอก, 1=ระกา, 2=จอ, 3=กุน, 4=ชวด, 5=ฉลู, 6=ขาล, 7=เถาะ, 8=มะโรง, 9=มะเส็ง, 10=มะเมีย, 11=มะแม
+    const patterns = [
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'เหลือง, น้ำตาล', badColor: 'แดง, ส้ม', act: 'วันวอก: วันทับเกิดตัวเอง พลังงานคงที่ เหมาะกับการสะสางงานเดิม', num: '5, 0', badNum: '2, 7', dir: 'ทิศตะวันตกเฉียงใต้', badDir: 'ทิศใต้', time: '11:00 - 12:59', item: 'เครื่องประดับเซรามิก หรือหินสีน้ำตาล' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ขาว, เงิน', badColor: 'แดง, ชมพู', act: 'วันระกา: จัดระเบียบความคุ้นเคย ตรวจสอบรายละเอียดงานเอกสาร', num: '4, 9', badNum: '2, 7', dir: 'ทิศตะวันตก', badDir: 'ทิศใต้', time: '13:00 - 14:59', item: 'เครื่องประดับโลหะสีเงิน' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดง, ชมพู', badColor: 'ดำ, น้ำเงิน', act: 'วันจอ: เปิดคลังธาตุไฟ เจรจาธุรกิจสำเร็จ หรือทำกิจกรรมที่ต้องใช้ความกระตือรือร้น', num: '2, 7', badNum: '1, 6', dir: 'ทิศใต้', badDir: 'ทิศเหนือ', time: '15:00 - 16:59', item: 'เสื้อผ้าโทนสีแดง/ชมพู หรือโคมไฟให้แสงสว่าง' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ดำ, ฟ้า', badColor: 'เหลือง, น้ำตาล', act: 'วันกุน: พลังงานน้ำสูง ควรอยู่อย่างสงบ ศึกษาหาความรู้ หรือพักผ่อน', num: '1, 6', badNum: '5, 0', dir: 'ทิศเหนือ', badDir: 'ทิศตะวันตกเฉียงใต้', time: '17:00 - 18:59', item: 'แก้วน้ำเก็บอุณหภูมิสีเข้ม' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ดำ, น้ำเงิน', badColor: 'เหลือง, ดิน', act: 'วันชวด: ทับปีเกิด พลังงานอาจอึดอัดเล็กน้อย เน้นสวดมนต์ ทำสมาธิ', num: '1, 6', badNum: '5, 0', dir: 'ทิศเหนือ', badDir: 'ทิศศูนย์กลาง', time: '19:00 - 20:59', item: 'หินมงคลโทนสีดำ เช่น ออบซิเดียน' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'น้ำตาล, เหลือง', badColor: 'เขียว', act: 'วันฉลู: ทับเดือนเกิด งานอาจล่าช้ากว่าปกติ เน้นความอดทนและรอบคอบ', num: '5, 0', badNum: '3, 8', dir: 'ทิศตะวันออกเฉียงเหนือ', badDir: 'ทิศตะวันออก', time: '21:00 - 22:59', item: 'ลูกปัดหินธรรมชาติ' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'เขียว (แก้เคล็ด)', badColor: 'ขาว, ทอง', act: 'วันขาล: (ชงวันเกิด 100%) งดเสี่ยงโชค งดเดินทางไกล ระวังอุบัติเหตุและการปะทะ', num: '3, 8 (แก้เคล็ด)', badNum: '4, 9', dir: 'ทิศตะวันออก', badDir: 'ทิศตะวันตก', time: '23:00 - 00:59', item: 'จี้หยก หรือเครื่องรางไม้แกะสลัก' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'เขียวใบไม้', badColor: 'ขาว, เงิน', act: 'วันเถาะ: พลังธาตุไม้ให้โชค เริ่มต้นสิ่งใหม่ เสนอไอเดีย สร้างเครือข่าย', num: '3, 8', badNum: '4, 9', dir: 'ทิศตะวันออก', badDir: 'ทิศตะวันตก', time: '01:00 - 02:59', item: 'ต้นไม้ประดับโต๊ะทำงาน หรือสมุดปกสีเขียว' },
+        { type: 'mid', title: '📊 ดวงปานกลาง', color: 'เหลืองทอง', badColor: 'เขียว', act: 'วันมะโรง: จัดการระบบหลังบ้าน อัปเดตข้อมูล หรือดูแลสุขภาพ', num: '5, 0', badNum: '3, 8', dir: 'ทิศตะวันออกเฉียงใต้', badDir: 'ทิศตะวันออก', time: '03:00 - 04:59', item: 'สมุดบันทึกปกหนัง' },
+        { type: 'heng', title: '🌟 วันดวงเฮง', color: 'แดงเข้ม, ม่วง', badColor: 'ดำ, น้ำเงิน', act: 'วันมะเส็ง: คู่มิตรให้โชค เซ็นสัญญา ลงทุน หรือเข้าร่วมงานสังคมสำคัญ', num: '2, 7', badNum: '1, 6', dir: 'ทิศใต้', badDir: 'ทิศเหนือ', time: '05:00 - 06:59', item: 'ปากกาหมึกแดง หรือเครื่องประดับโกเมน/ทับทิม' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'แดง (แก้เคล็ด)', badColor: 'ดำ, ขาว', act: 'วันมะเมีย: (ชงปีเกิด) ระวังอารมณ์ร้อน การตัดสินใจผิดพลาด และปัญหาผู้ใหญ่', num: '2, 7 (แก้เคล็ด)', badNum: '1, 6', dir: 'ทิศใต้', badDir: 'ทิศเหนือ', time: '07:00 - 08:59', item: 'เทียนหอมอโรม่า เพื่อปรับสมดุลอารมณ์' },
+        { type: 'bad', title: '🚫 งดเสี่ยงโชค', color: 'น้ำตาล (แก้เคล็ด)', badColor: 'เขียว, ฟ้า', act: 'วันมะแม: (ชงเดือนเกิด) ระวังปัญหาเอกสาร ข้อสัญญา และความขัดแย้งกับคนใกล้ชิด', num: '5, 0 (แก้เคล็ด)', badNum: '3, 8', dir: 'ทิศตะวันตกเฉียงใต้', badDir: 'ทิศตะวันออก', time: '09:00 - 10:59 (ยามชง)', item: 'สร้อยข้อมือไม้หอม (ลดทอนความขัดแย้ง)' }
+    ];
+
+    const monthZodiacNames = ['ฉลู', 'ขาล', 'เถาะ', 'มะโรง', 'มะเส็ง', 'มะเมีย', 'มะแม', 'วอก', 'ระกา', 'จอ', 'กุน', 'ชวด'];
+    const dayZodiacNames = ['วอก', 'ระกา', 'จอ', 'กุน', 'ชวด', 'ฉลู', 'ขาล', 'เถาะ', 'มะโรง', 'มะเส็ง', 'มะเมีย', 'มะแม'];
+
+    function getDayZodiac(date) {
+        const start = new Date(2026, 2, 19); 
+        const diff = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
+        let idx = diff % 12;
+        return dayZodiacNames[idx < 0 ? idx + 12 : idx];
+    }
+
+    const lunarNewYears = {
+        2025: new Date(2025, 0, 29).getTime(),
+        2026: new Date(2026, 1, 17).getTime(),
+        2027: new Date(2027, 1, 6).getTime(), 
+        2028: new Date(2028, 0, 26).getTime(),
+        2029: new Date(2029, 1, 13).getTime(),
+        2030: new Date(2030, 1, 3).getTime()  
+    };
+
+    function getLunarYear(date) {
+        let year = date.getFullYear();
+        let targetLNY = lunarNewYears[year];
+        if (!targetLNY) return (date.getMonth() === 0) ? year - 1 : year;
+        if (date.getTime() < targetLNY) return year - 1;
+        return year;
+    }
+
+    function getYearZodiac(lunarYear) {
+        const zodiacs = [
+            { name: 'ชวด', status: 'warning', text: 'ปีทับดวงชะตา (ไท้ส่วย) - อึดอัด กดดัน' },
+            { name: 'ฉลู', status: 'good', text: 'ปีคู่ฮะ (สมพงษ์) - ราบรื่น ได้รับความช่วยเหลือ' },
+            { name: 'ขาล', status: 'normal', text: 'ปีปกติ (ผ่านไปได้ด้วยดี)' },
+            { name: 'เถาะ', status: 'warning', text: 'ปีชงร่วม (刑 - เบียดเบียน) - ระวังปัญหาวุ่นวายใจ' },
+            { name: 'มะโรง', status: 'good', text: 'ปีสมพงษ์ ซาฮะ - ดวงเปิด ได้รับโอกาส' },
+            { name: 'มะเส็ง', status: 'normal', text: 'ปีปกติ (ทรงตัว)' },
+            { name: 'มะเมีย', status: 'danger', text: 'ปีชง 100% (ปะทะปีเกิด) - ระวังการเปลี่ยนแปลงกะทันหัน' },
+            { name: 'มะแม', status: 'warning', text: 'ปีชงร่วม (害 - ให้ร้าย) - ระวังคนใส่ความ' },
+            { name: 'วอก', status: 'good', text: 'ปีสมพงษ์ ซาฮะ (ปีทอง) - ก้าวหน้า สำเร็จ' },
+            { name: 'ระกา', status: 'warning', text: 'ปีชงร่วม (破 - แตกหัก) - ระวังความขัดแย้ง' },
+            { name: 'จอ', status: 'normal', text: 'ปีปกติ (ราบรื่น)' },
+            { name: 'กุน', status: 'normal', text: 'ปีปกติ (มั่นคง)' }
+        ];
+        return zodiacs[(lunarYear - 4) % 12];
+    }
+
+    function getPattern(date) {
+        const start = new Date(2026, 2, 19);
+        const diff = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000);
+        let idx = diff % 12;
+        return patterns[idx < 0 ? idx + 12 : idx];
+    }
+
+    function switchTab(tabId, el, resetToToday = false) {
+        document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active'));
+        document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+        document.getElementById(tabId).classList.add('active');
+        el.classList.add('active');
+
+        if(resetToToday) {
+            const now = new Date();
+            if(tabId === 'daily-tab') { currentViewDate = now; } 
+            else if(tabId === 'monthly-tab') { calendarMonth = now.getMonth(); calendarYear = now.getFullYear(); }
+        }
+
+        if(tabId === 'daily-tab') { renderDaily(); } 
+        else if(tabId === 'monthly-tab') { renderCalendar(); } 
+        else if(tabId === 'yearly-tab') { 
+            renderYearly();
+            if(resetToToday) {
+                setTimeout(() => {
+                    const todayItem = document.querySelector('.list-item.is-today');
+                    if(todayItem) todayItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }, 100);
+            }
+        }
+    }
+
+    function renderDaily() {
+        const p = getPattern(currentViewDate);
+        const dZodiac = getDayZodiac(currentViewDate);
+        const container = document.getElementById('daily-card-container');
+        const dStr = currentViewDate.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
+        
+        container.innerHTML = `
+            <div class="card">
+                <div class="card-header ${p.type}">
+                    <h2>${p.title}</h2>
+                    <p>${dStr}<br><span class="zodiac-badge">วัน${dZodiac}</span></p>
+                </div>
+                <div class="card-content">
+                    <div class="section"><span class="label">1. สีมงคล / สีชง</span><div class="val">มงคล: <span class="good-val">${p.color}</span> | ชง: <span class="bad-val">${p.badColor}</span></div></div>
+                    <div class="section"><span class="label">2. พลังงานและกิจกรรมแนะนำ</span><div class="val">${p.act}</div></div>
+                    <div class="section"><span class="label">3. เลขโดด / มงคล / ชง</span><div class="val">มงคล: <span class="good-val">${p.num}</span> | ชง: <span class="bad-val">${p.badNum}</span></div></div>
+                    <div class="section"><span class="label">4. ทิศมงคล / ทิศชง</span><div class="val">มงคล: <span class="good-val">${p.dir}</span> | ชง: <span class="bad-val">${p.badDir}</span></div></div>
+                    <div class="section"><span class="label">5. เวลาชง</span><div class="val">ประจำวัน: <span class="bad-val">${p.time} น.</span><br><small>ชงส่วนตัว (ยามปะทะเกิด): 09:00 - 10:59 น.</small></div></div>
+                    <div class="section" style="border-bottom:none; margin-bottom:0;"><span class="label">6. ไอเทมเสริมพลังธาตุประจำวัน</span><div class="val item-val">✨ ${p.item}</div></div>
+                </div>
+            </div>`;
+        document.getElementById('main-picker').value = currentViewDate.toISOString().split('T')[0];
+    }
+
+    function renderCalendar() {
+        const title = document.getElementById('cal-month-title');
+        const alertBox = document.getElementById('month-alert');
+        const body = document.querySelector('#calendar-body tbody');
+        const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        
+        let tempDate = new Date(calendarYear, calendarMonth, 15);
+        let lunarY = getLunarYear(tempDate);
+        const z = getYearZodiac(lunarY);
+        let zIcon = z.status === 'good' ? '🟢' : (z.status === 'danger' ? '🔴' : (z.status === 'warning' ? '🟡' : '⚪'));
+        
+        const mZodiac = monthZodiacNames[calendarMonth];
+        title.innerHTML = `เดือน${mZodiac} (${monthNames[calendarMonth]}) ${calendarYear + 543}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ปี${z.name} : ${z.text.split('(')[0]} ${zIcon}</span>`;
+        
+        alertBox.style.display = 'block';
+        
+        if (calendarMonth === 5) { 
+            alertBox.className = 'alert-box alert-danger'; 
+            alertBox.innerHTML = "🔴 <b>เดือนมะเมีย (ชงปีเกิด 100%):</b><br>ระวังการตัดสินใจเรื่องใหญ่ การลงทุน และอุบัติเหตุตลอดเดือน (มิถุนายน)";
+        } else if (calendarMonth === 6) { 
+            alertBox.className = 'alert-box alert-warning'; 
+            alertBox.innerHTML = "🟡 <b>เดือนมะแม (ชงเดือนเกิด):</b><br>ระวังความขัดแย้งกับผู้ใหญ่ ปัญหาเรื่องงาน หรือเอกสาร (กรกฎาคม)";
+        } else if (calendarMonth === 4) { 
+            alertBox.className = 'alert-box alert-warning'; 
+            alertBox.innerHTML = "🟡 <b>เดือนมะเส็ง (ชงยามเกิด):</b><br>ระวังความเครียด หงุดหงิดง่าย หรือปัญหาเกี่ยวกับลูกน้อง/บริวาร (พฤษภาคม)";
+        } else if (calendarMonth === 11) { 
+            alertBox.className = 'alert-box alert-warning'; 
+            alertBox.innerHTML = "🟡 <b>เดือนชวด (ทับดวงชะตา):</b><br>อึดอัด กดดัน มีเรื่องให้ต้องรับผิดชอบหรือคิดเยอะเป็นพิเศษ (ธันวาคม)";
+        } else { 
+            alertBox.style.display = 'none'; 
+        }
+
+        body.innerHTML = '';
+        let firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+        let days = new Date(calendarYear, calendarMonth + 1, 0).getDate();
+        let date = 1;
+        for (let i = 0; i < 6; i++) {
+            let row = document.createElement('tr');
+            for (let j = 0; j < 7; j++) {
+                let cell = document.createElement('td');
+                if (i === 0 && j < firstDay || date > days) { row.appendChild(cell); }
+                else {
+                    let d = new Date(calendarYear, calendarMonth, date);
+                    let p = getPattern(d);
+                    cell.innerHTML = `<span class="cal-date">${date}</span><div class="cal-type ${p.type}">${p.title.split(' ')[1]}</div>`;
+                    if(d.toDateString() === new Date().toDateString()) cell.classList.add('cal-today');
+                    
+                    cell.onclick = () => { 
+                        currentViewDate = d; 
+                        switchTab('daily-tab', document.querySelectorAll('.tab-item')[0], false); 
+                    };
+                    row.appendChild(cell);
+                    date++;
+                }
+            }
+            body.appendChild(row);
+            if (date > days) break;
+        }
+    }
+
+    function renderYearly() {
+        const list = document.getElementById('yearly-list');
+        const banner = document.getElementById('year-alert-banner');
+        
+        let lunarY = getLunarYear(currentViewDate);
+        const z = getYearZodiac(lunarY);
+        
+        banner.style.display = 'block';
+        if (z.status === 'good') { banner.className = 'alert-box alert-success'; } 
+        else if (z.status === 'danger') { banner.className = 'alert-box alert-danger'; } 
+        else { banner.className = 'alert-box alert-warning'; }
+
+        banner.innerHTML = `<h4>${z.status==='good'?'🟢':z.status==='danger'?'🔴':'🟡'} ภาพรวมนักษัตร ${lunarY} (ปี${z.name})</h4>
+                            <strong>${z.text}</strong>`;
+
+        list.innerHTML = '';
+        const todayStr = new Date().toDateString();
+        for(let i = 0; i < 365; i++) {
+            let d = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), currentViewDate.getDate() + i);
+            let p = getPattern(d);
+            let dZodiac = getDayZodiac(d);
+            let isToday = d.toDateString() === todayStr;
+            
+            list.innerHTML += `<div class="list-item ${p.type} ${isToday?'is-today':''}" onclick="currentViewDate=new Date(${d.getTime()}); switchTab('daily-tab', document.querySelectorAll('.tab-item')[0], false)">
+                <div>
+                    <strong>${d.getDate()} ${d.toLocaleDateString('th-TH',{month:'short'})}</strong> 
+                    <span class="list-zodiac">วัน${dZodiac}</span>
+                </div>
+                <span>${p.title.split(' ')[1]}</span>
+            </div>`;
+        }
+    }
+
+    function jumpDate(val) { if(val) { currentViewDate = new Date(val); renderDaily(); } }
+    function changeMonth(n) { calendarMonth += n; if(calendarMonth<0){calendarMonth=11;calendarYear--;} if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar(); }
+    function moveDate(n) { currentViewDate.setDate(currentViewDate.getDate()+n); renderDaily(); }
+
+    setInterval(() => {
+        const now = new Date();
+        document.getElementById('clock').innerText = now.toLocaleTimeString('th-TH');
+        const h = now.getHours();
+        const isBad = (h >= 9 && h < 11);
+        document.getElementById('status-display').innerHTML = isBad ? `<span class="status-tag" style="background:var(--bad)">⚠️ ช่วงเวลาชงส่วนตัว (ยามปะทะ)</span>` : `<span class="status-tag" style="background:var(--heng)">✅ ช่วงเวลามงคล</span>`;
+    }, 1000);
+
+    renderDaily();
+</script>
+</body>
+</html>
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Bazi Focus">
