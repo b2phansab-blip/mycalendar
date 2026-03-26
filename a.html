@@ -346,7 +346,6 @@
         document.getElementById(tabId).classList.add('active');
         el.classList.add('active');
 
-        // ป้องกันการ Reset วันที่หากกดปุ่ม ข้อมูลดวง หรือ ถนน 10 ปี
         if(resetToToday && tabId !== 'profile-tab' && tabId !== 'luck-tab') {
             const now = new Date();
             if(tabId === 'daily-tab') { currentViewDate = now; } 
@@ -407,7 +406,7 @@
         alertBox.style.display = 'block';
         if (calendarMonth === 0) { 
             alertBox.className = 'alert-box alert-danger'; 
-            alertBox.innerHTML = "🔴 <b>เดือนฉลู (ชงปีเกิด 100%):</b><br>ระวังสุขภาพและอุบัติเหตุ (ช่วงมกราคม - ต้นกุมภาพันธ์)";
+            alertBox.innerHTML = "🔴 <b>เดือนฉลู (ชงปีเกิด):</b><br>ระวังสุขภาพและอุบัติเหตุ (ช่วงมกราคม - ต้นกุมภาพันธ์)";
         } else if (calendarMonth === 9) { 
             alertBox.className = 'alert-box alert-danger'; 
             alertBox.innerHTML = "🔴 <b>เดือนจอ (ชงคลังมะโรง):</b><br>ระวังเรื่องเงิน การงาน และบริวาร (ช่วงตุลาคม - ต้นพฤศจิกายน)";
@@ -490,9 +489,24 @@
         const now = new Date();
         document.getElementById('clock').innerText = now.toLocaleTimeString('th-TH');
         const h = now.getHours();
-        // ยามชงของคุณคือ 03:00-04:59 (ขาล) และ 19:00-20:59 (จอ)
-        const isBad = (h >= 3 && h < 5) || (h >= 19 && h < 21);
-        document.getElementById('status-display').innerHTML = isBad ? `<span class="status-tag" style="background:var(--bad)">⚠️ ช่วงเวลาชงส่วนตัว</span>` : `<span class="status-tag" style="background:var(--heng)">✅ ช่วงเวลามงคล</span>`;
+        
+        // 1. เช็คเวลาชงส่วนตัว (ยามขาล 03:00-04:59 และ ยามจอ 19:00-20:59)
+        const isPersonalBad = (h >= 3 && h < 5) || (h >= 19 && h < 21);
+        
+        // 2. เช็คเวลาชงประจำวัน (ดึงจาก Pattern ของวันนี้)
+        const p = getPattern(now);
+        const dailyBadStart = parseInt(p.time.split(':')[0]); 
+        const isDailyBad = (h === dailyBadStart || h === dailyBadStart + 1); // ควบ 2 ชั่วโมงของยาม
+        
+        // 3. กำหนดป้ายสถานะ
+        let statusHtml = `<span class="status-tag" style="background:var(--heng)">✅ ช่วงเวลามงคล</span>`;
+        if (isPersonalBad) {
+            statusHtml = `<span class="status-tag" style="background:var(--bad)">⚠️ ชงส่วนตัว (ระวังพิเศษ)</span>`;
+        } else if (isDailyBad) {
+            statusHtml = `<span class="status-tag" style="background:var(--mid)">⚠️ เวลาชงประจำวัน</span>`;
+        }
+        
+        document.getElementById('status-display').innerHTML = statusHtml;
     }, 1000);
 
     // เปิดมาหน้าแรกให้ไปที่ Tab รายวัน
