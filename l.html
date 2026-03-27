@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Bazi Focus Pro - Friend 4</title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#006064">
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary: #006064; --heng: #2e7d32; --mid: #f57f17; --bad: #c62828; --bg: #f0f2f5; }
+        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg); margin: 0; padding-bottom: 90px; user-select: none; overscroll-behavior-y: contain; }
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; padding-top: env(safe-area-inset-top, 20px); }
+        .top-selector { background: white; padding: 12px; border-radius: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 12px; display: flex; align-items: center; justify-content: center; gap: 10px; border: 1px solid #eee; }
+        input[type="date"] { padding: 10px; border-radius: 12px; border: 1px solid #ddd; font-family: 'Sarabun'; font-size: 1em; color: var(--primary); outline: none; background: #fafafa; width: 160px; }
+        .status-panel { text-align: center; margin-bottom: 15px; background: white; padding: 15px; border-radius: 20px; border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        #clock { font-size: 1.8em; font-weight: 600; color: var(--primary); letter-spacing: 1px; }
+        .status-tag { padding: 4px 14px; border-radius: 20px; color: white; display: inline-block; margin-top: 6px; font-size: 0.8em; font-weight: 600; }
+        .tab-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.98); display: flex; box-shadow: 0 -2px 15px rgba(0,0,0,0.08); z-index: 1000; padding-bottom: env(safe-area-inset-bottom, 10px); backdrop-filter: blur(10px); }
+        .tab-item { flex: 1; padding: 12px 0; text-align: center; cursor: pointer; color: #aaa; font-weight: 600; font-size: 0.75em; position: relative; }
+        .tab-item.active { color: var(--primary); }
+        .tab-item.active::after { content: ''; position: absolute; top: 0; left: 20%; right: 20%; height: 3px; background: var(--primary); border-radius: 0 0 5px 5px; }
+        .view-content { display: none; }
+        .view-content.active { display: block; animation: fadeIn 0.3s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .alert-box { padding: 15px; border-radius: 20px; margin-bottom: 15px; font-size: 0.85em; display: none; border-left: 6px solid; line-height: 1.6; }
+        .alert-danger { background: #fff1f0; color: #cf1322; border-color: #ff4d4f; }
+        .alert-warning { background: #fffbe6; color: #d48806; border-color: #ffc53d; }
+        .alert-success { background: #e0f7fa; color: #006064; border-color: #80deea; }
+        .alert-box h4 { margin: 0 0 5px 0; font-size: 1.1em; }
+        .card { background: white; border-radius: 30px; box-shadow: 0 12px 35px rgba(0,0,0,0.08); overflow: hidden; border: 1px solid #f0f0f0; }
+        .card-header { padding: 25px 20px; color: white; text-align: center; position: relative; }
+        .card-header.heng { background: linear-gradient(135deg, #00838f, #26c6da); }
+        .card-header.mid { background: linear-gradient(135deg, #f57f17, #ffca28); }
+        .card-header.bad { background: linear-gradient(135deg, #c62828, #ef5350); }
+        .card-header.profile { background: linear-gradient(135deg, #006064, #0097a7); }
+        .card-header.luck { background: linear-gradient(135deg, #455a64, #78909c); }
+        .card-header h2 { margin: 0; font-size: 1.6em; }
+        .card-header p { margin: 10px 0 0; font-size: 1em; opacity: 0.95; }
+        .zodiac-badge { background: rgba(255,255,255,0.25); padding: 3px 12px; border-radius: 15px; font-size: 0.85em; display: inline-block; margin-top: 5px; font-weight: 600; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .card-content { padding: 25px; }
+        .section { margin-bottom: 18px; border-bottom: 1px solid #f8f8f8; padding-bottom: 12px; }
+        .label { font-size: 0.75em; color: #bbb; display: block; margin-bottom: 5px; font-weight: 600; text-transform: uppercase; }
+        .val { font-size: 1.05em; color: #333; line-height: 1.6; }
+        .good-val { color: var(--heng); font-weight: 600; }
+        .bad-val { color: var(--bad); font-weight: 600; }
+        .item-val { color: var(--primary); font-weight: 600; }
+        .calendar-table { width: 100%; background: white; border-radius: 20px; overflow: hidden; border-collapse: collapse; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .calendar-table th { padding: 12px; background: #fafafa; font-size: 0.75em; color: #999; border-bottom: 1px solid #eee; }
+        .calendar-table td { width: 14.28%; height: 85px; border: 0.5px solid #f5f5f5; vertical-align: top; padding: 6px; cursor: pointer; position: relative; }
+        .cal-date { font-size: 0.85em; font-weight: 600; color: #444; }
+        .cal-type { font-size: 0.6em; position: absolute; bottom: 8px; left: 4px; right: 4px; text-align: center; padding: 3px; color: white; border-radius: 6px; font-weight: 600; }
+        .cal-type.heng { background: var(--heng); }
+        .cal-type.mid { background: var(--mid); }
+        .cal-type.bad { background: var(--bad); }
+        .cal-today { background: #e0f7fa; border: 2.5px solid var(--primary) !important; z-index: 5; }
+        .list-item { background: white; padding: 16px; border-radius: 18px; margin-bottom: 10px; display: flex; justify-content: space-between; border-left: 7px solid #ccc; box-shadow: 0 2px 6px rgba(0,0,0,0.02); align-items: center; }
+        .list-item.is-today { border: 2px solid var(--primary); transform: scale(1.02); box-shadow: 0 5px 15px rgba(0,96,100,0.1); }
+        .list-item.heng { border-left-color: var(--heng); }
+        .list-item.mid { border-left-color: var(--mid); }
+        .list-item.bad { border-left-color: var(--bad); }
+        .list-zodiac { font-size: 0.8em; color: #777; background: #f0f0f0; padding: 2px 8px; border-radius: 10px; margin-left: 8px; }
+        button.nav-btn { border: none; background: #e0f7fa; color: var(--primary); padding: 15px; border-radius: 18px; font-weight: 600; font-family: 'Sarabun'; flex: 1; font-size: 1em; }
+        button.nav-btn.primary { background: var(--primary); color: white; }
+        .timeline { position: relative; padding-left: 20px; border-left: 3px solid #eee; margin-top: 15px; }
+        .timeline-item { position: relative; margin-bottom: 25px; padding-left: 15px; }
+        .timeline-item::before { content: ''; position: absolute; left: -25px; top: 0; width: 12px; height: 12px; border-radius: 50%; background: #ccc; border: 3px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .timeline-item.active::before { background: var(--primary); border-color: #e0f7fa; transform: scale(1.3); }
+        .timeline-item.past { opacity: 0.6; }
+        .timeline-year { font-size: 0.8em; color: #777; font-weight: 600; margin-bottom: 3px; }
+        .timeline-title { font-size: 1.05em; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .timeline-desc { font-size: 0.85em; color: #555; line-height: 1.5; background: #f9f9f9; padding: 10px; border-radius: 12px; }
+        .timeline-item.active .timeline-desc { background: #e0f7fa; color: var(--primary); border-left: 4px solid var(--primary); }
+    </style>
+</head>
+<body>
+<div class="container">
+    
+    <div id="profile-tab" class="view-content">
+        <h3 style="text-align:center; color: var(--primary); margin-bottom: 15px;">🔮 พื้นฐานดวง 4 เสาหลัก (Bazi)</h3>
+        <div class="card" style="margin-bottom: 15px;">
+            <div class="card-header profile">
+                <h2 style="font-size: 1.4em;">ดิถีธาตุและโครงสร้างดวง</h2>
+                <p>26 ตุลาคม 1959 | 09:30 น.</p>
+            </div>
+            <div class="card-content">
+                <div class="section">
+                    <span class="label">ดิถีธาตุ (Day Master)</span>
+                    <div class="val" style="color: #00838f; font-weight: bold;">💧 ธาตุน้ำมหาสมุทร (壬 - เหริน)</div>
+                    <div style="font-size: 0.85em; color: #666; margin-top: 4px;">ลักษณะนิสัย: ฉลาดล้ำลึก ไหลเวียนไม่หยุดนิ่ง ปรับตัวเข้ากับสถานการณ์ได้ดีเยี่ยม มีพลังขับเคลื่อนและเป็นผู้ใหญ่ที่น่าเคารพ</div>
+                </div>
+                <div class="section">
+                    <span class="label">ดวงชะตา 4 เสาหลัก (Four Pillars)</span>
+                    <div class="val" style="font-size: 0.9em; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 5px;">
+                        <div style="background: #f5f5f5; padding: 8px; border-radius: 8px;"><b>ปี:</b> 己亥 (ดิน/กุน)</div>
+                        <div style="background: #f5f5f5; padding: 8px; border-radius: 8px;"><b>เดือน:</b> 甲戌 (ไม้/จอ)</div>
+                        <div style="background: #e0f7fa; padding: 8px; border-radius: 8px; border: 1px solid #80deea;"><b>วัน:</b> 壬午 (น้ำ/มะเมีย)</div>
+                        <div style="background: #f5f5f5; padding: 8px; border-radius: 8px;"><b>เวลา:</b> 乙巳 (ไม้/มะเส็ง)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card" style="margin-bottom: 15px;">
+            <div class="card-header heng" style="padding: 15px 20px;">
+                <h2 style="font-size: 1.2em; text-align: left; margin: 0;">✨ ธาตุให้โชค (Yong Shen)</h2>
+            </div>
+            <div class="card-content">
+                <div class="section">
+                    <span class="label">ธาตุที่ช่วยปรับสมดุลและให้โชคลาภ</span>
+                    <div class="val good-val">ธาตุทอง 🪙 และ ธาตุน้ำ 💧</div>
+                    <div style="font-size: 0.85em; color: #666; margin-top: 4px;">ดวงชะตามีธาตุไฟและดินล้อมรอบ ทำให้น้ำระเหยและอ่อนกำลัง จึงต้องการ "ธาตุทอง" เพื่อก่อเกิดแหล่งน้ำ และ "ธาตุน้ำ" เพื่อเสริมความหนักแน่นมั่นคงให้ชีวิต</div>
+                </div>
+                <div class="section"><span class="label">สีมงคลประจำตัว</span><div class="val good-val">ขาว, เงิน, ทอง (ทอง) / ฟ้า, น้ำเงิน, ดำ (น้ำ)</div></div>
+                <div class="section"><span class="label">ทิศมงคล (หันหน้าทำงาน/หัวเตียง)</span><div class="val good-val">ทิศตะวันตก (ทอง), ทิศเหนือ (น้ำ)</div></div>
+                <div class="section" style="border-bottom:none; margin-bottom:0;"><span class="label">เลขโดดมงคลประจำตัว</span><div class="val good-val">4, 9 (ทอง) และ 1, 6 (น้ำ)</div></div>
+            </div>
+        </div>
+        <div class="card" style="margin-bottom: 15px;">
+            <div class="card-header bad" style="padding: 15px 20px;">
+                <h2 style="font-size: 1.2em; text-align: left; margin: 0;">⚠️ จุดปะทะที่ต้องระมัดระวัง</h2>
+            </div>
+            <div class="card-content">
+                <div class="section"><span class="label">นักษัตรที่ปะทะดวง (ชง)</span><div class="val bad-val">มะเส็ง(ชงปี), มะโรง(ชงเดือน), ชวด(ชงวัน), กุน(ชงยาม)</div></div>
+                <div class="section"><span class="label">ธาตุที่ควรหลีกเลี่ยง (ชั่วคราว)</span><div class="val bad-val">ธาตุไฟ 🔥 (ทำให้น้ำแห้ง) และ ธาตุดิน ⛰️ (ทำให้น้ำขุ่น)</div></div>
+                <div class="section" style="border-bottom:none; margin-bottom:0;"><span class="label">เวลาชงส่วนตัว (ยามปะทะ)</span><div class="val bad-val">21:00-22:59 น. และ 23:00-00:59 น.</div></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="luck-tab" class="view-content">
+        <h3 style="text-align:center; color: var(--primary); margin-bottom: 15px;">🛣️ ถนนชีวิต 100 ปี (Da Yun)</h3>
+        <div class="alert-box alert-success" style="display:block;">
+            <h4>ถนนชีวิตคืออะไร?</h4>
+            การผูกดวง 4 เสาหลักคือ <b>"รถยนต์"</b> ส่วนถนนชีวิตคือ <b>"สภาพเส้นทาง"</b> ที่ต้องขับผ่านในแต่ละช่วงวัย
+        </div>
+        <div class="card" style="margin-bottom: 15px;">
+            <div class="card-header luck" style="padding: 20px;">
+                <h2 style="font-size: 1.4em;">วัฏจักรดวงชะตาของคุณ</h2>
+                <p>เปลี่ยนรอบทุกๆ อายุลงท้ายด้วยเลข 6</p>
+            </div>
+            <div class="card-content" style="padding: 15px 20px;">
+                <div class="timeline">
+                    <div class="timeline-item past"><div class="timeline-year">อายุ 16 - 25 ปี</div><div class="timeline-title">ถนน 壬申 (น้ำ / วอก)</div><div class="timeline-desc">ธาตุทองและน้ำเสริมดวง เป็นวัยรุ่นที่โดดเด่น มีการพัฒนาสติปัญญาและการศึกษาที่ดีเยี่ยม</div></div>
+                    <div class="timeline-item past"><div class="timeline-year">อายุ 26 - 35 ปี</div><div class="timeline-title">ถนน 辛未 (ทอง / มะแม)</div><div class="timeline-desc">มีผู้ใหญ่อุปถัมภ์ แต่ฐานล่างเป็นดินมะแม ทำให้ต้องรับผิดชอบสูง สร้างตัวด้วยความพยายาม</div></div>
+                    <div class="timeline-item past"><div class="timeline-year">อายุ 36 - 45 ปี</div><div class="timeline-title">ถนน 庚午 (ทอง / มะเมีย)</div><div class="timeline-desc">ราศีบนเป็นทองให้โชค แต่ราศีล่างเป็นไฟทับวันเกิด มีโชคลาภเข้ามาแต่ก็มีการใช้จ่ายหมุนเวียนสูง</div></div>
+                    <div class="timeline-item past"><div class="timeline-year">อายุ 46 - 55 ปี</div><div class="timeline-title">ถนน 己巳 (ดิน / มะเส็ง)</div><div class="timeline-desc">เป็นช่วงปะทะ! (มะเส็งชงปีเกิดกุน) มีการเปลี่ยนแปลงครั้งใหญ่ในชีวิต หรือย้ายถิ่นฐาน/ที่ทำงาน</div></div>
+                    <div class="timeline-item past"><div class="timeline-year">อายุ 56 - 65 ปี</div><div class="timeline-title">ถนน 戊辰 (ดิน / มะโรง)</div><div class="timeline-desc">มะโรงชงเดือนเกิด (จอ) เป็นช่วงรับมือกับความท้าทายเรื่องงานและคนรอบข้าง ต้องใช้สติและความนิ่ง</div></div>
+                    <div class="timeline-item active"><div class="timeline-year">🔥 อายุ 66 - 75 ปี (ปัจจุบัน)</div><div class="timeline-title">ถนน 丁卯 (ไฟ / เถาะ)</div><div class="timeline-desc"><b>พลังงาน: 📊 วัยพักผ่อนและดูแลสมาธิ</b><br>ธาตุไฟและไม้เข้ามาดูดพลังงานน้ำ เป็นช่วงวัยที่ควรละทิ้งภาระหนักๆ ปล่อยวางเรื่องเครียด ไม่ควรสุ่มเสี่ยงทางการเงิน เน้นใช้ชีวิตอย่างสงบ และดูแลสุขภาพร่างกายเป็นหลัก</div></div>
+                    <div class="timeline-item"><div class="timeline-year">อายุ 76 - 85 ปี</div><div class="timeline-title">ถนน 丙寅 (ไฟ / ขาล)</div><div class="timeline-desc"><b>พลังงาน: ⚠️ รักษาสุขภาพอย่างใกล้ชิด</b><br>ไฟและไม้ยังคงคุกรุ่น ระมัดระวังเรื่องโรคหัวใจ ความดัน หรือสายตา เป็นบั้นปลายที่ควรแวดล้อมด้วยลูกหลานคอยดูแล</div></div>
+                    <div class="timeline-item"><div class="timeline-year">อายุ 86 - 95 ปี</div><div class="timeline-title">ถนน 乙丑 (ไม้ / ฉลู)</div><div class="timeline-desc"><b>พลังงาน: 📊 สงบสุข</b><br>พลังงานแห่งความอึกทึกผ่านพ้นไป เข้าสู่ช่วงเวลาแห่งความสงบร่มเย็น จิตใจปล่อยวางได้ 100%</div></div>
+                    <div class="timeline-item"><div class="timeline-year">อายุ 96 - 105 ปี</div><div class="timeline-title">ถนน 甲子 (ไม้ / ชวด)</div><div class="timeline-desc"><b>พลังงาน: 🌟 ร่มโพธิ์ร่มไทร</b><br>ราศีล่างเป็นชวด (ธาตุน้ำให้โชค) บั้นปลายชีวิตที่เปี่ยมด้วยบารมี ได้รับความรักและการดูแลอย่างดีเยี่ยมจากครอบครัว</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="daily-tab" class="view-content active">
+        <div class="top-selector"><span style="font-size: 0.85em; font-weight: 600; color: #555;">เลือกล่วงหน้า:</span><input type="date" id="main-picker" onchange="jumpDate(this.value)"></div>
+        <div class="status-panel"><div id="clock">00:00:00</div><div id="status-display"></div></div>
+        <div id="daily-card-container"></div>
+        <div style="display:flex; gap:12px; margin-top:20px;"><button class="nav-btn" onclick="moveDate(-1)">เมื่อวาน</button><button class="nav-btn primary" onclick="moveDate(1)">พรุ่งนี้</button></div>
+    </div>
+
+    <div id="monthly-tab" class="view-content">
+        <div id="month-alert" class="alert-box"></div>
+        <div class="cal-header" style="display:flex; justify-content:space-between; align-items:center; background:white; padding:12px; border-radius:15px; margin-bottom:12px; border:1px solid #eee;">
+            <button onclick="changeMonth(-1)" style="border:none; background:none; font-size:1.2em;">◀</button>
+            <h3 id="cal-month-title" style="margin:0; font-size: 1.1em; color: var(--primary); text-align: center;">เดือน...</h3>
+            <button onclick="changeMonth(1)" style="border:none; background:none; font-size:1.2em;">▶</button>
+        </div>
+        <table class="calendar-table" id="calendar-body"><thead><tr><th>อา</th><th>จ</th><th>อ</th><th>พ</th><th>พฤ</th><th>ศ</th><th>ส</th></tr></thead><tbody></tbody></table>
+    </div>
+
+    <div id="yearly-tab" class="view-content">
+        <h3 style="text-align:center; color: var(--primary); margin-bottom: 15px;">สรุปดวง 365 วัน</h3>
+        <div id="year-alert-banner" class="alert-box"></div>
+        <div id="yearly-list"></div>
+    </div>
+</div>
+
+<nav class="tab-bar">
+    <div class="tab-item" onclick="switchTab('profile-tab', this, true)">พื้นฐาน</div>
+    <div class="tab-item" onclick="switchTab('luck-tab', this, true)">ถนน 10 ปี</div>
+    <div class="tab-item active" onclick="switchTab('daily-tab', this, true)">รายวัน</div>
+    <div class="tab-item" onclick="switchTab('monthly-tab', this, true)">เดือน</div>
+    <div class="tab-item" onclick="switchTab('yearly-tab', this, true)">รายปี</div>
+</nav>
+
+<script>
+    let currentViewDate = new Date(); let calendarMonth = currentViewDate.getMonth(); let calendarYear = currentViewDate.getFullYear();
+    const monthZodiacNames = ['ฉลู', 'ขาล', 'เถาะ', 'มะโรง', 'มะเส็ง', 'มะเมีย', 'มะแม', 'วอก', 'ระกา', 'จอ', 'กุน', 'ชวด'];
+    const dayZodiacNames = ['วอก', 'ระกา', 'จอ', 'กุน', 'ชวด', 'ฉลู', 'ขาล', 'เถาะ', 'มะโรง', 'มะเส็ง', 'มะเมีย', 'มะแม'];
+
+    // ธาตุให้โชคคือ ทอง และ น้ำ (วันชวด/กุน/วอก/ระกา จะให้ผลดี แต่ต้องเช็คเรื่องการปะทะ)
+    const userBaziProfile = {
+        'วอก': { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ขาว, เงิน, ทอง', badColor: 'แดง, ส้ม', act: 'วันทรัพยากร (ธาตุทอง): เสริมกำลังสติปัญญา เหมาะกับการตัดสินใจเรื่องสำคัญ การจัดการทรัพย์สิน', num: '4, 9', badNum: '2, 7', dir: 'ทิศตะวันตก', badDir: 'ทิศใต้', time: '15:00 - 16:59', item: 'นาฬิกาโลหะ หรือ แว่นตากรอบเงิน/ทอง (ดึงดูดพลังทอง)' },
+        'ระกา': { type: 'heng', title: '🌟 วันดวงเฮง', color: 'ขาว, ดำ, น้ำเงิน', badColor: 'แดง, เขียว', act: 'วันสนับสนุน (ธาตุทอง): พลังแห่งความมั่นคง มีเกณฑ์ได้รับความช่วยเหลือจากคนรอบข้าง', num: '1, 6, 4, 9', badNum: '2, 7', dir: 'ทิศตะวันตก', badDir: 'ทิศตะวันออก', time: '17:00 - 18:59', item: 'เครื่องประดับเงิน หรือ เสื้อผ้าโทนสีสว่าง' },
+        'ชวด': { type: 'bad', title: '🚫 วันปะทะ (ชง)', color: 'เขียว, ไม้', badColor: 'ฟ้า, ดำ', act: 'วันชงวันเกิด (ธาตุน้ำ): ระวังปัญหาเรื่องสุขภาพ อารมณ์แปรปรวน หรือความขัดแย้งกับคนสนิท', num: '3, 4 (แก้เคล็ด)', badNum: '1, 6', dir: 'ทิศตะวันออก', badDir: 'ทิศใต้', time: '23:00 - 00:59', item: 'พกเครื่องประดับไม้ (เพื่อใช้น้ำก่อเกิดไม้ ลดแรงปะทะไฟ)' },
+        'กุน': { type: 'bad', title: '🚫 วันปะทะ (ชง)', color: 'เขียว, ไม้', badColor: 'ฟ้า, ขาว', act: 'วันชงยามเกิด (ธาตุน้ำ): ระวังปัญหาจุกจิกจากบริวาร หรือลูกหลาน ไม่ควรตัดสินใจเรื่องเงิน', num: '3, 4 (แก้เคล็ด)', badNum: '1, 6', dir: 'ทิศตะวันออก', badDir: 'ทิศตะวันตก', time: '21:00 - 22:59', item: 'ต้นไม้เล็กๆ หรือ ของใช้สีเขียว' },
+        'มะโรง': { type: 'bad', title: '🚫 วันปะทะ (ชง)', color: 'ขาว, เงิน', badColor: 'แดง, เหลือง', act: 'วันชงเดือนเกิด (ธาตุดิน): ระวังอุปสรรคการงาน งานเอกสาร หรือความล่าช้าในสิ่งที่คาดหวัง', num: '4, 9 (แก้เคล็ด)', badNum: '5, 0', dir: 'ทิศตะวันตก', badDir: 'ทิศตะวันออกเฉียงใต้', time: '07:00 - 08:59', item: 'พกพวงกุญแจโลหะทรงกลม (ใช้ทองถ่ายเทพลังดิน)' },
+        'มะเส็ง': { type: 'bad', title: '🚫 วันปะทะ (ชง)', color: 'ดำ, น้ำเงิน', badColor: 'แดง, ส้ม', act: 'วันชงปีเกิด (ธาตุไฟ): ระวังอุบัติเหตุจากการเดินทาง หรือปัญหากับผู้ใหญ่รอบตัว', num: '1, 6 (แก้เคล็ด)', badNum: '2, 7', dir: 'ทิศเหนือ', badDir: 'ทิศตะวันตกเฉียงเหนือ', time: '09:00 - 10:59', item: 'ดื่มน้ำสะอาดบ่อยๆ หรือ พกของใช้สีดำ/น้ำเงิน (ดับไฟ)' },
+        'มะเมีย': { type: 'mid', title: '📊 วันทับวันเกิด', color: 'ฟ้า, น้ำเงิน', badColor: 'แดง, ชมพู', act: 'วันธาตุไฟ: จิตใจอาจจะร้อนรุ่มง่าย ควรเน้นการทำสมาธิ หรือผ่อนคลายกับสิ่งที่ชอบ', num: '1, 6', badNum: '2, 7', dir: 'ทิศเหนือ', badDir: 'ทิศใต้', time: '11:00 - 12:59', item: 'แว่นตากรองแสง หรือ สเปรย์น้ำแร่เย็นๆ' },
+        'ฉลู': { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ขาว, เงิน', badColor: 'เหลือง, แดง', act: 'วันธาตุดิน: ทำงานตามรูทีนปกติ ไม่เร่งรีบ งดการออกตัวหรือค้ำประกันใคร', num: '4, 9', badNum: '5, 0', dir: 'ทิศตะวันตก', badDir: 'ทิศตะวันออกเฉียงเหนือ', time: '01:00 - 02:59', item: 'นาฬิกาข้อมือโลหะ (ถ่ายเทความอึดอัด)' },
+        'ขาล': { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, ดำ', badColor: 'เขียว, แดง', act: 'วันธาตุไม้: มีความคิดสร้างสรรค์ แต่อาจจะรู้สึกเหนื่อยล้า พักผ่อนให้เพียงพอ', num: '1, 6', badNum: '3, 4', dir: 'ทิศเหนือ', badDir: 'ทิศตะวันตก', time: '03:00 - 04:59', item: 'หูฟังตัดเสียง หรือ เครื่องดื่มเย็นๆ' },
+        'เถาะ': { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ฟ้า, น้ำเงิน', badColor: 'เขียว, แดง', act: 'วันธาตุไม้: วันแห่งการดูแลจัดการเรื่องส่วนตัว ไม่เหมาะกับการเจรจาธุรกิจใหญ่', num: '1, 6', badNum: '3, 4', dir: 'ทิศเหนือ', badDir: 'ทิศตะวันตก', time: '05:00 - 06:59', item: 'สมุดแพลนเนอร์สีน้ำเงิน' },
+        'มะแม': { type: 'mid', title: '📊 ดวงปานกลาง', color: 'ขาว, ทอง', badColor: 'แดง, เหลือง', act: 'วันธาตุดิน: อาจรู้สึกกดดันจากความคาดหวังรอบตัว ค่อยๆ แก้ปัญหาทีละเปราะ', num: '4, 9', badNum: '5, 0', dir: 'ทิศตะวันตก', badDir: 'ทิศใต้', time: '13:00 - 14:59', item: 'เครื่องประดับคริสตัล หรือ แหวนเงิน' },
+        'จอ': { type: 'mid', title: '📊 วันทับเดือนเกิด', color: 'ขาว, เงิน', badColor: 'แดง, ส้ม', act: 'วันธาตุดิน: มีเรื่องต้องรับผิดชอบเยอะ ระวังการสื่อสารผิดพลาดในเรื่องงาน', num: '4, 9', badNum: '5, 0', dir: 'ทิศตะวันตก', badDir: 'ทิศตะวันออกเฉียงใต้', time: '19:00 - 20:59', item: 'ปากกาสีเงิน หรือ แฟ้มเอกสารสีเทา' }
+    };
+
+    function getDayZodiac(date) { const start = new Date(2026, 2, 23); const diff = Math.floor((Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) - Date.UTC(start.getFullYear(), start.getMonth(), start.getDate())) / 86400000); let idx = diff % 12; return dayZodiacNames[idx < 0 ? idx + 12 : idx]; }
+    const lunarNewYears = { 2025: new Date(2025,0,29).getTime(), 2026: new Date(2026,1,17).getTime(), 2027: new Date(2027,1,6).getTime(), 2028: new Date(2028,0,26).getTime(), 2029: new Date(2029,1,13).getTime(), 2030: new Date(2030,1,3).getTime() };
+    function getLunarYear(date) { let year = date.getFullYear(); let targetLNY = lunarNewYears[year]; if (!targetLNY) return (date.getMonth() === 0) ? year - 1 : year; if (date.getTime() < targetLNY) return year - 1; return year; }
+    
+    function getYearZodiac(lunarYear) {
+        const zodiacs = [
+            { name: 'ชวด', status: 'danger', text: 'ปีชงวันเกิด (ระวังสภาพจิตใจ สุขภาพ และเรื่องส่วนตัว)' },
+            { name: 'ฉลู', status: 'normal', text: 'ปีธาตุดิน (อึดอัดใจ ควรก้าวเดินอย่างระมัดระวัง)' },
+            { name: 'ขาล', status: 'normal', text: 'ปีธาตุไม้ (มีความเหน็ดเหนื่อย ต้องอาศัยความอดทน)' },
+            { name: 'เถาะ', status: 'normal', text: 'ปีธาตุไม้ (ประคองตัวได้ดี)' },
+            { name: 'มะโรง', status: 'danger', text: 'ปีชงเดือนเกิด (ระวังปัญหาหน้าที่การงาน/เอกสาร/คดีความ)' },
+            { name: 'มะเส็ง', status: 'danger', text: 'ปีชงปีเกิด (ระวังอุบัติเหตุและปัญหากับผู้ใหญ่ การเปลี่ยนแปลงใหญ่)' },
+            { name: 'มะเมีย', status: 'warning', text: 'ปีทับวันเกิด (มีความร้อนรุ่ม ระวังอารมณ์)' },
+            { name: 'มะแม', status: 'normal', text: 'ปีธาตุดิน (มีความกดดันเล็กน้อย)' },
+            { name: 'วอก', status: 'good', text: 'ปีธาตุทอง (ปีทองคำ! ผู้ใหญ่อุปถัมภ์ ปลดล็อกความอึดอัด)' },
+            { name: 'ระกา', status: 'good', text: 'ปีธาตุทอง (มีความมั่นคง โชคลาภเข้ามาสนับสนุน)' },
+            { name: 'จอ', status: 'warning', text: 'ปีทับเดือนเกิด (ภาระหน้าที่ความรับผิดชอบสูง)' },
+            { name: 'กุน', status: 'danger', text: 'ปีชงยามเกิด (ระวังปัญหาเรื่องลูกหลาน บริวาร หรือเสียทรัพย์)' }
+        ];
+        return zodiacs[(lunarYear - 4) % 12];
+    }
+    function getPattern(date) { return userBaziProfile[getDayZodiac(date)]; }
+    function switchTab(tabId, el, resetToToday = false) {
+        document.querySelectorAll('.view-content').forEach(v => v.classList.remove('active')); document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active')); document.getElementById(tabId).classList.add('active'); el.classList.add('active');
+        if(resetToToday && tabId !== 'profile-tab' && tabId !== 'luck-tab') { const now = new Date(); if(tabId === 'daily-tab') { currentViewDate = now; } else if(tabId === 'monthly-tab') { calendarMonth = now.getMonth(); calendarYear = now.getFullYear(); } }
+        if(tabId === 'daily-tab') { renderDaily(); } else if(tabId === 'monthly-tab') { renderCalendar(); } else if(tabId === 'yearly-tab') { renderYearly(); if(resetToToday) { setTimeout(() => { const todayItem = document.querySelector('.list-item.is-today'); if(todayItem) todayItem.scrollIntoView({ behavior: 'smooth', block: 'center' }); }, 100); } }
+    }
+    function renderDaily() {
+        const p = getPattern(currentViewDate); const dZodiac = getDayZodiac(currentViewDate); const container = document.getElementById('daily-card-container'); const dStr = currentViewDate.toLocaleDateString('th-TH', {day:'numeric', month:'long', year:'numeric'});
+        container.innerHTML = `<div class="card"><div class="card-header ${p.type}"><h2>${p.title}</h2><p>${dStr}<br><span class="zodiac-badge">วัน${dZodiac}</span></p></div><div class="card-content"><div class="section"><span class="label">1. สีมงคล / สีชง</span><div class="val">มงคล: <span class="good-val">${p.color}</span> | ชง: <span class="bad-val">${p.badColor}</span></div></div><div class="section"><span class="label">2. พลังงานและกิจกรรมแนะนำ</span><div class="val">${p.act}</div></div><div class="section"><span class="label">3. เลขโดด / มงคล / ชง</span><div class="val">มงคล: <span class="good-val">${p.num}</span> | ชง: <span class="bad-val">${p.badNum}</span></div></div><div class="section"><span class="label">4. ทิศมงคล / ทิศชง</span><div class="val">มงคล: <span class="good-val">${p.dir}</span> | ชง: <span class="bad-val">${p.badDir}</span></div></div><div class="section"><span class="label">5. เวลาชง</span><div class="val">ประจำวัน: <span class="bad-val">${p.time} น.</span><br><small>ชงส่วนตัว: 21:00-22:59 และ 23:00-00:59 น.</small></div></div><div class="section" style="border-bottom:none; margin-bottom:0;"><span class="label">6. ไอเทมเสริมพลังธาตุประจำวัน</span><div class="val item-val">✨ ${p.item}</div></div></div></div>`;
+        document.getElementById('main-picker').value = currentViewDate.toISOString().split('T')[0];
+    }
+    function renderCalendar() {
+        const title = document.getElementById('cal-month-title'); const alertBox = document.getElementById('month-alert'); const body = document.querySelector('#calendar-body tbody'); const monthNames = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        let tempDate = new Date(calendarYear, calendarMonth, 15); let lunarY = getLunarYear(tempDate); const z = getYearZodiac(lunarY); let zIcon = z.status === 'good' ? '🟢' : (z.status === 'danger' ? '🔴' : (z.status === 'warning' ? '🟡' : '⚪'));
+        title.innerHTML = `เดือน${monthZodiacNames[calendarMonth]} (${monthNames[calendarMonth]}) ${calendarYear + 543}<br><span style="font-size:0.75em; font-weight:normal; color:#666;">ปี${z.name} : ${z.text.split('(')[0]} ${zIcon}</span>`;
+        alertBox.style.display = 'block';
+        if (calendarMonth === 11) { alertBox.className = 'alert-box alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนชวด (ชงวันเกิด):</b> ระวังปัญหาสุขภาพ/คนสนิท (ธ.ค.)"; } 
+        else if (calendarMonth === 10) { alertBox.className = 'alert-box alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนกุน (ชงยามเกิด):</b> ระวังปัญหาบริวาร (พ.ย.)"; } 
+        else if (calendarMonth === 3) { alertBox.className = 'alert-box alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนมะโรง (ชงเดือนเกิด):</b> ระวังอุปสรรคการงาน (เม.ย.)"; } 
+        else if (calendarMonth === 4) { alertBox.className = 'alert-box alert-danger'; alertBox.innerHTML = "🔴 <b>เดือนมะเส็ง (ชงปีเกิด):</b> ระวังอุบัติเหตุ/ผู้ใหญ่ (พ.ค.)"; } 
+        else { alertBox.style.display = 'none'; }
+        body.innerHTML = ''; let firstDay = new Date(calendarYear, calendarMonth, 1).getDay(); let days = new Date(calendarYear, calendarMonth + 1, 0).getDate(); let date = 1;
+        for (let i = 0; i < 6; i++) { let row = document.createElement('tr'); for (let j = 0; j < 7; j++) { let cell = document.createElement('td'); if (i === 0 && j < firstDay || date > days) { row.appendChild(cell); } else { let d = new Date(calendarYear, calendarMonth, date); let p = getPattern(d); cell.innerHTML = `<span class="cal-date">${date}</span><div class="cal-type ${p.type}">${p.title.split(' ')[1]}</div>`; if(d.toDateString() === new Date().toDateString()) cell.classList.add('cal-today'); cell.onclick = () => { currentViewDate = d; switchTab('daily-tab', document.querySelectorAll('.tab-item')[2], false); }; row.appendChild(cell); date++; } } body.appendChild(row); if (date > days) break; }
+    }
+    function renderYearly() {
+        const list = document.getElementById('yearly-list'); const banner = document.getElementById('year-alert-banner'); let lunarY = getLunarYear(currentViewDate); const z = getYearZodiac(lunarY);
+        banner.style.display = 'block'; if (z.status === 'good') { banner.className = 'alert-box alert-success'; } else if (z.status === 'danger') { banner.className = 'alert-box alert-danger'; } else { banner.className = 'alert-box alert-warning'; }
+        banner.innerHTML = `<h4>${z.status==='good'?'🟢':z.status==='danger'?'🔴':'🟡'} ภาพรวมนักษัตร ${lunarY} (ปี${z.name})</h4><strong>${z.text}</strong>`; list.innerHTML = ''; const todayStr = new Date().toDateString();
+        for(let i = 0; i < 365; i++) { let d = new Date(currentViewDate.getFullYear(), currentViewDate.getMonth(), currentViewDate.getDate() + i); let p = getPattern(d); let dZodiac = getDayZodiac(d); let isToday = d.toDateString() === todayStr; list.innerHTML += `<div class="list-item ${p.type} ${isToday?'is-today':''}" onclick="currentViewDate=new Date(${d.getTime()}); switchTab('daily-tab', document.querySelectorAll('.tab-item')[2], false)"><div><strong>${d.getDate()} ${d.toLocaleDateString('th-TH',{month:'short'})}</strong> <span class="list-zodiac">วัน${dZodiac}</span></div><span>${p.title.split(' ')[1]}</span></div>`; }
+    }
+    function jumpDate(val) { if(val) { currentViewDate = new Date(val); renderDaily(); } } function changeMonth(n) { calendarMonth += n; if(calendarMonth<0){calendarMonth=11;calendarYear--;} if(calendarMonth>11){calendarMonth=0;calendarYear++;} renderCalendar(); } function moveDate(n) { currentViewDate.setDate(currentViewDate.getDate()+n); renderDaily(); }
+    setInterval(() => { 
+        const now = new Date(); document.getElementById('clock').innerText = now.toLocaleTimeString('th-TH'); const h = now.getHours(); 
+        const isPersonalBad = (h >= 21 || h < 1); // ยามกุน (21-23) และ ยามชวด (23-01)
+        const p = getPattern(now); const dailyBadStart = parseInt(p.time.split(':')[0]); const isDailyBad = (h === dailyBadStart || h === dailyBadStart + 1);
+        let statusHtml = `<span class="status-tag" style="background:var(--heng)">✅ ช่วงเวลามงคล</span>`;
+        if (isPersonalBad) { statusHtml = `<span class="status-tag" style="background:var(--bad)">⚠️ ชงส่วนตัว (ระวังพิเศษ)</span>`; } else if (isDailyBad) { statusHtml = `<span class="status-tag" style="background:var(--mid)">⚠️ เวลาชงประจำวัน</span>`; }
+        document.getElementById('status-display').innerHTML = statusHtml; 
+    }, 1000);
+    renderDaily();
+</script>
+</body>
+</html>
