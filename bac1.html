@@ -169,7 +169,6 @@
             return cols;
         }
 
-        // สำหรับคำนวณและแสดงผลถนนใหญ่ (รวม Tie)
         function parseBigRoadDisplay(inputStr) {
             let cols = [];
             let currentCol = [];
@@ -177,14 +176,13 @@
                 if (char === 'T') {
                     if (currentCol.length > 0) currentCol[currentCol.length - 1].ties++;
                     else if (cols.length > 0) cols[cols.length-1][cols[cols.length-1].length-1].ties++;
-                    else currentCol.push({ color: 'T', ties: 1 }); // เสมอเปิดขอน
+                    else currentCol.push({ color: 'T', ties: 1 });
                     continue;
                 }
-
                 if (currentCol.length === 0) {
                     currentCol.push({ color: char, ties: 0 });
                 } else if (currentCol[0].color === 'T') {
-                    currentCol[0].color = char; // แปลงเสมอเปิดขอนเป็นสี
+                    currentCol[0].color = char;
                 } else if (currentCol[0].color === char) {
                     currentCol.push({ color: char, ties: 0 });
                 } else {
@@ -196,7 +194,6 @@
             return cols;
         }
 
-        // ตรรกะคำนวณแบบไม่นับเสมอ
         function calculateBigRoadPure(history) {
             let cols = [];
             let currentCol = [];
@@ -256,7 +253,7 @@
         function getBetAdvice(pureHistArr) {
             let currentRoads = calculateAllRoadsPure(pureHistArr);
 
-            // แมลงสาบยังไม่เกิด
+            // รอแมลงสาบเกิดก่อนค่อยเริ่มให้สัญญาณแทง
             if (currentRoads.cp.length === 0) return { bet: null, reason: "รอแมลงสาบเกิด" };
 
             let brStreak = { color: currentRoads.br[currentRoads.br.length-1][0], len: currentRoads.br[currentRoads.br.length-1].length };
@@ -272,7 +269,6 @@
             let selected = p1 || p2 || p3 || p4;
             if (!selected) return { bet: null, reason: "ยังไม่มีตารางไหนถึง 2 เม็ด" };
 
-            // Simulate B and P
             let roadsB = calculateAllRoadsPure([...pureHistArr, 'B']);
             let roadsP = calculateAllRoadsPure([...pureHistArr, 'P']);
 
@@ -354,7 +350,6 @@
         }
 
         function analyze() {
-            // Update Text Display
             let displayDiv = document.getElementById('scoreDisplay');
             if(globalScore === "") {
                 displayDiv.innerHTML = "เริ่มกดปุ่มเพื่อบันทึกสกอร์...";
@@ -391,22 +386,20 @@
                     statusText = '⏸️ ข้าม'; statusClass = 'text-slate-400'; skips++;
                 }
 
-                // แสดงในตารางเริ่มเมื่อแมลงสาบเกิด (ประมาณตาที่ 7 เป็นต้นไป)
-                if(i >= 6) {
-                    tableHTML = `<tr class="border-b hover:bg-slate-50 transition">
-                        <td class="p-3 text-slate-500 text-center">${i+1}</td>
-                        <td class="p-3">${advice.priority ? `${advice.priority} (${formatColorText(advice.colorCode)})` : '<span class="text-slate-300">-</span>'}</td>
-                        <td class="p-3 text-center">${advice.bet ? formatBadge(advice.bet) : '-'}</td>
-                        <td class="p-3 text-center">${formatBadge(currentOutcome)}</td>
-                        <td class="p-3 ${statusClass}">${statusText}</td>
-                    </tr>` + tableHTML; // Prepend ให้ตาล่าสุดอยู่บน
-                }
+                // ปลดล็อค แสดงประวัติตั้งแต่ตาที่ 1 เลย
+                tableHTML = `<tr class="border-b hover:bg-slate-50 transition">
+                    <td class="p-3 text-slate-500 text-center">${i+1}</td>
+                    <td class="p-3">${advice.priority ? `${advice.priority} (${formatColorText(advice.colorCode)})` : '<span class="text-slate-300">-</span>'}</td>
+                    <td class="p-3 text-center">${advice.bet ? formatBadge(advice.bet) : '-'}</td>
+                    <td class="p-3 text-center">${formatBadge(currentOutcome)}</td>
+                    <td class="p-3 ${statusClass}">${statusText}</td>
+                </tr>` + tableHTML; 
                 
                 historyArr.push(currentOutcome);
                 if(currentOutcome !== 'T') pureHistory.push(currentOutcome);
             }
 
-            document.getElementById('historyTable').innerHTML = tableHTML || '<tr><td colspan="5" class="p-4 text-center text-slate-400">กรุณากดสถิติให้แมลงสาบเกิดก่อน</td></tr>';
+            document.getElementById('historyTable').innerHTML = tableHTML || '<tr><td colspan="5" class="p-4 text-center text-slate-400">ยังไม่มีประวัติการกด</td></tr>';
             document.getElementById('winCount').innerText = wins;
             document.getElementById('lossCount').innerText = losses;
             document.getElementById('totalHands').innerText = `รวม: ${globalScore.length} ตา`;
@@ -415,10 +408,8 @@
             let winRate = totalPlayed > 0 ? ((wins / totalPlayed) * 100).toFixed(2) : 0;
             document.getElementById('winRate').innerText = winRate + '%';
 
-            // Render UI Maps
             renderRoads(globalScore);
 
-            // Prediction for NEXT Bet
             let nextPureArr = globalScore.replace(/T/g, '').split('');
             let nextAdvice = getBetAdvice(nextPureArr);
             let nextBetDiv = document.getElementById('nextBetResult');
@@ -442,7 +433,6 @@
             }
         }
 
-        // Initialize empty state
         analyze();
     </script>
 </body>
