@@ -3,60 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Baccarat Priority AI</title>
+    <title>Baccarat Pro AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
         body { font-family: 'Kanit', sans-serif; }
+        
+        /* Custom Shapes for Roads */
+        .br-cell { position: relative; width: 24px; height: 24px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; background: white;}
+        .br-B { border-color: #ef4444; color: #ef4444; }
+        .br-P { border-color: #3b82f6; color: #3b82f6; }
+        .br-tie-line { position: absolute; width: 100%; height: 3px; background-color: #22c55e; transform: rotate(-45deg); }
+        
+        .beb-cell { width: 16px; height: 16px; border-radius: 50%; border: 2px solid; background: transparent; }
+        .beb-RED { border-color: #ef4444; }
+        .beb-BLUE { border-color: #3b82f6; }
+        
+        .sr-cell { width: 16px; height: 16px; border-radius: 50%; }
+        .sr-RED { background-color: #ef4444; }
+        .sr-BLUE { background-color: #3b82f6; }
+        
+        .cp-cell { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .cp-RED { color: #ef4444; }
+        .cp-BLUE { color: #3b82f6; }
+
+        .road-container { min-height: 100px; display: flex; gap: 4px; overflow-x: auto; padding: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
+        .road-col { display: flex; flex-direction: column; gap: 4px; }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+<body class="bg-slate-200 min-h-screen p-2 md:p-6 pb-20">
 
-    <div class="max-w-4xl mx-auto space-y-6">
+    <div class="max-w-5xl mx-auto space-y-4">
         
-        <div class="bg-white rounded-2xl shadow-sm p-6 text-center">
-            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">🎯 Baccarat Priority Predictor</h1>
-            <p class="text-slate-500 mt-2">สูตรลากเค้าไพ่ 2 เม็ด (BR > BEB > SR > CP)</p>
+        <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">🎯 Baccarat Priority Pro</h1>
             
-            <div class="mt-6">
-                <input type="text" id="scoreInput" 
-                    class="w-full text-center text-xl md:text-2xl p-4 border-2 border-slate-300 rounded-xl focus:border-blue-500 focus:outline-none uppercase tracking-[0.2em]"
-                    placeholder="กรอกสกอร์ B, P, T ติดกัน (เช่น bbbpbpppt)"
-                    oninput="this.value = this.value.replace(/[^bBpPtT]/g, ''); analyze();">
+            <div class="mt-4 bg-slate-100 p-3 rounded-lg border-2 border-dashed border-slate-300 min-h-[60px] flex items-center justify-center break-all text-lg tracking-widest font-mono font-bold text-slate-700" id="scoreDisplay">
+                เริ่มกดสกอร์เพื่อใช้งาน...
             </div>
-            
-            <div class="grid grid-cols-3 gap-4 mt-6">
-                <div class="bg-green-100 p-4 rounded-xl border border-green-200">
-                    <div class="text-green-600 font-semibold">ชนะ (Win)</div>
+
+            <div class="grid grid-cols-3 gap-2 md:gap-4 mt-4">
+                <button onclick="addScore('P')" class="bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(29,78,216)] active:shadow-[0_0px_0_rgb(29,78,216)] active:translate-y-1 transition-all text-xl md:text-2xl">
+                    P (น้ำเงิน)
+                </button>
+                <button onclick="addScore('T')" class="bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(21,128,61)] active:shadow-[0_0px_0_rgb(21,128,61)] active:translate-y-1 transition-all text-xl md:text-2xl">
+                    T (เสมอ)
+                </button>
+                <button onclick="addScore('B')" class="bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(185,28,28)] active:shadow-[0_0px_0_rgb(185,28,28)] active:translate-y-1 transition-all text-xl md:text-2xl">
+                    B (แดง)
+                </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <button onclick="undoScore()" class="bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 rounded-xl shadow text-lg flex items-center justify-center gap-2">
+                    <span>⬅️</span> Back (ลบล่าสุด)
+                </button>
+                <button onclick="clearScore()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow text-lg flex items-center justify-center gap-2">
+                    <span>🔄</span> Clear (เริ่มขอนใหม่)
+                </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3 mt-6">
+                <div class="bg-green-50 p-2 md:p-4 rounded-xl border border-green-200">
+                    <div class="text-green-600 font-semibold text-sm">ชนะ (Win)</div>
                     <div class="text-2xl font-bold text-green-700" id="winCount">0</div>
                 </div>
-                <div class="bg-red-100 p-4 rounded-xl border border-red-200">
-                    <div class="text-red-600 font-semibold">แพ้ (Loss)</div>
+                <div class="bg-red-50 p-2 md:p-4 rounded-xl border border-red-200">
+                    <div class="text-red-600 font-semibold text-sm">แพ้ (Loss)</div>
                     <div class="text-2xl font-bold text-red-700" id="lossCount">0</div>
                 </div>
-                <div class="bg-blue-100 p-4 rounded-xl border border-blue-200">
-                    <div class="text-blue-600 font-semibold">Win Rate</div>
+                <div class="bg-blue-50 p-2 md:p-4 rounded-xl border border-blue-200">
+                    <div class="text-blue-600 font-semibold text-sm">Win Rate</div>
                     <div class="text-2xl font-bold text-blue-700" id="winRate">0%</div>
                 </div>
             </div>
         </div>
 
-        <div id="nextBetCard" class="bg-slate-800 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300">
-            <h2 class="text-lg text-slate-300 font-semibold mb-2">🔮 คำทำนายตาต่อไป (Next Bet)</h2>
-            <div id="nextBetResult" class="text-4xl md:text-5xl font-bold mb-4">รอสถิติ...</div>
-            <div id="nextBetReason" class="text-lg text-slate-400">กรุณากรอกสกอร์ให้แมลงสาบเกิดก่อน</div>
+        <div id="nextBetCard" class="bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 text-center text-white transition-colors duration-300">
+            <h2 class="text-lg text-white/80 font-semibold mb-2">🔮 คำทำนายตาต่อไป (Next Bet)</h2>
+            <div id="nextBetResult" class="text-4xl md:text-6xl font-bold mb-4 drop-shadow-md">รอสถิติ...</div>
+            <div id="nextBetReason" class="text-lg md:text-xl text-white/90 bg-black/20 inline-block px-4 py-1 rounded-full">กรุณากดสกอร์ให้ตารางเกิดก่อน</div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <div class="p-4 bg-slate-50 border-b font-semibold text-slate-700">ประวัติการคำนวณแบบตาต่อตา</div>
+        <div class="bg-white rounded-2xl shadow-sm p-4">
+            <h3 class="font-bold text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">📊 ตาราง 4 เค้าไพ่ (Road Maps)</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <div class="text-xs font-bold text-slate-500 mb-1">1. ถนนใหญ่ (Big Road)</div>
+                    <div id="grid-br" class="road-container"></div>
+                </div>
+                <div>
+                    <div class="text-xs font-bold text-slate-500 mb-1">2. ตาไก่ (Big Eye Boy)</div>
+                    <div id="grid-beb" class="road-container"></div>
+                </div>
+                <div>
+                    <div class="text-xs font-bold text-slate-500 mb-1">3. ถนนเล็ก (Small Road)</div>
+                    <div id="grid-sr" class="road-container"></div>
+                </div>
+                <div>
+                    <div class="text-xs font-bold text-slate-500 mb-1">4. แมลงสาบ (Cockroach Pig)</div>
+                    <div id="grid-cp" class="road-container"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-10">
+            <div class="p-4 bg-slate-50 border-b font-semibold text-slate-700 flex justify-between">
+                <span>ประวัติแบบตาต่อตา</span>
+                <span class="text-sm font-normal text-slate-500" id="totalHands">รวม: 0 ตา</span>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="bg-slate-100 text-slate-600 text-sm">
-                            <th class="p-3 border-b">ตาที่</th>
+                        <tr class="bg-slate-100 text-slate-600 text-sm whitespace-nowrap">
+                            <th class="p-3 border-b text-center">ตาที่</th>
                             <th class="p-3 border-b">เข้าเงื่อนไข (Priority)</th>
-                            <th class="p-3 border-b">ระบบสั่งแทง</th>
-                            <th class="p-3 border-b">ผลที่ออก</th>
+                            <th class="p-3 border-b text-center">สั่งแทง</th>
+                            <th class="p-3 border-b text-center">ผลที่ออก</th>
                             <th class="p-3 border-b">สถานะ</th>
                         </tr>
                     </thead>
@@ -69,8 +132,72 @@
     </div>
 
     <script>
-        // --- BACCARAT ENGINE ---
-        function calculateBigRoad(history) {
+        let globalScore = "";
+
+        // --- Core Engine & Logic --- //
+        function addScore(char) {
+            globalScore += char;
+            analyze();
+        }
+
+        function undoScore() {
+            if (globalScore.length > 0) {
+                globalScore = globalScore.slice(0, -1);
+                analyze();
+            }
+        }
+
+        function clearScore() {
+            if(confirm("ยืนยันการล้างข้อมูลเพื่อเริ่มขอนใหม่?")) {
+                globalScore = "";
+                analyze();
+            }
+        }
+
+        function groupIntoColumns(flatArr) {
+            let cols = [];
+            let current = [];
+            for(let c of flatArr) {
+                if(current.length === 0 || current[0] === c) {
+                    current.push(c);
+                } else {
+                    cols.push(current);
+                    current = [c];
+                }
+            }
+            if(current.length > 0) cols.push(current);
+            return cols;
+        }
+
+        // สำหรับคำนวณและแสดงผลถนนใหญ่ (รวม Tie)
+        function parseBigRoadDisplay(inputStr) {
+            let cols = [];
+            let currentCol = [];
+            for (let char of inputStr) {
+                if (char === 'T') {
+                    if (currentCol.length > 0) currentCol[currentCol.length - 1].ties++;
+                    else if (cols.length > 0) cols[cols.length-1][cols[cols.length-1].length-1].ties++;
+                    else currentCol.push({ color: 'T', ties: 1 }); // เสมอเปิดขอน
+                    continue;
+                }
+
+                if (currentCol.length === 0) {
+                    currentCol.push({ color: char, ties: 0 });
+                } else if (currentCol[0].color === 'T') {
+                    currentCol[0].color = char; // แปลงเสมอเปิดขอนเป็นสี
+                } else if (currentCol[0].color === char) {
+                    currentCol.push({ color: char, ties: 0 });
+                } else {
+                    cols.push(currentCol);
+                    currentCol = [{ color: char, ties: 0 }];
+                }
+            }
+            if (currentCol.length > 0) cols.push(currentCol);
+            return cols;
+        }
+
+        // ตรรกะคำนวณแบบไม่นับเสมอ
+        function calculateBigRoadPure(history) {
             let cols = [];
             let currentCol = [];
             for (let outcome of history) {
@@ -89,8 +216,7 @@
             let road = [];
             for (let c = offset; c < bigRoadCols.length; c++) {
                 for (let r = 0; r < bigRoadCols[c].length; r++) {
-                    if (c === offset && r === 0) continue; // ข้ามเม็ดแรกของตารางอ้างอิง
-
+                    if (c === offset && r === 0) continue; 
                     let color = '';
                     if (r === 0) {
                         let ref1 = bigRoadCols[c - 1].length;
@@ -119,18 +245,18 @@
             return { color: lastColor, len: count };
         }
 
-        function calculateAllRoads(hist) {
-            let br = calculateBigRoad(hist);
+        function calculateAllRoadsPure(pureHistArr) {
+            let br = calculateBigRoadPure(pureHistArr);
             let beb = calculateDerivedRoad(br, 1);
             let sr = calculateDerivedRoad(br, 2);
             let cp = calculateDerivedRoad(br, 3);
             return { br, beb, sr, cp };
         }
 
-        function getBetAdvice(historyStr) {
-            let hist = historyStr.filter(x => x !== 'T');
-            let currentRoads = calculateAllRoads(hist);
+        function getBetAdvice(pureHistArr) {
+            let currentRoads = calculateAllRoadsPure(pureHistArr);
 
+            // แมลงสาบยังไม่เกิด
             if (currentRoads.cp.length === 0) return { bet: null, reason: "รอแมลงสาบเกิด" };
 
             let brStreak = { color: currentRoads.br[currentRoads.br.length-1][0], len: currentRoads.br[currentRoads.br.length-1].length };
@@ -144,11 +270,11 @@
             let p4 = cpStreak.len >= 2 ? { name: '4. แมลงสาบ', color: cpStreak.color } : null;
 
             let selected = p1 || p2 || p3 || p4;
-            if (!selected) return { bet: null, reason: "รอ 2 เม็ดติดกัน" };
+            if (!selected) return { bet: null, reason: "ยังไม่มีตารางไหนถึง 2 เม็ด" };
 
-            // จำลองการแทง Banker และ Player
-            let roadsB = calculateAllRoads([...hist, 'B']);
-            let roadsP = calculateAllRoads([...hist, 'P']);
+            // Simulate B and P
+            let roadsB = calculateAllRoadsPure([...pureHistArr, 'B']);
+            let roadsP = calculateAllRoadsPure([...pureHistArr, 'P']);
 
             if (selected.name.includes('ถนนใหญ่')) {
                 let brB = roadsB.br[roadsB.br.length-1];
@@ -164,32 +290,91 @@
                 if (getSimColor(roadsB, selected.name) === selected.color) return { bet: 'B', priority: selected.name, colorCode: selected.color };
                 if (getSimColor(roadsP, selected.name) === selected.color) return { bet: 'P', priority: selected.name, colorCode: selected.color };
             }
-            return { bet: null, reason: "ตารางสวิง คำนวณทิศทางไม่ได้" };
+            return { bet: null, reason: "ตารางสวิง คำนวณทางไม่ได้" };
         }
 
-        // --- UI LOGIC ---
-        function formatColor(c) {
+        // --- Render UI --- //
+        function formatColorText(c) {
             if(c === 'B' || c === 'RED') return '<span class="text-red-500 font-bold">แดง</span>';
             if(c === 'P' || c === 'BLUE') return '<span class="text-blue-500 font-bold">น้ำเงิน</span>';
             return c;
         }
 
-        function formatOutcome(c) {
-            if(c === 'B') return '<span class="bg-red-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold">B</span>';
-            if(c === 'P') return '<span class="bg-blue-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold">P</span>';
-            if(c === 'T') return '<span class="bg-green-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold">T</span>';
+        function formatBadge(c) {
+            if(c === 'B') return '<span class="bg-red-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold inline-block w-[24px] text-center">B</span>';
+            if(c === 'P') return '<span class="bg-blue-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold inline-block w-[24px] text-center">P</span>';
+            if(c === 'T') return '<span class="bg-green-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold inline-block w-[24px] text-center">T</span>';
             return c;
         }
 
+        function renderRoads(inputStr) {
+            let brCols = parseBigRoadDisplay(inputStr);
+            let pureArr = inputStr.replace(/T/g, '').split('');
+            let roads = calculateAllRoadsPure(pureArr);
+            
+            let bebCols = groupIntoColumns(roads.beb);
+            let srCols = groupIntoColumns(roads.sr);
+            let cpCols = groupIntoColumns(roads.cp);
+
+            // BR
+            let brHTML = '';
+            for(let col of brCols) {
+                brHTML += '<div class="road-col">';
+                for(let cell of col) {
+                    let mark = '';
+                    if(cell.ties > 0) mark = `<div class="br-tie-line"></div><span class="absolute -top-1 -right-1 text-[8px] bg-green-500 text-white rounded-full w-3 h-3 flex items-center justify-center">${cell.ties>1?cell.ties:''}</span>`;
+                    brHTML += `<div class="br-cell br-${cell.color}">${cell.color!=='T'?cell.color:''} ${mark}</div>`;
+                }
+                brHTML += '</div>';
+            }
+            document.getElementById('grid-br').innerHTML = brHTML || '<div class="text-slate-300 text-sm mt-2">ยังไม่มีสถิติ</div>';
+
+            // BEB
+            document.getElementById('grid-beb').innerHTML = bebCols.map(col => 
+                `<div class="road-col">${col.map(c => `<div class="beb-cell beb-${c}"></div>`).join('')}</div>`
+            ).join('') || '<div class="text-slate-300 text-sm mt-2">-</div>';
+
+            // SR
+            document.getElementById('grid-sr').innerHTML = srCols.map(col => 
+                `<div class="road-col">${col.map(c => `<div class="sr-cell sr-${c}"></div>`).join('')}</div>`
+            ).join('') || '<div class="text-slate-300 text-sm mt-2">-</div>';
+
+            // CP
+            document.getElementById('grid-cp').innerHTML = cpCols.map(col => 
+                `<div class="road-col">${col.map(c => `<div class="cp-cell cp-${c}">/</div>`).join('')}</div>`
+            ).join('') || '<div class="text-slate-300 text-sm mt-2">-</div>';
+
+            // Scroll to right end
+            setTimeout(() => {
+                ['grid-br','grid-beb','grid-sr','grid-cp'].forEach(id => {
+                    let el = document.getElementById(id);
+                    el.scrollLeft = el.scrollWidth;
+                });
+            }, 50);
+        }
+
         function analyze() {
-            let input = document.getElementById('scoreInput').value.toUpperCase();
-            let history = [];
+            // Update Text Display
+            let displayDiv = document.getElementById('scoreDisplay');
+            if(globalScore === "") {
+                displayDiv.innerHTML = "เริ่มกดปุ่มเพื่อบันทึกสกอร์...";
+            } else {
+                let formattedScore = globalScore.split('').map(c => {
+                    if(c==='B') return '<span class="text-red-500">B</span>';
+                    if(c==='P') return '<span class="text-blue-500">P</span>';
+                    return '<span class="text-green-500">T</span>';
+                }).join(' ');
+                displayDiv.innerHTML = formattedScore;
+            }
+
+            let historyArr = [];
+            let pureHistory = [];
             let tableHTML = '';
             let wins = 0, losses = 0, skips = 0;
 
-            for (let i = 0; i < input.length; i++) {
-                let currentOutcome = input[i];
-                let advice = getBetAdvice(history);
+            for (let i = 0; i < globalScore.length; i++) {
+                let currentOutcome = globalScore[i];
+                let advice = getBetAdvice(pureHistory);
 
                 let statusText = '';
                 let statusClass = '';
@@ -203,32 +388,39 @@
                         statusText = '🔴 แพ้'; statusClass = 'text-red-600 font-bold'; losses++;
                     }
                 } else {
-                    statusText = '⏸️ ข้าม (' + advice.reason + ')'; statusClass = 'text-slate-400'; skips++;
+                    statusText = '⏸️ ข้าม'; statusClass = 'text-slate-400'; skips++;
                 }
 
-                // เริ่มแสดงในตารางเมื่อแมลงสาบเกิด (ประมาณตาที่ 7-8 เป็นต้นไป)
+                // แสดงในตารางเริ่มเมื่อแมลงสาบเกิด (ประมาณตาที่ 7 เป็นต้นไป)
                 if(i >= 6) {
-                    tableHTML += `<tr class="border-b hover:bg-slate-50 transition">
-                        <td class="p-3 text-slate-500">${i+1}</td>
-                        <td class="p-3">${advice.priority ? `${advice.priority} (${formatColor(advice.colorCode)})` : '-'}</td>
-                        <td class="p-3">${advice.bet ? formatOutcome(advice.bet) : '-'}</td>
-                        <td class="p-3">${formatOutcome(currentOutcome)}</td>
+                    tableHTML = `<tr class="border-b hover:bg-slate-50 transition">
+                        <td class="p-3 text-slate-500 text-center">${i+1}</td>
+                        <td class="p-3">${advice.priority ? `${advice.priority} (${formatColorText(advice.colorCode)})` : '<span class="text-slate-300">-</span>'}</td>
+                        <td class="p-3 text-center">${advice.bet ? formatBadge(advice.bet) : '-'}</td>
+                        <td class="p-3 text-center">${formatBadge(currentOutcome)}</td>
                         <td class="p-3 ${statusClass}">${statusText}</td>
-                    </tr>`;
+                    </tr>` + tableHTML; // Prepend ให้ตาล่าสุดอยู่บน
                 }
-                history.push(currentOutcome);
+                
+                historyArr.push(currentOutcome);
+                if(currentOutcome !== 'T') pureHistory.push(currentOutcome);
             }
 
-            document.getElementById('historyTable').innerHTML = tableHTML;
+            document.getElementById('historyTable').innerHTML = tableHTML || '<tr><td colspan="5" class="p-4 text-center text-slate-400">กรุณากดสถิติให้แมลงสาบเกิดก่อน</td></tr>';
             document.getElementById('winCount').innerText = wins;
             document.getElementById('lossCount').innerText = losses;
+            document.getElementById('totalHands').innerText = `รวม: ${globalScore.length} ตา`;
             
             let totalPlayed = wins + losses;
             let winRate = totalPlayed > 0 ? ((wins / totalPlayed) * 100).toFixed(2) : 0;
             document.getElementById('winRate').innerText = winRate + '%';
 
-            // Next Bet Prediction
-            let nextAdvice = getBetAdvice(history);
+            // Render UI Maps
+            renderRoads(globalScore);
+
+            // Prediction for NEXT Bet
+            let nextPureArr = globalScore.replace(/T/g, '').split('');
+            let nextAdvice = getBetAdvice(nextPureArr);
             let nextBetDiv = document.getElementById('nextBetResult');
             let nextReasonDiv = document.getElementById('nextBetReason');
             let cardDiv = document.getElementById('nextBetCard');
@@ -236,21 +428,22 @@
             if (nextAdvice.bet) {
                 let colorName = nextAdvice.bet === 'B' ? 'BANKER (แดง)' : 'PLAYER (น้ำเงิน)';
                 nextBetDiv.innerHTML = colorName;
-                nextReasonDiv.innerHTML = `ลากเค้าไพ่: ${nextAdvice.priority} (${formatColor(nextAdvice.colorCode)})`;
+                nextReasonDiv.innerHTML = `ลากเค้าไพ่: ${nextAdvice.priority} (${formatColorText(nextAdvice.colorCode)})`;
                 
-                // Change card color based on prediction
                 if(nextAdvice.bet === 'B') {
-                    cardDiv.className = "bg-red-600 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300";
+                    cardDiv.className = "bg-red-600 rounded-2xl shadow-xl p-6 md:p-8 text-center text-white transition-all duration-300 transform scale-[1.02]";
                 } else {
-                    cardDiv.className = "bg-blue-600 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300";
+                    cardDiv.className = "bg-blue-600 rounded-2xl shadow-xl p-6 md:p-8 text-center text-white transition-all duration-300 transform scale-[1.02]";
                 }
             } else {
                 nextBetDiv.innerHTML = "รอจังหวะ...";
                 nextReasonDiv.innerHTML = nextAdvice.reason;
-                cardDiv.className = "bg-slate-800 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300";
+                cardDiv.className = "bg-slate-800 rounded-2xl shadow-lg p-6 md:p-8 text-center text-white transition-all duration-300";
             }
         }
+
+        // Initialize empty state
+        analyze();
     </script>
 </body>
 </html>
-
