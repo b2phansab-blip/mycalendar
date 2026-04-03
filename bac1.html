@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baccarat Priority AI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600&display=swap');
+        body { font-family: 'Kanit', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto space-y-6">
+        
+        <div class="bg-white rounded-2xl shadow-sm p-6 text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-slate-800">🎯 Baccarat Priority Predictor</h1>
+            <p class="text-slate-500 mt-2">สูตรลากเค้าไพ่ 2 เม็ด (BR > BEB > SR > CP)</p>
+            
+            <div class="mt-6">
+                <input type="text" id="scoreInput" 
+                    class="w-full text-center text-xl md:text-2xl p-4 border-2 border-slate-300 rounded-xl focus:border-blue-500 focus:outline-none uppercase tracking-[0.2em]"
+                    placeholder="กรอกสกอร์ B, P, T ติดกัน (เช่น bbbpbpppt)"
+                    oninput="this.value = this.value.replace(/[^bBpPtT]/g, ''); analyze();">
+            </div>
+            
+            <div class="grid grid-cols-3 gap-4 mt-6">
+                <div class="bg-green-100 p-4 rounded-xl border border-green-200">
+                    <div class="text-green-600 font-semibold">ชนะ (Win)</div>
+                    <div class="text-2xl font-bold text-green-700" id="winCount">0</div>
+                </div>
+                <div class="bg-red-100 p-4 rounded-xl border border-red-200">
+                    <div class="text-red-600 font-semibold">แพ้ (Loss)</div>
+                    <div class="text-2xl font-bold text-red-700" id="lossCount">0</div>
+                </div>
+                <div class="bg-blue-100 p-4 rounded-xl border border-blue-200">
+                    <div class="text-blue-600 font-semibold">Win Rate</div>
+                    <div class="text-2xl font-bold text-blue-700" id="winRate">0%</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="nextBetCard" class="bg-slate-800 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300">
+            <h2 class="text-lg text-slate-300 font-semibold mb-2">🔮 คำทำนายตาต่อไป (Next Bet)</h2>
+            <div id="nextBetResult" class="text-4xl md:text-5xl font-bold mb-4">รอสถิติ...</div>
+            <div id="nextBetReason" class="text-lg text-slate-400">กรุณากรอกสกอร์ให้แมลงสาบเกิดก่อน</div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div class="p-4 bg-slate-50 border-b font-semibold text-slate-700">ประวัติการคำนวณแบบตาต่อตา</div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-600 text-sm">
+                            <th class="p-3 border-b">ตาที่</th>
+                            <th class="p-3 border-b">เข้าเงื่อนไข (Priority)</th>
+                            <th class="p-3 border-b">ระบบสั่งแทง</th>
+                            <th class="p-3 border-b">ผลที่ออก</th>
+                            <th class="p-3 border-b">สถานะ</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyTable" class="text-sm">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- BACCARAT ENGINE ---
+        function calculateBigRoad(history) {
+            let cols = [];
+            let currentCol = [];
+            for (let outcome of history) {
+                if (currentCol.length === 0 || currentCol[0] === outcome) {
+                    currentCol.push(outcome);
+                } else {
+                    cols.push(currentCol);
+                    currentCol = [outcome];
+                }
+            }
+            if (currentCol.length > 0) cols.push(currentCol);
+            return cols;
+        }
+
+        function calculateDerivedRoad(bigRoadCols, offset) {
+            let road = [];
+            for (let c = offset; c < bigRoadCols.length; c++) {
+                for (let r = 0; r < bigRoadCols[c].length; r++) {
+                    if (c === offset && r === 0) continue; // ข้ามเม็ดแรกของตารางอ้างอิง
+
+                    let color = '';
+                    if (r === 0) {
+                        let ref1 = bigRoadCols[c - 1].length;
+                        let ref2 = bigRoadCols[c - 1 - offset].length;
+                        color = (ref1 === ref2) ? 'RED' : 'BLUE';
+                    } else {
+                        let refCol = bigRoadCols[c - offset].length;
+                        if (refCol >= r + 1) color = 'RED';
+                        else if (refCol === r) color = 'BLUE';
+                        else color = 'RED';
+                    }
+                    road.push(color);
+                }
+            }
+            return road;
+        }
+
+        function getStreak(flatRoad) {
+            if (!flatRoad || flatRoad.length === 0) return { color: null, len: 0 };
+            let lastColor = flatRoad[flatRoad.length - 1];
+            let count = 0;
+            for (let i = flatRoad.length - 1; i >= 0; i--) {
+                if (flatRoad[i] === lastColor) count++;
+                else break;
+            }
+            return { color: lastColor, len: count };
+        }
+
+        function calculateAllRoads(hist) {
+            let br = calculateBigRoad(hist);
+            let beb = calculateDerivedRoad(br, 1);
+            let sr = calculateDerivedRoad(br, 2);
+            let cp = calculateDerivedRoad(br, 3);
+            return { br, beb, sr, cp };
+        }
+
+        function getBetAdvice(historyStr) {
+            let hist = historyStr.filter(x => x !== 'T');
+            let currentRoads = calculateAllRoads(hist);
+
+            if (currentRoads.cp.length === 0) return { bet: null, reason: "รอแมลงสาบเกิด" };
+
+            let brStreak = { color: currentRoads.br[currentRoads.br.length-1][0], len: currentRoads.br[currentRoads.br.length-1].length };
+            let bebStreak = getStreak(currentRoads.beb);
+            let srStreak = getStreak(currentRoads.sr);
+            let cpStreak = getStreak(currentRoads.cp);
+
+            let p1 = brStreak.len >= 2 ? { name: '1. ถนนใหญ่', color: brStreak.color } : null;
+            let p2 = bebStreak.len >= 2 ? { name: '2. ตาไก่', color: bebStreak.color } : null;
+            let p3 = srStreak.len >= 2 ? { name: '3. ถนนเล็ก', color: srStreak.color } : null;
+            let p4 = cpStreak.len >= 2 ? { name: '4. แมลงสาบ', color: cpStreak.color } : null;
+
+            let selected = p1 || p2 || p3 || p4;
+            if (!selected) return { bet: null, reason: "รอ 2 เม็ดติดกัน" };
+
+            // จำลองการแทง Banker และ Player
+            let roadsB = calculateAllRoads([...hist, 'B']);
+            let roadsP = calculateAllRoads([...hist, 'P']);
+
+            if (selected.name.includes('ถนนใหญ่')) {
+                let brB = roadsB.br[roadsB.br.length-1];
+                let brP = roadsP.br[roadsP.br.length-1];
+                if (brB.length > brStreak.len && brB[0] === selected.color) return { bet: 'B', priority: selected.name, colorCode: selected.color };
+                if (brP.length > brStreak.len && brP[0] === selected.color) return { bet: 'P', priority: selected.name, colorCode: selected.color };
+            } else {
+                let getSimColor = (roadsObj, name) => {
+                    if (name.includes('ตาไก่')) return roadsObj.beb[roadsObj.beb.length-1];
+                    if (name.includes('ถนนเล็ก')) return roadsObj.sr[roadsObj.sr.length-1];
+                    if (name.includes('แมลงสาบ')) return roadsObj.cp[roadsObj.cp.length-1];
+                }
+                if (getSimColor(roadsB, selected.name) === selected.color) return { bet: 'B', priority: selected.name, colorCode: selected.color };
+                if (getSimColor(roadsP, selected.name) === selected.color) return { bet: 'P', priority: selected.name, colorCode: selected.color };
+            }
+            return { bet: null, reason: "ตารางสวิง คำนวณทิศทางไม่ได้" };
+        }
+
+        // --- UI LOGIC ---
+        function formatColor(c) {
+            if(c === 'B' || c === 'RED') return '<span class="text-red-500 font-bold">แดง</span>';
+            if(c === 'P' || c === 'BLUE') return '<span class="text-blue-500 font-bold">น้ำเงิน</span>';
+            return c;
+        }
+
+        function formatOutcome(c) {
+            if(c === 'B') return '<span class="bg-red-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold">B</span>';
+            if(c === 'P') return '<span class="bg-blue-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold">P</span>';
+            if(c === 'T') return '<span class="bg-green-500 text-white px-2 py-1 rounded shadow-sm text-xs font-bold">T</span>';
+            return c;
+        }
+
+        function analyze() {
+            let input = document.getElementById('scoreInput').value.toUpperCase();
+            let history = [];
+            let tableHTML = '';
+            let wins = 0, losses = 0, skips = 0;
+
+            for (let i = 0; i < input.length; i++) {
+                let currentOutcome = input[i];
+                let advice = getBetAdvice(history);
+
+                let statusText = '';
+                let statusClass = '';
+
+                if (advice.bet) {
+                    if (currentOutcome === 'T') {
+                        statusText = '⏸️ ข้าม (เสมอ)'; statusClass = 'text-slate-500'; skips++;
+                    } else if (advice.bet === currentOutcome) {
+                        statusText = '🟢 ชนะ'; statusClass = 'text-green-600 font-bold'; wins++;
+                    } else {
+                        statusText = '🔴 แพ้'; statusClass = 'text-red-600 font-bold'; losses++;
+                    }
+                } else {
+                    statusText = '⏸️ ข้าม (' + advice.reason + ')'; statusClass = 'text-slate-400'; skips++;
+                }
+
+                // เริ่มแสดงในตารางเมื่อแมลงสาบเกิด (ประมาณตาที่ 7-8 เป็นต้นไป)
+                if(i >= 6) {
+                    tableHTML += `<tr class="border-b hover:bg-slate-50 transition">
+                        <td class="p-3 text-slate-500">${i+1}</td>
+                        <td class="p-3">${advice.priority ? `${advice.priority} (${formatColor(advice.colorCode)})` : '-'}</td>
+                        <td class="p-3">${advice.bet ? formatOutcome(advice.bet) : '-'}</td>
+                        <td class="p-3">${formatOutcome(currentOutcome)}</td>
+                        <td class="p-3 ${statusClass}">${statusText}</td>
+                    </tr>`;
+                }
+                history.push(currentOutcome);
+            }
+
+            document.getElementById('historyTable').innerHTML = tableHTML;
+            document.getElementById('winCount').innerText = wins;
+            document.getElementById('lossCount').innerText = losses;
+            
+            let totalPlayed = wins + losses;
+            let winRate = totalPlayed > 0 ? ((wins / totalPlayed) * 100).toFixed(2) : 0;
+            document.getElementById('winRate').innerText = winRate + '%';
+
+            // Next Bet Prediction
+            let nextAdvice = getBetAdvice(history);
+            let nextBetDiv = document.getElementById('nextBetResult');
+            let nextReasonDiv = document.getElementById('nextBetReason');
+            let cardDiv = document.getElementById('nextBetCard');
+
+            if (nextAdvice.bet) {
+                let colorName = nextAdvice.bet === 'B' ? 'BANKER (แดง)' : 'PLAYER (น้ำเงิน)';
+                nextBetDiv.innerHTML = colorName;
+                nextReasonDiv.innerHTML = `ลากเค้าไพ่: ${nextAdvice.priority} (${formatColor(nextAdvice.colorCode)})`;
+                
+                // Change card color based on prediction
+                if(nextAdvice.bet === 'B') {
+                    cardDiv.className = "bg-red-600 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300";
+                } else {
+                    cardDiv.className = "bg-blue-600 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300";
+                }
+            } else {
+                nextBetDiv.innerHTML = "รอจังหวะ...";
+                nextReasonDiv.innerHTML = nextAdvice.reason;
+                cardDiv.className = "bg-slate-800 rounded-2xl shadow-lg p-8 text-center text-white transition-colors duration-300";
+            }
+        }
+    </script>
+</body>
+</html>
