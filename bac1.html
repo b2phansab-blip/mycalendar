@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI + Fast Paste</title>
+    <title>Baccarat Pro AI + AI Export</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
         body { font-family: 'Kanit', sans-serif; }
         
-        /* Bead Plate */
         .bead-plate-container { display: grid; grid-template-rows: repeat(6, 30px); grid-auto-flow: column; grid-auto-columns: 30px; gap: 1px; background-color: #cbd5e1; border: 1px solid #cbd5e1; padding: 1px; overflow-x: auto; border-radius: 8px; margin-top: 8px; }
         .bead-cell-wrap { background-color: #f8fafc; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .bead-mark { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         .bead-B { background-color: #ef4444; } .bead-P { background-color: #3b82f6; } .bead-T { background-color: #22c55e; }
 
-        /* Roads */
         .br-cell { position: relative; width: 24px; height: 24px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; background: white;}
         .br-B { border-color: #ef4444; color: #ef4444; } .br-P { border-color: #3b82f6; color: #3b82f6; }
         .br-tie-line { position: absolute; width: 100%; height: 3px; background-color: #22c55e; transform: rotate(-45deg); }
@@ -150,9 +148,12 @@
             <div class="p-4 bg-slate-800 text-white font-semibold flex justify-between items-center">
                 <span>🗂️ คลังประวัติขอนไพ่ (Saved Shoes)</span>
             </div>
-            <div class="p-4 bg-slate-50 border-b">
+            <div class="p-4 bg-slate-50 border-b grid grid-cols-1 md:grid-cols-2 gap-2">
                 <button onclick="saveShoeToArchive()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl shadow transition-colors flex items-center justify-center gap-2">
-                    <span>💾</span> บันทึกขอนปัจจุบันเก็บไว้ในเครื่อง
+                    <span>💾</span> บันทึกขอนลงเครื่อง
+                </button>
+                <button onclick="exportForAI()" class="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-3 rounded-xl shadow transition-colors flex items-center justify-center gap-2">
+                    <span>🤖</span> คัดลอกข้อมูลส่งให้ AI
                 </button>
             </div>
             <div class="overflow-x-auto">
@@ -182,14 +183,12 @@
         let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive')) || [];
         let currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
 
-        // --- ระบบอัปเกรดข้อมูลเก่าอัตโนมัติ (Auto-Migration) ---
+        // Auto-Migration 
         let needsMigration = false;
         shoeArchive.forEach(shoe => {
             if (shoe.s9 === undefined) {
-                let tempPure = [];
-                let ls = 0;
+                let tempPure = []; let ls = 0;
                 let tStats = { w: 0, l: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
-                
                 for(let i=0; i<shoe.score.length; i++){
                     let c = shoe.score[i]; let adv = getBetAdvice(tempPure);
                     if(adv.bet){
@@ -203,46 +202,26 @@
                     if(c !== 'T') tempPure.push(c);
                 }
                 if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
-                
-                shoe.s2 = tStats.s2; shoe.s3 = tStats.s3; shoe.s4 = tStats.s4;
-                shoe.s5 = tStats.s5; shoe.s6 = tStats.s6; shoe.s7 = tStats.s7;
-                shoe.s8 = tStats.s8; shoe.s9 = tStats.s9;
+                shoe.s2 = tStats.s2; shoe.s3 = tStats.s3; shoe.s4 = tStats.s4; shoe.s5 = tStats.s5; shoe.s6 = tStats.s6; shoe.s7 = tStats.s7; shoe.s8 = tStats.s8; shoe.s9 = tStats.s9;
                 needsMigration = true;
             }
         });
         if(needsMigration) localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
-        // -----------------------------------------------------
 
         function addScore(char) { globalScore += char; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { if (globalScore.length > 0) { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); } }
         function clearScore() { if(confirm("ยืนยันการเริ่มขอนใหม่? (กระดานปัจจุบันจะถูกล้าง)")) { globalScore = ""; localStorage.removeItem('baccaratScore'); localStorage.removeItem('baccaratMemo'); document.getElementById('memoInput').value = ""; analyze(); } }
         function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); }
 
-        // --- โหลดสกอร์ที่ Paste มา (ใหม่) ---
         function loadPastedScore() {
             let inputField = document.getElementById('pasteInput');
             let inputVal = inputField.value.toUpperCase();
-            // กรองเอาเฉพาะตัวอักษร B, P, T
             let filtered = inputVal.replace(/[^BPT]/g, '');
-            
-            if (filtered.length === 0) {
-                alert("ไม่พบสกอร์ที่ถูกต้อง (กรุณาใช้เฉพาะตัวอักษร B, P, หรือ T)");
-                return;
-            }
-
+            if (filtered.length === 0) { alert("ไม่พบสกอร์ที่ถูกต้อง (กรุณาใช้เฉพาะตัวอักษร B, P, หรือ T)"); return; }
             if (globalScore.length > 0) {
-                if (confirm("กระดานปัจจุบันมีสกอร์อยู่แล้ว!\n\nกด [OK] เพื่อ 'แทนที่' ล้างของเดิมทิ้งทั้งหมด\nกด [Cancel] เพื่อ 'ต่อท้าย' สกอร์เดิม")) {
-                    globalScore = filtered; // แทนที่
-                } else {
-                    globalScore += filtered; // ต่อท้าย
-                }
-            } else {
-                globalScore = filtered;
-            }
-
-            localStorage.setItem('baccaratScore', globalScore);
-            inputField.value = ""; // ล้างช่อง input
-            analyze();
+                if (confirm("กระดานปัจจุบันมีสกอร์อยู่แล้ว!\n\nกด [OK] เพื่อ 'แทนที่' ล้างของเดิมทิ้งทั้งหมด\nกด [Cancel] เพื่อ 'ต่อท้าย' สกอร์เดิม")) { globalScore = filtered; } else { globalScore += filtered; }
+            } else { globalScore = filtered; }
+            localStorage.setItem('baccaratScore', globalScore); inputField.value = ""; analyze();
         }
 
         function saveToCloud() {
@@ -250,11 +229,8 @@
             if (GOOGLE_SHEET_URL === "ใส่_URL_ของ_APPS_SCRIPT_ที่นี่") { alert("กรุณาใส่ URL ของ Google Apps Script ในโค้ดก่อนครับ"); return; }
             let btn = document.getElementById('btnSaveCloud'); let originalText = btn.innerHTML;
             btn.innerHTML = "⏳ กำลังส่ง..."; btn.disabled = true;
-            
             let streaksText = `[2ไม้:${currentStats.s2}, 3ไม้:${currentStats.s3}, 4ไม้:${currentStats.s4}, 5ไม้:${currentStats.s5}, 6ไม้:${currentStats.s6}, 7ไม้:${currentStats.s7}, 8ไม้:${currentStats.s8}, 9ไม้+:${currentStats.s9}]`;
-            
-            const formData = new URLSearchParams();
-            formData.append('score', globalScore); formData.append('win', currentStats.win);
+            const formData = new URLSearchParams(); formData.append('score', globalScore); formData.append('win', currentStats.win);
             formData.append('loss', currentStats.loss); formData.append('winRate', document.getElementById('winRate').innerText);
             formData.append('memo', document.getElementById('memoInput').value + " " + streaksText);
             fetch(GOOGLE_SHEET_URL, { method: 'POST', body: formData })
@@ -270,28 +246,51 @@
                 s2: currentStats.s2, s3: currentStats.s3, s4: currentStats.s4,
                 s5: currentStats.s5, s6: currentStats.s6, s7: currentStats.s7, s8: currentStats.s8, s9: currentStats.s9
             };
-            shoeArchive.unshift(shoe);
-            localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
-            renderArchive();
-            alert('💾 บันทึกขอนไพ่ลงคลังประวัติเรียบร้อยแล้ว!');
+            shoeArchive.unshift(shoe); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
+            renderArchive(); alert('💾 บันทึกขอนไพ่ลงคลังประวัติเรียบร้อยแล้ว!');
+        }
+
+        // --- ระบบ Export ข้อมูลให้ AI วิเคราะห์ ---
+        function exportForAI() {
+            if(shoeArchive.length === 0) { alert("ยังไม่มีประวัติในคลังให้คัดลอกครับ กรุณาบันทึกขอนไพ่ก่อน"); return; }
+            
+            let exportText = "นี่คือข้อมูลสถิติขอนไพ่ทั้งหมดของฉัน ช่วยวิเคราะห์หาจุดแข็ง จุดอ่อน และสัญญาณอันตรายให้หน่อย:\n\n";
+            shoeArchive.forEach((shoe, i) => {
+                let l2=shoe.s2||0, l3=shoe.s3||0, l4=shoe.s4||0, l5=shoe.s5||0, l6=shoe.s6||0, l7=shoe.s7||0, l8=shoe.s8||0, l9=shoe.s9||0;
+                exportText += `--- ขอนที่ ${shoeArchive.length - i} ---\n`;
+                exportText += `วันที่: ${shoe.date}\n`;
+                exportText += `บันทึก (Memo): ${shoe.memo}\n`;
+                exportText += `สกอร์ที่ออก: ${shoe.score}\n`;
+                exportText += `สถิติของระบบ: ชนะ ${shoe.win} / แพ้ ${shoe.loss}\n`;
+                exportText += `สถิติแพ้ติดกัน: 2 ไม้(${l2}), 3 ไม้(${l3}), 4 ไม้(${l4}), 5 ไม้(${l5}), 6 ไม้(${l6}), 7 ไม้(${l7}), 8 ไม้(${l8}), 9 ไม้ขึ้นไป(${l9})\n\n`;
+            });
+
+            // ใช้เทคนิค Textarea แบบซ่อนเพื่อรองรับทุกเบราว์เซอร์
+            let tempInput = document.createElement("textarea");
+            tempInput.value = exportText;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            
+            try {
+                document.execCommand("copy");
+                alert("🤖 คัดลอกข้อมูลทั้งหมดเรียบร้อยแล้ว!\n\nคุณสามารถนำไป 'วาง' (Paste) ในแชทให้ผมช่วยวิเคราะห์ได้เลยครับ");
+            } catch (err) {
+                alert("❌ คัดลอกอัตโนมัติไม่สำเร็จ กรุณาลองใหม่ผ่านเบราว์เซอร์อื่นครับ");
+            }
+            document.body.removeChild(tempInput);
         }
 
         function loadShoeFromArchive(index) {
             if(confirm('ต้องการเปิดขอนไพ่นี้ขึ้นมาดูหรือไม่? (ข้อมูลบนกระดานปัจจุบันจะถูกทับ)')) {
-                globalScore = shoeArchive[index].score;
-                document.getElementById('memoInput').value = shoeArchive[index].memo !== "-" ? shoeArchive[index].memo : "";
-                localStorage.setItem('baccaratScore', globalScore);
-                localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value);
-                analyze();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+                globalScore = shoeArchive[index].score; document.getElementById('memoInput').value = shoeArchive[index].memo !== "-" ? shoeArchive[index].memo : "";
+                localStorage.setItem('baccaratScore', globalScore); localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value);
+                analyze(); window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
         function deleteShoeFromArchive(index) {
             if(confirm('🗑️ ยืนยันการลบประวัติขอนนี้ทิ้งอย่างถาวร?')) {
-                shoeArchive.splice(index, 1);
-                localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
-                renderArchive();
+                shoeArchive.splice(index, 1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive();
             }
         }
 
@@ -299,10 +298,7 @@
             let html = '';
             shoeArchive.forEach((shoe, index) => {
                 let scorePreview = shoe.score.length > 20 ? shoe.score.substring(0,20) + '...' : shoe.score;
-                let formattedScore = scorePreview.replace(/B/g, '<span class="text-red-500 font-bold">B</span>')
-                                                 .replace(/P/g, '<span class="text-blue-500 font-bold">P</span>')
-                                                 .replace(/T/g, '<span class="text-green-500 font-bold">T</span>');
-                
+                let formattedScore = scorePreview.replace(/B/g, '<span class="text-red-500 font-bold">B</span>').replace(/P/g, '<span class="text-blue-500 font-bold">P</span>').replace(/T/g, '<span class="text-green-500 font-bold">T</span>');
                 let l2=shoe.s2||0, l3=shoe.s3||0, l4=shoe.s4||0, l5=shoe.s5||0, l6=shoe.s6||0, l7=shoe.s7||0, l8=shoe.s8||0, l9=shoe.s9||0;
 
                 html += `<tr class="border-b hover:bg-slate-100 transition">
@@ -328,12 +324,8 @@
             document.getElementById('archiveTable').innerHTML = html || '<tr><td colspan="4" class="p-6 text-center text-slate-400">ยังไม่มีประวัติขอนไพ่ที่บันทึกไว้</td></tr>';
         }
 
-        // --- Logic Engine ---
         function getBetAdvice(pureHistArr) {
-            let br = calculateBigRoadPure(pureHistArr);
-            let beb = calculateDerivedRoad(br, 1);
-            let sr = calculateDerivedRoad(br, 2);
-            let cp = calculateDerivedRoad(br, 3);
+            let br = calculateBigRoadPure(pureHistArr); let beb = calculateDerivedRoad(br, 1); let sr = calculateDerivedRoad(br, 2); let cp = calculateDerivedRoad(br, 3);
             if (cp.length === 0) return { bet: null, reason: "รอแมลงสาบเกิด" };
             let brStreak = { color: br[br.length-1][0], len: br[br.length-1].length };
             let bebStreak = getStreak(beb); let srStreak = getStreak(sr); let cpStreak = getStreak(cp);
@@ -403,60 +395,31 @@
                     else if (adv.bet === cur) { 
                         st = '🟢 ชนะ'; sc = 'text-green-600 font-bold'; 
                         currentStats.win++; 
-                        
-                        if (currentLossStreak === 2) currentStats.s2++;
-                        else if (currentLossStreak === 3) currentStats.s3++;
-                        else if (currentLossStreak === 4) currentStats.s4++;
-                        else if (currentLossStreak === 5) currentStats.s5++;
-                        else if (currentLossStreak === 6) currentStats.s6++;
-                        else if (currentLossStreak === 7) currentStats.s7++;
-                        else if (currentLossStreak === 8) currentStats.s8++;
-                        else if (currentLossStreak >= 9) currentStats.s9++;
-                        
+                        if (currentLossStreak === 2) currentStats.s2++; else if (currentLossStreak === 3) currentStats.s3++; else if (currentLossStreak === 4) currentStats.s4++; else if (currentLossStreak === 5) currentStats.s5++; else if (currentLossStreak === 6) currentStats.s6++; else if (currentLossStreak === 7) currentStats.s7++; else if (currentLossStreak === 8) currentStats.s8++; else if (currentLossStreak >= 9) currentStats.s9++;
                         currentLossStreak = 0;
                     }
                     else { 
                         st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; 
-                        currentStats.loss++; 
-                        currentLossStreak++; 
+                        currentStats.loss++; currentLossStreak++; 
                     }
-                } else { 
-                    st = '⏸️ ข้าม'; sc = 'text-slate-400'; 
-                }
+                } else { st = '⏸️ ข้าม'; sc = 'text-slate-400'; }
 
                 let formatBadge = (c) => `<span class="bg-${c==='B'?'red':c==='P'?'blue':'green'}-500 text-white px-2 py-1 rounded text-xs font-bold w-[24px] inline-block text-center shadow-sm">${c}</span>`;
                 tableHTML = `<tr class="border-b hover:bg-slate-100 transition"><td class="p-3 text-center text-slate-500">${i+1}</td><td class="p-3">${adv.priority?`${adv.priority} (${adv.colorCode==='RED'?'<span class="text-red-500 font-bold">แดง</span>':'<span class="text-blue-500 font-bold">น้ำเงิน</span>'})`:'-'}</td><td class="p-3 text-center">${adv.bet?formatBadge(adv.bet):'-'}</td><td class="p-3 text-center">${formatBadge(cur)}</td><td class="p-3 ${sc}">${st}</td></tr>` + tableHTML;
                 if(cur !== 'T') pureHistory.push(cur);
             }
 
-            if (currentLossStreak === 2) currentStats.s2++;
-            else if (currentLossStreak === 3) currentStats.s3++;
-            else if (currentLossStreak === 4) currentStats.s4++;
-            else if (currentLossStreak === 5) currentStats.s5++;
-            else if (currentLossStreak === 6) currentStats.s6++;
-            else if (currentLossStreak === 7) currentStats.s7++;
-            else if (currentLossStreak === 8) currentStats.s8++;
-            else if (currentLossStreak >= 9) currentStats.s9++;
+            if (currentLossStreak === 2) currentStats.s2++; else if (currentLossStreak === 3) currentStats.s3++; else if (currentLossStreak === 4) currentStats.s4++; else if (currentLossStreak === 5) currentStats.s5++; else if (currentLossStreak === 6) currentStats.s6++; else if (currentLossStreak === 7) currentStats.s7++; else if (currentLossStreak === 8) currentStats.s8++; else if (currentLossStreak >= 9) currentStats.s9++;
 
             document.getElementById('historyTable').innerHTML = tableHTML || '<tr><td colspan="5" class="p-6 text-center text-slate-400">ยังไม่มีประวัติการกด</td></tr>';
             
-            document.getElementById('winCount').innerText = currentStats.win; 
-            document.getElementById('lossCount').innerText = currentStats.loss;
-            document.getElementById('streak2').innerText = currentStats.s2;
-            document.getElementById('streak3').innerText = currentStats.s3;
-            document.getElementById('streak4').innerText = currentStats.s4;
-            document.getElementById('streak5').innerText = currentStats.s5;
-            document.getElementById('streak6').innerText = currentStats.s6;
-            document.getElementById('streak7').innerText = currentStats.s7;
-            document.getElementById('streak8').innerText = currentStats.s8;
-            document.getElementById('streak9').innerText = currentStats.s9;
+            document.getElementById('winCount').innerText = currentStats.win; document.getElementById('lossCount').innerText = currentStats.loss;
+            document.getElementById('streak2').innerText = currentStats.s2; document.getElementById('streak3').innerText = currentStats.s3; document.getElementById('streak4').innerText = currentStats.s4; document.getElementById('streak5').innerText = currentStats.s5; document.getElementById('streak6').innerText = currentStats.s6; document.getElementById('streak7').innerText = currentStats.s7; document.getElementById('streak8').innerText = currentStats.s8; document.getElementById('streak9').innerText = currentStats.s9;
             
             document.getElementById('totalHands').innerText = `รวม: ${globalScore.length} ตา`;
-            let total = currentStats.win + currentStats.loss; 
-            document.getElementById('winRate').innerText = (total > 0 ? (currentStats.win/total*100).toFixed(2) : 0) + '%';
+            let total = currentStats.win + currentStats.loss; document.getElementById('winRate').innerText = (total > 0 ? (currentStats.win/total*100).toFixed(2) : 0) + '%';
             
-            renderRoads(globalScore);
-            renderArchive(); 
+            renderRoads(globalScore); renderArchive(); 
             
             let nextAdv = getBetAdvice(pureHistory);
             let nextDiv = document.getElementById('nextBetResult'); let nextRea = document.getElementById('nextBetReason'); let card = document.getElementById('nextBetCard');
