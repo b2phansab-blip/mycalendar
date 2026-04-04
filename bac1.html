@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI + Smart Save</title>
+    <title>Baccarat Pro AI + Strategy Advisor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -119,6 +119,8 @@
             </div>
         </div>
 
+        <div id="aiRecommendationCard"></div>
+
         <div id="nextBetCard" class="bg-slate-800 rounded-2xl shadow-lg p-6 text-center text-white transition-all duration-300">
             <h2 class="text-lg text-white/80 font-semibold mb-2">🔮 คำทำนายตาต่อไป</h2>
             <div id="nextBetResult" class="text-4xl md:text-6xl font-bold mb-4">รอสถิติ...</div>
@@ -193,22 +195,14 @@
         let globalScore = localStorage.getItem('baccaratScore') || "";
         document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
         document.getElementById('shoeNoInput').value = localStorage.getItem('baccaratShoeNo') || "1";
-        
-        // ตัวแปรติดตาม ID ขอนที่กำลังแก้ไขอยู่ (ถ้าเป็น null คือขอนใหม่)
         let currentLoadedShoeId = localStorage.getItem('baccaratLoadedShoeId') || null;
-
         let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive')) || [];
         let currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
 
-        // Auto-Migration สำหรับ ID ขอน และ สถิติ s9
+        // Auto-Migration 
         let needsMigration = false;
         shoeArchive.forEach(shoe => {
-            // สร้าง ID ให้ขอนเก่าๆ ที่ยังไม่มี
-            if (!shoe.id) {
-                shoe.id = Date.now() + Math.random().toString(36).substr(2, 9);
-                needsMigration = true;
-            }
-
+            if (!shoe.id) { shoe.id = Date.now() + Math.random().toString(36).substr(2, 9); needsMigration = true; }
             if (shoe.s9 === undefined) {
                 let tempPure = []; let ls = 0;
                 let tStats = { w: 0, l: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
@@ -233,154 +227,72 @@
 
         function addScore(char) { globalScore += char; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { if (globalScore.length > 0) { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); } }
-        
         function clearScore() { 
             if(confirm("ยืนยันการเริ่มขอนใหม่? (กระดานปัจจุบันจะถูกล้าง)")) { 
-                globalScore = ""; 
-                localStorage.removeItem('baccaratScore'); 
-                document.getElementById('memoInput').value = ""; 
-                
-                // เคลียร์ ID ปัจจุบัน เพื่อให้เซฟครั้งหน้าเป็นขอนใหม่ 100%
-                currentLoadedShoeId = null;
-                localStorage.removeItem('baccaratLoadedShoeId');
-                
-                saveMemo(); 
-                analyze(); 
+                globalScore = ""; localStorage.removeItem('baccaratScore'); document.getElementById('memoInput').value = ""; 
+                currentLoadedShoeId = null; localStorage.removeItem('baccaratLoadedShoeId');
+                saveMemo(); analyze(); 
             } 
         }
-        
-        function saveMemo() { 
-            localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); 
-            localStorage.setItem('baccaratShoeNo', document.getElementById('shoeNoInput').value); 
-        }
-
+        function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); localStorage.setItem('baccaratShoeNo', document.getElementById('shoeNoInput').value); }
         function loadPastedScore() {
-            let inputField = document.getElementById('pasteInput');
-            let inputVal = inputField.value.toUpperCase();
-            let filtered = inputVal.replace(/[^BPT]/g, '');
+            let inputField = document.getElementById('pasteInput'); let inputVal = inputField.value.toUpperCase(); let filtered = inputVal.replace(/[^BPT]/g, '');
             if (filtered.length === 0) { alert("ไม่พบสกอร์ที่ถูกต้อง (กรุณาใช้เฉพาะตัวอักษร B, P, หรือ T)"); return; }
-            if (globalScore.length > 0) {
-                if (confirm("กระดานปัจจุบันมีสกอร์อยู่แล้ว!\n\nกด [OK] เพื่อ 'แทนที่' ล้างของเดิมทิ้งทั้งหมด\nกด [Cancel] เพื่อ 'ต่อท้าย' สกอร์เดิม")) { globalScore = filtered; } else { globalScore += filtered; }
-            } else { globalScore = filtered; }
+            if (globalScore.length > 0) { if (confirm("กระดานปัจจุบันมีสกอร์อยู่แล้ว!\n\nกด [OK] เพื่อ 'แทนที่' ล้างของเดิมทิ้งทั้งหมด\nกด [Cancel] เพื่อ 'ต่อท้าย' สกอร์เดิม")) { globalScore = filtered; } else { globalScore += filtered; } } else { globalScore = filtered; }
             localStorage.setItem('baccaratScore', globalScore); inputField.value = ""; analyze();
         }
 
         function saveToCloud() {
             if (globalScore === "") { alert("ยังไม่มีสกอร์ให้บันทึกครับ!"); return; }
             if (GOOGLE_SHEET_URL === "ใส่_URL_ของ_APPS_SCRIPT_ที่นี่") { alert("กรุณาใส่ URL ของ Google Apps Script ในโค้ดก่อนครับ"); return; }
-            let btn = document.getElementById('btnSaveCloud'); let originalText = btn.innerHTML;
-            btn.innerHTML = "⏳ กำลังส่ง..."; btn.disabled = true;
+            let btn = document.getElementById('btnSaveCloud'); let originalText = btn.innerHTML; btn.innerHTML = "⏳ กำลังส่ง..."; btn.disabled = true;
             let currentShoe = document.getElementById('shoeNoInput').value || "-";
             let streaksText = `[2ไม้:${currentStats.s2}, 3ไม้:${currentStats.s3}, 4ไม้:${currentStats.s4}, 5ไม้:${currentStats.s5}, 6ไม้:${currentStats.s6}, 7ไม้:${currentStats.s7}, 8ไม้:${currentStats.s8}, 9ไม้+:${currentStats.s9}]`;
-            const formData = new URLSearchParams(); formData.append('score', globalScore); formData.append('win', currentStats.win);
-            formData.append('loss', currentStats.loss); formData.append('winRate', document.getElementById('winRate').innerText);
-            formData.append('memo', `ขอนที่ ${currentShoe}: ` + document.getElementById('memoInput').value + " " + streaksText);
-            fetch(GOOGLE_SHEET_URL, { method: 'POST', body: formData })
-            .then(() => { alert("✅ ส่งข้อมูลลง Google Sheet สำเร็จ!"); btn.innerHTML = originalText; btn.disabled = false; })
-            .catch(error => { alert("❌ เกิดข้อผิดพลาด: " + error); btn.innerHTML = originalText; btn.disabled = false; });
+            const formData = new URLSearchParams(); formData.append('score', globalScore); formData.append('win', currentStats.win); formData.append('loss', currentStats.loss); formData.append('winRate', document.getElementById('winRate').innerText); formData.append('memo', `ขอนที่ ${currentShoe}: ` + document.getElementById('memoInput').value + " " + streaksText);
+            fetch(GOOGLE_SHEET_URL, { method: 'POST', body: formData }).then(() => { alert("✅ ส่งข้อมูลลง Google Sheet สำเร็จ!"); btn.innerHTML = originalText; btn.disabled = false; }).catch(error => { alert("❌ เกิดข้อผิดพลาด: " + error); btn.innerHTML = originalText; btn.disabled = false; });
         }
 
         function saveShoeToArchive() {
             if(globalScore.length === 0) { alert('ไม่มีสกอร์บนกระดานให้บันทึกครับ'); return; }
-            
             let currentShoe = document.getElementById('shoeNoInput').value || "";
-            
             let shoe = {
-                id: currentLoadedShoeId || (Date.now() + Math.random().toString(36).substr(2, 9)), // ใช้ ID เดิมถ้ามี
-                shoeNo: currentShoe,
-                date: new Date().toLocaleString('th-TH'), 
-                score: globalScore, 
-                memo: document.getElementById('memoInput').value || "-",
-                win: currentStats.win, loss: currentStats.loss,
-                s2: currentStats.s2, s3: currentStats.s3, s4: currentStats.s4,
-                s5: currentStats.s5, s6: currentStats.s6, s7: currentStats.s7, s8: currentStats.s8, s9: currentStats.s9
+                id: currentLoadedShoeId || (Date.now() + Math.random().toString(36).substr(2, 9)),
+                shoeNo: currentShoe, date: new Date().toLocaleString('th-TH'), score: globalScore, memo: document.getElementById('memoInput').value || "-",
+                win: currentStats.win, loss: currentStats.loss, s2: currentStats.s2, s3: currentStats.s3, s4: currentStats.s4, s5: currentStats.s5, s6: currentStats.s6, s7: currentStats.s7, s8: currentStats.s8, s9: currentStats.s9
             };
-            
-            // เช็คว่าเป็นการอัปเดตขอนเดิม หรือ บันทึกขอนใหม่
             if (currentLoadedShoeId) {
                 let idx = shoeArchive.findIndex(s => s.id === currentLoadedShoeId);
-                if (idx !== -1) {
-                    shoeArchive[idx] = shoe; // ทับข้อมูลเดิม
-                    alert('💾 อัปเดตข้อมูลขอนไพ่เดิมเรียบร้อยแล้ว!');
-                } else {
-                    // ถ้าหาไม่เจอ (อาจจะโดนลบไปแล้ว) ให้เซฟเป็นขอนใหม่
-                    shoeArchive.unshift(shoe);
-                    alert('💾 บันทึกขอนไพ่ใหม่ลงคลังประวัติเรียบร้อยแล้ว!');
-                }
+                if (idx !== -1) { shoeArchive[idx] = shoe; alert('💾 อัปเดตข้อมูลขอนไพ่เดิมเรียบร้อยแล้ว!'); } else { shoeArchive.unshift(shoe); alert('💾 บันทึกขอนไพ่ใหม่ลงคลังประวัติเรียบร้อยแล้ว!'); }
             } else {
-                // บันทึกขอนใหม่
-                shoeArchive.unshift(shoe);
-                currentLoadedShoeId = shoe.id; // เซ็ตให้มันรู้ตัวว่าตอนนี้กำลังเปิดขอนนี้อยู่
-                localStorage.setItem('baccaratLoadedShoeId', currentLoadedShoeId);
-                alert('💾 บันทึกขอนไพ่ใหม่ลงคลังประวัติเรียบร้อยแล้ว!');
-                
-                // Auto-Increment เลขขอนสำหรับขอนต่อไป (ทำเฉพาะตอนเซฟใหม่)
-                if(!isNaN(currentShoe) && currentShoe.trim() !== "") {
-                    document.getElementById('shoeNoInput').value = parseInt(currentShoe) + 1;
-                    saveMemo();
-                }
+                shoeArchive.unshift(shoe); currentLoadedShoeId = shoe.id; localStorage.setItem('baccaratLoadedShoeId', currentLoadedShoeId); alert('💾 บันทึกขอนไพ่ใหม่ลงคลังประวัติเรียบร้อยแล้ว!');
+                if(!isNaN(currentShoe) && currentShoe.trim() !== "") { document.getElementById('shoeNoInput').value = parseInt(currentShoe) + 1; saveMemo(); }
             }
-
-            localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
-            renderArchive(); 
+            localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); 
         }
 
-        // --- ระบบ Export ข้อมูลให้ AI วิเคราะห์ ---
         function exportForAI() {
             if(shoeArchive.length === 0) { alert("ยังไม่มีประวัติในคลังให้คัดลอกครับ กรุณาบันทึกขอนไพ่ก่อน"); return; }
-            
             let exportText = "นี่คือข้อมูลสถิติขอนไพ่ทั้งหมดของฉัน ช่วยวิเคราะห์หาจุดแข็ง จุดอ่อน และสัญญาณอันตรายให้หน่อย:\n\n";
             shoeArchive.forEach((shoe, i) => {
                 let l2=shoe.s2||0, l3=shoe.s3||0, l4=shoe.s4||0, l5=shoe.s5||0, l6=shoe.s6||0, l7=shoe.s7||0, l8=shoe.s8||0, l9=shoe.s9||0;
                 let displayShoe = shoe.shoeNo ? shoe.shoeNo : (shoeArchive.length - i);
-                exportText += `--- ขอนที่ ${displayShoe} ---\n`;
-                exportText += `วันที่: ${shoe.date}\n`;
-                exportText += `บันทึก (Memo): ${shoe.memo}\n`;
-                exportText += `สกอร์ที่ออก: ${shoe.score}\n`;
-                exportText += `สถิติของระบบ: ชนะ ${shoe.win} / แพ้ ${shoe.loss}\n`;
-                exportText += `สถิติแพ้ติดกัน: 2 ไม้(${l2}), 3 ไม้(${l3}), 4 ไม้(${l4}), 5 ไม้(${l5}), 6 ไม้(${l6}), 7 ไม้(${l7}), 8 ไม้(${l8}), 9 ไม้ขึ้นไป(${l9})\n\n`;
+                exportText += `--- ขอนที่ ${displayShoe} ---\nวันที่: ${shoe.date}\nบันทึก (Memo): ${shoe.memo}\nสกอร์ที่ออก: ${shoe.score}\nสถิติของระบบ: ชนะ ${shoe.win} / แพ้ ${shoe.loss}\nสถิติแพ้ติดกัน: 2 ไม้(${l2}), 3 ไม้(${l3}), 4 ไม้(${l4}), 5 ไม้(${l5}), 6 ไม้(${l6}), 7 ไม้(${l7}), 8 ไม้(${l8}), 9 ไม้ขึ้นไป(${l9})\n\n`;
             });
-
-            let tempInput = document.createElement("textarea");
-            tempInput.value = exportText;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            
-            try {
-                document.execCommand("copy");
-                alert("🤖 คัดลอกข้อมูลทั้งหมดเรียบร้อยแล้ว!\n\nคุณสามารถนำไป 'วาง' (Paste) ในแชทให้ผมช่วยวิเคราะห์ได้เลยครับ");
-            } catch (err) {
-                alert("❌ คัดลอกอัตโนมัติไม่สำเร็จ กรุณาลองใหม่ผ่านเบราว์เซอร์อื่นครับ");
-            }
-            document.body.removeChild(tempInput);
+            let tempInput = document.createElement("textarea"); tempInput.value = exportText; document.body.appendChild(tempInput); tempInput.select();
+            try { document.execCommand("copy"); alert("🤖 คัดลอกข้อมูลทั้งหมดเรียบร้อยแล้ว!\n\nคุณสามารถนำไป 'วาง' (Paste) ในแชทให้ผมช่วยวิเคราะห์ได้เลยครับ"); } catch (err) { alert("❌ คัดลอกอัตโนมัติไม่สำเร็จ"); } document.body.removeChild(tempInput);
         }
 
         function loadShoeFromArchive(index) {
             if(confirm('ต้องการเปิดขอนไพ่นี้ขึ้นมาดูหรือไม่? (ข้อมูลบนกระดานปัจจุบันจะถูกทับ)')) {
-                globalScore = shoeArchive[index].score; 
-                document.getElementById('memoInput').value = shoeArchive[index].memo !== "-" ? shoeArchive[index].memo : "";
-                document.getElementById('shoeNoInput').value = shoeArchive[index].shoeNo || "";
-                localStorage.setItem('baccaratScore', globalScore); 
-                
-                // ล็อคเป้า ID ว่าตอนนี้กำลังแก้ขอนเก่าอันไหนอยู่
-                currentLoadedShoeId = shoeArchive[index].id;
-                localStorage.setItem('baccaratLoadedShoeId', currentLoadedShoeId);
-
-                saveMemo();
-                analyze(); window.scrollTo({ top: 0, behavior: 'smooth' });
+                globalScore = shoeArchive[index].score; document.getElementById('memoInput').value = shoeArchive[index].memo !== "-" ? shoeArchive[index].memo : ""; document.getElementById('shoeNoInput').value = shoeArchive[index].shoeNo || "";
+                localStorage.setItem('baccaratScore', globalScore); currentLoadedShoeId = shoeArchive[index].id; localStorage.setItem('baccaratLoadedShoeId', currentLoadedShoeId); saveMemo(); analyze(); window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
         function deleteShoeFromArchive(index) {
             if(confirm('🗑️ ยืนยันการลบประวัติขอนนี้ทิ้งอย่างถาวร?')) {
-                // ถ้าระบบกำลังโหลดขอนที่กำลังจะโดนลบ ให้เคลียร์ session ทิ้งด้วย
-                if (currentLoadedShoeId === shoeArchive[index].id) {
-                    currentLoadedShoeId = null;
-                    localStorage.removeItem('baccaratLoadedShoeId');
-                }
-                shoeArchive.splice(index, 1); 
-                localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); 
-                renderArchive();
+                if (currentLoadedShoeId === shoeArchive[index].id) { currentLoadedShoeId = null; localStorage.removeItem('baccaratLoadedShoeId'); }
+                shoeArchive.splice(index, 1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive();
             }
         }
 
@@ -390,33 +302,14 @@
                 let scorePreview = shoe.score.length > 20 ? shoe.score.substring(0,20) + '...' : shoe.score;
                 let formattedScore = scorePreview.replace(/B/g, '<span class="text-red-500 font-bold">B</span>').replace(/P/g, '<span class="text-blue-500 font-bold">P</span>').replace(/T/g, '<span class="text-green-500 font-bold">T</span>');
                 let l2=shoe.s2||0, l3=shoe.s3||0, l4=shoe.s4||0, l5=shoe.s5||0, l6=shoe.s6||0, l7=shoe.s7||0, l8=shoe.s8||0, l9=shoe.s9||0;
-                
                 let dispShoeNo = shoe.shoeNo ? `ขอนที่ ${shoe.shoeNo}` : `ขอนเก่า`;
-
-                // เปลี่ยนสีแถวเล็กน้อยถ้าขอนนี้กำลังถูกโหลดอยู่
                 let rowBgClass = (currentLoadedShoeId === shoe.id) ? "bg-indigo-50 border-l-4 border-indigo-500" : "hover:bg-slate-100";
 
                 html += `<tr class="border-b transition ${rowBgClass}">
-                    <td class="p-3 text-xs text-slate-500 whitespace-nowrap align-top">
-                        <div class="font-bold text-indigo-600 text-sm mb-1">${dispShoeNo}</div>
-                        ${shoe.date}
-                    </td>
-                    <td class="p-3 text-xs text-slate-700 align-top">
-                        <div class="font-semibold text-sm mb-1">${shoe.memo}</div>
-                        <div class="font-mono tracking-widest bg-white px-2 py-1 rounded border inline-block">${formattedScore}</div>
-                    </td>
-                    <td class="p-3 text-center align-top">
-                        <div class="text-sm font-bold mb-1"><span class="text-green-600">W:${shoe.win}</span> / <span class="text-red-600">L:${shoe.loss}</span></div>
-                        <div class="text-[10px] text-red-600 bg-red-50 px-1.5 py-1 rounded border border-red-100 inline-block text-left whitespace-nowrap">
-                            [2:${l2}] [3:${l3}] [4:${l4}] [5:${l5}]<br>[6:${l6}] [7:${l7}] [8:${l8}] [9+:${l9}]
-                        </div>
-                    </td>
-                    <td class="p-3 text-center whitespace-nowrap align-top">
-                        <div class="flex flex-col gap-1">
-                            <button onclick="loadShoeFromArchive(${index})" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs font-semibold shadow-sm">เปิดดู</button>
-                            <button onclick="deleteShoeFromArchive(${index})" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-semibold shadow-sm">ลบ</button>
-                        </div>
-                    </td>
+                    <td class="p-3 text-xs text-slate-500 whitespace-nowrap align-top"><div class="font-bold text-indigo-600 text-sm mb-1">${dispShoeNo}</div>${shoe.date}</td>
+                    <td class="p-3 text-xs text-slate-700 align-top"><div class="font-semibold text-sm mb-1">${shoe.memo}</div><div class="font-mono tracking-widest bg-white px-2 py-1 rounded border inline-block">${formattedScore}</div></td>
+                    <td class="p-3 text-center align-top"><div class="text-sm font-bold mb-1"><span class="text-green-600">W:${shoe.win}</span> / <span class="text-red-600">L:${shoe.loss}</span></div><div class="text-[10px] text-red-600 bg-red-50 px-1.5 py-1 rounded border border-red-100 inline-block text-left whitespace-nowrap">[2:${l2}] [3:${l3}] [4:${l4}] [5:${l5}]<br>[6:${l6}] [7:${l7}] [8:${l8}] [9+:${l9}]</div></td>
+                    <td class="p-3 text-center whitespace-nowrap align-top"><div class="flex flex-col gap-1"><button onclick="loadShoeFromArchive(${index})" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs font-semibold shadow-sm">เปิดดู</button><button onclick="deleteShoeFromArchive(${index})" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-semibold shadow-sm">ลบ</button></div></td>
                 </tr>`;
             });
             document.getElementById('archiveTable').innerHTML = html || '<tr><td colspan="4" class="p-6 text-center text-slate-400">ยังไม่มีประวัติขอนไพ่ที่บันทึกไว้</td></tr>';
@@ -478,6 +371,40 @@
             return { color: lastColor, len: count };
         }
 
+        function updateAIRecommendation(pureHistArr) {
+            let recDiv = document.getElementById('aiRecommendationCard');
+            if (pureHistArr.length < 20) {
+                let remaining = 20 - pureHistArr.length;
+                recDiv.innerHTML = `<div class="bg-slate-100 border-l-4 border-slate-400 p-4 rounded-xl shadow-sm text-left transition-all">
+                    <h3 class="font-bold text-slate-700 flex items-center gap-2">🤖 AI Caddie: รอเก็บข้อมูล (Wait)</h3>
+                    <p class="text-sm text-slate-500 mt-1">เพิ่งเล่นไป ${pureHistArr.length}/20 ตา กรุณาจดสกอร์เพิ่มอีก ${remaining} ตา เพื่อให้ AI สแกนทรงไพ่และเลือกแผน A/B ให้ครับ</p>
+                </div>`;
+                return;
+            }
+
+            let brCols = calculateBigRoadPure(pureHistArr);
+            let maxStreak = 0;
+            let isPingPong = true;
+            
+            // สแกนประวัติว่าเคยมีเสาสูงสุดกี่เม็ด
+            brCols.forEach(col => {
+                if (col.length > maxStreak) maxStreak = col.length;
+                if (col.length >= 3) isPingPong = false; // ถ้ามี 3 เม็ดขึ้นไป ถือว่าเริ่มมีเค้าไหล
+            });
+
+            if (isPingPong) {
+                recDiv.innerHTML = `<div class="bg-orange-100 border-l-4 border-orange-500 p-4 rounded-xl shadow-sm text-left transition-all">
+                    <h3 class="font-bold text-orange-700 flex items-center gap-2">🤖 AI แนะนำ: ใช้ <span class="bg-orange-500 text-white px-2 py-0.5 rounded">แผน B (รอผิด 4)</span></h3>
+                    <p class="text-sm text-orange-800 mt-2"><strong>เหตุผล:</strong> ผ่านมา ${pureHistArr.length} ตา ไพ่ยังไม่เคยตั้งเสาเกิน 2 เม็ดเลย (ทรง 2 ตัด/ปิงปอง) ถือเป็นขอนสวิงจัด ถ้ารีบบุกระบบลาก 2 เม็ดจะโดนกินลึก <strong>ควรนั่งทับมือรอระบบสั่งผิด 4 ไม้ติดก่อนแล้วค่อยเข้าทำ +3 หน่วยครับ</strong></p>
+                </div>`;
+            } else {
+                recDiv.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl shadow-sm text-left transition-all">
+                    <h3 class="font-bold text-emerald-700 flex items-center gap-2">🤖 AI แนะนำ: ใช้ <span class="bg-emerald-500 text-white px-2 py-0.5 rounded">แผน A (รอผิด 2)</span></h3>
+                    <p class="text-sm text-emerald-800 mt-2"><strong>เหตุผล:</strong> ไพ่ขอนนี้มีเสาเอก ${maxStreak} เม็ดปรากฏให้เห็นแล้ว ถือว่ามีโมเมนตัม "มังกร" ระบบเข้าทางสถิตินี้มาก <strong>แนะนำให้รอผิดแค่ 2 ไม้ติด แล้วเริ่มเดินเงินบุกทำกำไร +3 หน่วยได้เลยครับ!</strong></p>
+                </div>`;
+            }
+        }
+
         function analyze() {
             let pureHistory = []; let tableHTML = ''; 
             currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
@@ -519,6 +446,9 @@
             let total = currentStats.win + currentStats.loss; document.getElementById('winRate').innerText = (total > 0 ? (currentStats.win/total*100).toFixed(2) : 0) + '%';
             
             renderRoads(globalScore); renderArchive(); 
+            
+            // อัปเดตคำแนะนำ AI
+            updateAIRecommendation(pureHistory);
             
             let nextAdv = getBetAdvice(pureHistory);
             let nextDiv = document.getElementById('nextBetResult'); let nextRea = document.getElementById('nextBetReason'); let card = document.getElementById('nextBetCard');
