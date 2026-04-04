@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI + Advanced Streak</title>
+    <title>Baccarat Pro AI + Fast Paste</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -54,7 +54,21 @@
                 <button onclick="saveToCloud()" id="btnSaveCloud" class="touch-manipulation bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow text-sm md:text-base flex items-center justify-center gap-1">☁️ ส่ง Sheet</button>
             </div>
 
-            <div class="mt-6 border-t border-slate-100 pt-4">
+            <div class="mt-4 text-left border-t border-slate-100 pt-4">
+                <label class="text-sm font-bold text-slate-600 flex items-center gap-2 mb-2">
+                    <span>📋 วางสกอร์แบบข้อความ (Copy/Paste)</span>
+                </label>
+                <div class="flex gap-2">
+                    <input type="text" id="pasteInput" 
+                        class="flex-1 p-3 border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-indigo-400 focus:outline-none uppercase font-mono tracking-widest placeholder:text-slate-400 placeholder:normal-case placeholder:tracking-normal"
+                        placeholder="วางสกอร์ที่นี่ เช่น bbbpbpppt">
+                    <button onclick="loadPastedScore()" class="touch-manipulation bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow whitespace-nowrap transition-colors">
+                        โหลดสกอร์
+                    </button>
+                </div>
+            </div>
+
+            <div class="mt-4 border-t border-slate-100 pt-4">
                 <div class="grid grid-cols-3 gap-3">
                     <div class="bg-green-50 p-2 md:p-3 rounded-xl border border-green-200">
                         <div class="text-green-600 font-semibold text-xs md:text-sm">ชนะ (Win)</div>
@@ -72,30 +86,14 @@
                 <div class="mt-3 text-left">
                     <div class="text-xs font-bold text-slate-500 mb-1">สถิติแพ้ติดกัน (Losing Streaks) *ไม่นับเสมอ/ข้าม*</div>
                     <div class="grid grid-cols-4 md:grid-cols-8 gap-1 md:gap-2">
-                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 2</span><div class="text-sm font-bold" id="streak2">0</div>
-                        </div>
-                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 3</span><div class="text-sm font-bold" id="streak3">0</div>
-                        </div>
-                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 4</span><div class="text-sm font-bold" id="streak4">0</div>
-                        </div>
-                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 5</span><div class="text-sm font-bold" id="streak5">0</div>
-                        </div>
-                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 6</span><div class="text-sm font-bold" id="streak6">0</div>
-                        </div>
-                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 7</span><div class="text-sm font-bold" id="streak7">0</div>
-                        </div>
-                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 8</span><div class="text-sm font-bold" id="streak8">0</div>
-                        </div>
-                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center">
-                            <span class="text-[10px] font-semibold">ติด 9+</span><div class="text-sm font-bold" id="streak9">0</div>
-                        </div>
+                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 2</span><div class="text-sm font-bold" id="streak2">0</div></div>
+                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 3</span><div class="text-sm font-bold" id="streak3">0</div></div>
+                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 4</span><div class="text-sm font-bold" id="streak4">0</div></div>
+                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 5</span><div class="text-sm font-bold" id="streak5">0</div></div>
+                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 6</span><div class="text-sm font-bold" id="streak6">0</div></div>
+                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 7</span><div class="text-sm font-bold" id="streak7">0</div></div>
+                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 8</span><div class="text-sm font-bold" id="streak8">0</div></div>
+                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 9+</span><div class="text-sm font-bold" id="streak9">0</div></div>
                     </div>
                 </div>
             </div>
@@ -182,11 +180,9 @@
         let globalScore = localStorage.getItem('baccaratScore') || "";
         document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
         let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive')) || [];
-        
         let currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
 
         // --- ระบบอัปเกรดข้อมูลเก่าอัตโนมัติ (Auto-Migration) ---
-        // เช็คว่ามีขอนไหนในคลังที่ยังไม่เคยมีตัวแปร s9 ไหม ถ้ามีให้คำนวณย้อนหลังแล้วเซฟทับทันที
         let needsMigration = false;
         shoeArchive.forEach(shoe => {
             if (shoe.s9 === undefined) {
@@ -195,40 +191,59 @@
                 let tStats = { w: 0, l: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
                 
                 for(let i=0; i<shoe.score.length; i++){
-                    let c = shoe.score[i];
-                    let adv = getBetAdvice(tempPure);
+                    let c = shoe.score[i]; let adv = getBetAdvice(tempPure);
                     if(adv.bet){
-                        if(c === 'T') { /* ข้าม ไม่ล้างสถิติ */ }
+                        if(c === 'T') { }
                         else if(adv.bet === c) {
                             tStats.w++;
                             if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
                             ls = 0;
-                        } else {
-                            tStats.l++;
-                            ls++;
-                        }
+                        } else { tStats.l++; ls++; }
                     }
                     if(c !== 'T') tempPure.push(c);
                 }
-                // เช็คยอดค้างตอนจบขอน
                 if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
                 
-                // อัปเดตข้อมูลเข้าไปใน shoe เก่า
                 shoe.s2 = tStats.s2; shoe.s3 = tStats.s3; shoe.s4 = tStats.s4;
                 shoe.s5 = tStats.s5; shoe.s6 = tStats.s6; shoe.s7 = tStats.s7;
                 shoe.s8 = tStats.s8; shoe.s9 = tStats.s9;
                 needsMigration = true;
             }
         });
-        if(needsMigration) {
-            localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
-        }
+        if(needsMigration) localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
         // -----------------------------------------------------
 
         function addScore(char) { globalScore += char; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { if (globalScore.length > 0) { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); } }
         function clearScore() { if(confirm("ยืนยันการเริ่มขอนใหม่? (กระดานปัจจุบันจะถูกล้าง)")) { globalScore = ""; localStorage.removeItem('baccaratScore'); localStorage.removeItem('baccaratMemo'); document.getElementById('memoInput').value = ""; analyze(); } }
         function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); }
+
+        // --- โหลดสกอร์ที่ Paste มา (ใหม่) ---
+        function loadPastedScore() {
+            let inputField = document.getElementById('pasteInput');
+            let inputVal = inputField.value.toUpperCase();
+            // กรองเอาเฉพาะตัวอักษร B, P, T
+            let filtered = inputVal.replace(/[^BPT]/g, '');
+            
+            if (filtered.length === 0) {
+                alert("ไม่พบสกอร์ที่ถูกต้อง (กรุณาใช้เฉพาะตัวอักษร B, P, หรือ T)");
+                return;
+            }
+
+            if (globalScore.length > 0) {
+                if (confirm("กระดานปัจจุบันมีสกอร์อยู่แล้ว!\n\nกด [OK] เพื่อ 'แทนที่' ล้างของเดิมทิ้งทั้งหมด\nกด [Cancel] เพื่อ 'ต่อท้าย' สกอร์เดิม")) {
+                    globalScore = filtered; // แทนที่
+                } else {
+                    globalScore += filtered; // ต่อท้าย
+                }
+            } else {
+                globalScore = filtered;
+            }
+
+            localStorage.setItem('baccaratScore', globalScore);
+            inputField.value = ""; // ล้างช่อง input
+            analyze();
+        }
 
         function saveToCloud() {
             if (globalScore === "") { alert("ยังไม่มีสกอร์ให้บันทึกครับ!"); return; }
@@ -250,14 +265,10 @@
         function saveShoeToArchive() {
             if(globalScore.length === 0) { alert('ไม่มีสกอร์บนกระดานให้บันทึกครับ'); return; }
             let shoe = {
-                date: new Date().toLocaleString('th-TH'),
-                score: globalScore,
-                memo: document.getElementById('memoInput').value || "-",
-                win: currentStats.win,
-                loss: currentStats.loss,
+                date: new Date().toLocaleString('th-TH'), score: globalScore, memo: document.getElementById('memoInput').value || "-",
+                win: currentStats.win, loss: currentStats.loss,
                 s2: currentStats.s2, s3: currentStats.s3, s4: currentStats.s4,
-                s5: currentStats.s5, s6: currentStats.s6, s7: currentStats.s7, 
-                s8: currentStats.s8, s9: currentStats.s9
+                s5: currentStats.s5, s6: currentStats.s6, s7: currentStats.s7, s8: currentStats.s8, s9: currentStats.s9
             };
             shoeArchive.unshift(shoe);
             localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
