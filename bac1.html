@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI + Top Advisor</title>
+    <title>Baccarat Pro AI + 4-Road Advisor</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -371,35 +371,48 @@
             return { color: lastColor, len: count };
         }
 
+        // --- ฟังก์ชัน AI Caddie ตัวใหม่ (สแกน 4 เค้าไพ่) ---
         function updateAIRecommendation(pureHistArr) {
             let recDiv = document.getElementById('aiRecommendationCard');
             if (pureHistArr.length < 20) {
                 let remaining = 20 - pureHistArr.length;
-                recDiv.innerHTML = `<div class="bg-slate-100 border-l-4 border-slate-400 p-4 rounded-xl shadow-sm text-left transition-all">
+                recDiv.innerHTML = `<div class="bg-slate-100 border-l-4 border-slate-400 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
                     <h3 class="font-bold text-slate-700 flex items-center gap-2">🤖 AI Caddie: รอเก็บข้อมูล (Wait)</h3>
-                    <p class="text-sm text-slate-500 mt-1">เพิ่งเล่นไป ${pureHistArr.length}/20 ตา กรุณาจดสกอร์เพิ่มอีก ${remaining} ตา เพื่อให้ AI สแกนทรงไพ่และเลือกแผน A/B ให้ครับ</p>
+                    <p class="text-sm text-slate-500 mt-1">เพิ่งเล่นไป ${pureHistArr.length}/20 ตา กรุณาจดสกอร์เพิ่มอีก ${remaining} ตา เพื่อให้ AI สแกนวิเคราะห์ทรงของทั้ง 4 เค้าไพ่ครับ</p>
                 </div>`;
                 return;
             }
 
-            let brCols = calculateBigRoadPure(pureHistArr);
-            let maxStreak = 0;
-            let isPingPong = true;
-            
-            brCols.forEach(col => {
-                if (col.length > maxStreak) maxStreak = col.length;
-                if (col.length >= 3) isPingPong = false; 
-            });
+            // คำนวณทั้ง 4 ตาราง
+            let br = calculateBigRoadPure(pureHistArr);
+            let beb = groupIntoColumns(calculateDerivedRoad(br, 1));
+            let sr = groupIntoColumns(calculateDerivedRoad(br, 2));
+            let cp = groupIntoColumns(calculateDerivedRoad(br, 3));
 
-            if (isPingPong) {
-                recDiv.innerHTML = `<div class="bg-orange-100 border-l-4 border-orange-500 p-4 rounded-xl shadow-sm text-left transition-all">
+            // หาความยาวเสาสูงสุดของแต่ละตาราง
+            let maxBr = 0; br.forEach(c => { if(c.length > maxBr) maxBr = c.length; });
+            let maxBeb = 0; beb.forEach(c => { if(c.length > maxBeb) maxBeb = c.length; });
+            let maxSr = 0; sr.forEach(c => { if(c.length > maxSr) maxSr = c.length; });
+            let maxCp = 0; cp.forEach(c => { if(c.length > maxCp) maxCp = c.length; });
+
+            // เช็คว่าถ้าทุกตารางเตี้ยหมด (ไม่มีอันไหนถึง 3 เม็ดเลย) หรือ ถนนใหญ่เตี้ยมาก
+            let isSuperChoppy = (maxBr < 3 && maxBeb < 3 && maxSr < 3 && maxCp < 3);
+
+            if (isSuperChoppy || maxBr < 3) {
+                recDiv.innerHTML = `<div class="bg-orange-100 border-l-4 border-orange-500 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
                     <h3 class="font-bold text-orange-700 flex items-center gap-2">🤖 AI แนะนำ: ใช้ <span class="bg-orange-500 text-white px-2 py-0.5 rounded">แผน B (รอผิด 4)</span></h3>
-                    <p class="text-sm text-orange-800 mt-2"><strong>เหตุผล:</strong> ผ่านมา ${pureHistArr.length} ตา ไพ่ยังไม่เคยตั้งเสาเกิน 2 เม็ดเลย (ทรง 2 ตัด/ปิงปอง) ถือเป็นขอนสวิงจัด ถ้ารีบบุกระบบลาก 2 เม็ดจะโดนกินลึก <strong>ควรนั่งทับมือรอระบบสั่งผิด 4 ไม้ติดก่อนแล้วค่อยเข้าทำ +3 หน่วยครับ</strong></p>
+                    <p class="text-sm text-orange-800 mt-2"><strong>เหตุผล:</strong> สแกน 4 เค้าไพ่แล้วพบว่า <strong>ถนนใหญ่สูงสุดแค่ ${maxBr} เม็ด, ตาไก่ ${maxBeb}, ถนนเล็ก ${maxSr}, แมลงสาบ ${maxCp}</strong><br>สวิงทุกตารางแบบนี้ ถ้ารีบบุก ระบบลากเค้าไพ่จะโดนหลอกกินลึก <strong>ควรนั่งทับมือรอระบบสั่งผิด 4 ไม้ติดก่อน แล้วค่อยเข้าทำ +3 หน่วยครับ</strong></p>
                 </div>`;
             } else {
-                recDiv.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl shadow-sm text-left transition-all">
+                let strongRoads = [];
+                if(maxBr >= 3) strongRoads.push("ถนนใหญ่");
+                if(maxBeb >= 3) strongRoads.push("ตาไก่");
+                if(maxSr >= 3) strongRoads.push("ถนนเล็ก");
+                if(maxCp >= 3) strongRoads.push("แมลงสาบ");
+
+                recDiv.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
                     <h3 class="font-bold text-emerald-700 flex items-center gap-2">🤖 AI แนะนำ: ใช้ <span class="bg-emerald-500 text-white px-2 py-0.5 rounded">แผน A (รอผิด 2)</span></h3>
-                    <p class="text-sm text-emerald-800 mt-2"><strong>เหตุผล:</strong> ไพ่ขอนนี้มีเสาเอก ${maxStreak} เม็ดปรากฏให้เห็นแล้ว ถือว่ามีโมเมนตัม "มังกร" ระบบเข้าทางสถิตินี้มาก <strong>แนะนำให้รอผิดแค่ 2 ไม้ติด แล้วเริ่มเดินเงินบุกทำกำไร +3 หน่วยได้เลยครับ!</strong></p>
+                    <p class="text-sm text-emerald-800 mt-2"><strong>เหตุผล:</strong> สแกน 4 เค้าไพ่แล้วพบ "โมเมนตัมมังกร" ให้เกาะในตาราง: <strong>${strongRoads.join(", ")}</strong><br>ระบบของคุณจะทำงานได้ดีเยี่ยมในสภาวะนี้ <strong>แนะนำให้รอผิดแค่ 2 ไม้ติด แล้วเริ่มเดินเงินบุกทำกำไร +3 หน่วยได้เลยครับ!</strong></p>
                 </div>`;
             }
         }
@@ -446,6 +459,7 @@
             
             renderRoads(globalScore); renderArchive(); 
             
+            // อัปเดต AI Advisor
             updateAIRecommendation(pureHistory);
             
             let nextAdv = getBetAdvice(pureHistory);
