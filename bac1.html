@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI + Streak Tracker</title>
+    <title>Baccarat Pro AI + Advanced Streak</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -69,18 +69,33 @@
                         <div class="text-xl md:text-2xl font-bold text-blue-700" id="winRate">0%</div>
                     </div>
                 </div>
-                <div class="grid grid-cols-3 gap-2 mt-3">
-                    <div class="bg-red-50 p-2 rounded-xl border border-red-100 text-red-600 flex flex-col justify-center">
-                        <span class="text-[10px] md:text-xs font-semibold">ผิด 2 ไม้ติด</span>
-                        <div class="text-lg md:text-xl font-bold" id="streak2">0</div>
-                    </div>
-                    <div class="bg-red-100 p-2 rounded-xl border border-red-200 text-red-700 flex flex-col justify-center">
-                        <span class="text-[10px] md:text-xs font-semibold">ผิด 3 ไม้ติด</span>
-                        <div class="text-lg md:text-xl font-bold" id="streak3">0</div>
-                    </div>
-                    <div class="bg-red-200 p-2 rounded-xl border border-red-300 text-red-800 flex flex-col justify-center">
-                        <span class="text-[10px] md:text-xs font-semibold">ผิด 4 ไม้ติดขึ้นไป</span>
-                        <div class="text-lg md:text-xl font-bold" id="streak4">0</div>
+                <div class="mt-3 text-left">
+                    <div class="text-xs font-bold text-slate-500 mb-1">สถิติแพ้ติดกัน (Losing Streaks) *ไม่นับเสมอ/ข้าม*</div>
+                    <div class="grid grid-cols-4 md:grid-cols-8 gap-1 md:gap-2">
+                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 2</span><div class="text-sm font-bold" id="streak2">0</div>
+                        </div>
+                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 3</span><div class="text-sm font-bold" id="streak3">0</div>
+                        </div>
+                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 4</span><div class="text-sm font-bold" id="streak4">0</div>
+                        </div>
+                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 5</span><div class="text-sm font-bold" id="streak5">0</div>
+                        </div>
+                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 6</span><div class="text-sm font-bold" id="streak6">0</div>
+                        </div>
+                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 7</span><div class="text-sm font-bold" id="streak7">0</div>
+                        </div>
+                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 8</span><div class="text-sm font-bold" id="streak8">0</div>
+                        </div>
+                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center">
+                            <span class="text-[10px] font-semibold">ติด 9+</span><div class="text-sm font-bold" id="streak9">0</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -148,7 +163,7 @@
                         <tr class="bg-slate-100 text-slate-600 text-sm whitespace-nowrap">
                             <th class="p-3 border-b">วันที่ / เวลา</th>
                             <th class="p-3 border-b">Memo / สกอร์</th>
-                            <th class="p-3 border-b text-center">สถิติ (W/L/สวิง)</th>
+                            <th class="p-3 border-b text-center">สถิติ (W/L/แพ้ติดกัน)</th>
                             <th class="p-3 border-b text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -168,8 +183,8 @@
         document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
         let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive')) || [];
         
-        // ตัวแปรเก็บสถิติปัจจุบัน
-        let currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0 };
+        // ตัวแปรเก็บสถิติปัจจุบัน (เพิ่มครบ 2 ถึง 9+)
+        let currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
 
         function addScore(char) { globalScore += char; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { if (globalScore.length > 0) { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); } }
@@ -181,10 +196,13 @@
             if (GOOGLE_SHEET_URL === "ใส่_URL_ของ_APPS_SCRIPT_ที่นี่") { alert("กรุณาใส่ URL ของ Google Apps Script ในโค้ดก่อนครับ"); return; }
             let btn = document.getElementById('btnSaveCloud'); let originalText = btn.innerHTML;
             btn.innerHTML = "⏳ กำลังส่ง..."; btn.disabled = true;
+            
+            let streaksText = `[2ไม้:${currentStats.s2}, 3ไม้:${currentStats.s3}, 4ไม้:${currentStats.s4}, 5ไม้:${currentStats.s5}, 6ไม้:${currentStats.s6}, 7ไม้:${currentStats.s7}, 8ไม้:${currentStats.s8}, 9ไม้+:${currentStats.s9}]`;
+            
             const formData = new URLSearchParams();
             formData.append('score', globalScore); formData.append('win', currentStats.win);
             formData.append('loss', currentStats.loss); formData.append('winRate', document.getElementById('winRate').innerText);
-            formData.append('memo', document.getElementById('memoInput').value + ` (ผิด2:${currentStats.s2}, ผิด3:${currentStats.s3}, ผิด4+:${currentStats.s4})`);
+            formData.append('memo', document.getElementById('memoInput').value + " " + streaksText);
             fetch(GOOGLE_SHEET_URL, { method: 'POST', body: formData })
             .then(() => { alert("✅ ส่งข้อมูลลง Google Sheet สำเร็จ!"); btn.innerHTML = originalText; btn.disabled = false; })
             .catch(error => { alert("❌ เกิดข้อผิดพลาด: " + error); btn.innerHTML = originalText; btn.disabled = false; });
@@ -199,9 +217,9 @@
                 memo: document.getElementById('memoInput').value || "-",
                 win: currentStats.win,
                 loss: currentStats.loss,
-                s2: currentStats.s2,
-                s3: currentStats.s3,
-                s4: currentStats.s4
+                s2: currentStats.s2, s3: currentStats.s3, s4: currentStats.s4,
+                s5: currentStats.s5, s6: currentStats.s6, s7: currentStats.s7, 
+                s8: currentStats.s8, s9: currentStats.s9
             };
             shoeArchive.unshift(shoe);
             localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
@@ -236,8 +254,8 @@
                                                  .replace(/P/g, '<span class="text-blue-500 font-bold">P</span>')
                                                  .replace(/T/g, '<span class="text-green-500 font-bold">T</span>');
                 
-                // สำหรับขอนเก่าที่บันทึกก่อนมีฟีเจอร์นับไม้ติด ให้แสดงผลเป็น 0
-                let ls2 = shoe.s2 || 0; let ls3 = shoe.s3 || 0; let ls4 = shoe.s4 || 0;
+                // รองรับข้อมูลเก่า ถ้าไม่มีค่าพวกนี้ให้เป็น 0
+                let l2=shoe.s2||0, l3=shoe.s3||0, l4=shoe.s4||0, l5=shoe.s5||0, l6=shoe.s6||0, l7=shoe.s7||0, l8=shoe.s8||0, l9=shoe.s9||0;
 
                 html += `<tr class="border-b hover:bg-slate-100 transition">
                     <td class="p-3 text-xs text-slate-500 whitespace-nowrap align-top">${shoe.date}</td>
@@ -247,8 +265,8 @@
                     </td>
                     <td class="p-3 text-center align-top">
                         <div class="text-sm font-bold mb-1"><span class="text-green-600">W:${shoe.win}</span> / <span class="text-red-600">L:${shoe.loss}</span></div>
-                        <div class="text-[10px] text-red-500 bg-red-50 px-1 py-1 rounded border border-red-100 whitespace-nowrap">
-                            ผิดติด: [2ไม้: ${ls2}] [3ไม้: ${ls3}] [4ไม้+: ${ls4}]
+                        <div class="text-[10px] text-red-600 bg-red-50 px-1.5 py-1 rounded border border-red-100 inline-block text-left">
+                            [2:${l2}] [3:${l3}] [4:${l4}] [5:${l5}]<br>[6:${l6}] [7:${l7}] [8:${l8}] [9+:${l9}]
                         </div>
                     </td>
                     <td class="p-3 text-center whitespace-nowrap align-top">
@@ -345,50 +363,72 @@
 
         function analyze() {
             let pureHistory = []; let tableHTML = ''; 
-            currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0 };
+            currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
             let currentLossStreak = 0;
 
             for (let i = 0; i < globalScore.length; i++) {
                 let cur = globalScore[i]; let adv = getBetAdvice(pureHistory);
                 let st = ''; let sc = '';
+                
                 if (adv.bet) {
                     if (cur === 'T') { 
+                        // เสมอ ไม่บวก/ไม่ล้าง การแพ้ติดกัน
                         st = '⏸️ ข้าม (เสมอ)'; sc = 'text-slate-500'; 
-                        // เสมอ ไม่นับว่าเสียไม้ และไม่ตัดสถิติไม้ที่เสียติดกัน
                     }
                     else if (adv.bet === cur) { 
                         st = '🟢 ชนะ'; sc = 'text-green-600 font-bold'; 
                         currentStats.win++; 
-                        // สรุปยอดไม้ที่เสียติดกัน เมื่อชนะแล้วล้างค่า
+                        
+                        // ถ้าย้ายมาฝั่งชนะ ให้สรุปยอดการเสียติดกัน แล้วล้างค่าเป็น 0
                         if (currentLossStreak === 2) currentStats.s2++;
                         else if (currentLossStreak === 3) currentStats.s3++;
-                        else if (currentLossStreak >= 4) currentStats.s4++;
+                        else if (currentLossStreak === 4) currentStats.s4++;
+                        else if (currentLossStreak === 5) currentStats.s5++;
+                        else if (currentLossStreak === 6) currentStats.s6++;
+                        else if (currentLossStreak === 7) currentStats.s7++;
+                        else if (currentLossStreak === 8) currentStats.s8++;
+                        else if (currentLossStreak >= 9) currentStats.s9++;
+                        
                         currentLossStreak = 0;
                     }
                     else { 
                         st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; 
                         currentStats.loss++; 
-                        currentLossStreak++; // เพิ่มจำนวนตาที่เสียติดกัน
+                        currentLossStreak++; // บันทึกว่าแพ้เพิ่ม 1 ไม้
                     }
-                } else { st = '⏸️ ข้าม'; sc = 'text-slate-400'; }
+                } else { 
+                    // ข้ามการเดิมพันเพราะตารางสวิง/ยังไม่เกิด ก็ไม่ทำอะไรกับสถิติแพ้ติดกัน
+                    st = '⏸️ ข้าม'; sc = 'text-slate-400'; 
+                }
 
                 let formatBadge = (c) => `<span class="bg-${c==='B'?'red':c==='P'?'blue':'green'}-500 text-white px-2 py-1 rounded text-xs font-bold w-[24px] inline-block text-center shadow-sm">${c}</span>`;
                 tableHTML = `<tr class="border-b hover:bg-slate-100 transition"><td class="p-3 text-center text-slate-500">${i+1}</td><td class="p-3">${adv.priority?`${adv.priority} (${adv.colorCode==='RED'?'<span class="text-red-500 font-bold">แดง</span>':'<span class="text-blue-500 font-bold">น้ำเงิน</span>'})`:'-'}</td><td class="p-3 text-center">${adv.bet?formatBadge(adv.bet):'-'}</td><td class="p-3 text-center">${formatBadge(cur)}</td><td class="p-3 ${sc}">${st}</td></tr>` + tableHTML;
                 if(cur !== 'T') pureHistory.push(cur);
             }
 
-            // ถ้าจบขอนแล้วยังเสียติดกันอยู่ ให้บวกสถิติเข้าไปด้วย
+            // ถ้าจบรอบ (จบขอน) แล้วยังมียอดแพ้ติดกันค้างอยู่ ให้บวกสถิติเข้าไปด้วย
             if (currentLossStreak === 2) currentStats.s2++;
             else if (currentLossStreak === 3) currentStats.s3++;
-            else if (currentLossStreak >= 4) currentStats.s4++;
+            else if (currentLossStreak === 4) currentStats.s4++;
+            else if (currentLossStreak === 5) currentStats.s5++;
+            else if (currentLossStreak === 6) currentStats.s6++;
+            else if (currentLossStreak === 7) currentStats.s7++;
+            else if (currentLossStreak === 8) currentStats.s8++;
+            else if (currentLossStreak >= 9) currentStats.s9++;
 
-            // อัปเดต UI หน้า Dashboard
             document.getElementById('historyTable').innerHTML = tableHTML || '<tr><td colspan="5" class="p-6 text-center text-slate-400">ยังไม่มีประวัติการกด</td></tr>';
+            
+            // อัปเดต UI 
             document.getElementById('winCount').innerText = currentStats.win; 
             document.getElementById('lossCount').innerText = currentStats.loss;
             document.getElementById('streak2').innerText = currentStats.s2;
             document.getElementById('streak3').innerText = currentStats.s3;
             document.getElementById('streak4').innerText = currentStats.s4;
+            document.getElementById('streak5').innerText = currentStats.s5;
+            document.getElementById('streak6').innerText = currentStats.s6;
+            document.getElementById('streak7').innerText = currentStats.s7;
+            document.getElementById('streak8').innerText = currentStats.s8;
+            document.getElementById('streak9').innerText = currentStats.s9;
             
             document.getElementById('totalHands').innerText = `รวม: ${globalScore.length} ตา`;
             let total = currentStats.win + currentStats.loss; 
