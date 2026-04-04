@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI + History Archive</title>
+    <title>Baccarat Pro AI + Streak Tracker</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -54,7 +54,38 @@
                 <button onclick="saveToCloud()" id="btnSaveCloud" class="touch-manipulation bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-xl shadow text-sm md:text-base flex items-center justify-center gap-1">☁️ ส่ง Sheet</button>
             </div>
 
-            <div class="mt-6 text-left border-t pt-4">
+            <div class="mt-6 border-t border-slate-100 pt-4">
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-green-50 p-2 md:p-3 rounded-xl border border-green-200">
+                        <div class="text-green-600 font-semibold text-xs md:text-sm">ชนะ (Win)</div>
+                        <div class="text-xl md:text-2xl font-bold text-green-700" id="winCount">0</div>
+                    </div>
+                    <div class="bg-red-50 p-2 md:p-3 rounded-xl border border-red-200">
+                        <div class="text-red-600 font-semibold text-xs md:text-sm">แพ้ (Loss)</div>
+                        <div class="text-xl md:text-2xl font-bold text-red-700" id="lossCount">0</div>
+                    </div>
+                    <div class="bg-blue-50 p-2 md:p-3 rounded-xl border border-blue-200">
+                        <div class="text-blue-600 font-semibold text-xs md:text-sm">Win Rate</div>
+                        <div class="text-xl md:text-2xl font-bold text-blue-700" id="winRate">0%</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2 mt-3">
+                    <div class="bg-red-50 p-2 rounded-xl border border-red-100 text-red-600 flex flex-col justify-center">
+                        <span class="text-[10px] md:text-xs font-semibold">ผิด 2 ไม้ติด</span>
+                        <div class="text-lg md:text-xl font-bold" id="streak2">0</div>
+                    </div>
+                    <div class="bg-red-100 p-2 rounded-xl border border-red-200 text-red-700 flex flex-col justify-center">
+                        <span class="text-[10px] md:text-xs font-semibold">ผิด 3 ไม้ติด</span>
+                        <div class="text-lg md:text-xl font-bold" id="streak3">0</div>
+                    </div>
+                    <div class="bg-red-200 p-2 rounded-xl border border-red-300 text-red-800 flex flex-col justify-center">
+                        <span class="text-[10px] md:text-xs font-semibold">ผิด 4 ไม้ติดขึ้นไป</span>
+                        <div class="text-lg md:text-xl font-bold" id="streak4">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-left border-t border-slate-100 pt-4">
                 <label class="text-sm font-bold text-slate-600 flex items-center gap-2 mb-2">
                     <span>📝 บันทึกช่วยจำ (Memo)</span>
                 </label>
@@ -62,21 +93,6 @@
                     class="w-full p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-slate-700 focus:ring-2 focus:ring-yellow-400 focus:outline-none placeholder:text-slate-400"
                     rows="2" placeholder="ใส่บันทึกของคุณที่นี่..."
                     oninput="saveMemo()"></textarea>
-            </div>
-
-            <div class="grid grid-cols-3 gap-3 mt-6">
-                <div class="bg-green-50 p-2 md:p-4 rounded-xl border border-green-200">
-                    <div class="text-green-600 font-semibold text-sm">ชนะ (Win)</div>
-                    <div class="text-2xl font-bold text-green-700" id="winCount">0</div>
-                </div>
-                <div class="bg-red-50 p-2 md:p-4 rounded-xl border border-red-200">
-                    <div class="text-red-600 font-semibold text-sm">แพ้ (Loss)</div>
-                    <div class="text-2xl font-bold text-red-700" id="lossCount">0</div>
-                </div>
-                <div class="bg-blue-50 p-2 md:p-4 rounded-xl border border-blue-200">
-                    <div class="text-blue-600 font-semibold text-sm">Win Rate</div>
-                    <div class="text-2xl font-bold text-blue-700" id="winRate">0%</div>
-                </div>
             </div>
         </div>
 
@@ -132,7 +148,7 @@
                         <tr class="bg-slate-100 text-slate-600 text-sm whitespace-nowrap">
                             <th class="p-3 border-b">วันที่ / เวลา</th>
                             <th class="p-3 border-b">Memo / สกอร์</th>
-                            <th class="p-3 border-b text-center">W/L</th>
+                            <th class="p-3 border-b text-center">สถิติ (W/L/สวิง)</th>
                             <th class="p-3 border-b text-center">จัดการ</th>
                         </tr>
                     </thead>
@@ -145,31 +161,30 @@
 
     <script>
         // =======================================================
-        // ใส่ URL ของ Google Apps Script ที่นี่ (ถ้าต้องการใช้ปุ่ม ☁️ ส่ง Sheet)
         const GOOGLE_SHEET_URL = "ใส่_URL_ของ_APPS_SCRIPT_ที่นี่";
         // =======================================================
 
         let globalScore = localStorage.getItem('baccaratScore') || "";
         document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
-        
-        // โหลดข้อมูลคลังประวัติ
         let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive')) || [];
+        
+        // ตัวแปรเก็บสถิติปัจจุบัน
+        let currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0 };
 
         function addScore(char) { globalScore += char; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { if (globalScore.length > 0) { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); } }
         function clearScore() { if(confirm("ยืนยันการเริ่มขอนใหม่? (กระดานปัจจุบันจะถูกล้าง)")) { globalScore = ""; localStorage.removeItem('baccaratScore'); localStorage.removeItem('baccaratMemo'); document.getElementById('memoInput').value = ""; analyze(); } }
         function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); }
 
-        // --- ระบบส่งข้อมูลเข้า Google Sheets ---
         function saveToCloud() {
             if (globalScore === "") { alert("ยังไม่มีสกอร์ให้บันทึกครับ!"); return; }
             if (GOOGLE_SHEET_URL === "ใส่_URL_ของ_APPS_SCRIPT_ที่นี่") { alert("กรุณาใส่ URL ของ Google Apps Script ในโค้ดก่อนครับ"); return; }
             let btn = document.getElementById('btnSaveCloud'); let originalText = btn.innerHTML;
             btn.innerHTML = "⏳ กำลังส่ง..."; btn.disabled = true;
             const formData = new URLSearchParams();
-            formData.append('score', globalScore); formData.append('win', document.getElementById('winCount').innerText);
-            formData.append('loss', document.getElementById('lossCount').innerText); formData.append('winRate', document.getElementById('winRate').innerText);
-            formData.append('memo', document.getElementById('memoInput').value);
+            formData.append('score', globalScore); formData.append('win', currentStats.win);
+            formData.append('loss', currentStats.loss); formData.append('winRate', document.getElementById('winRate').innerText);
+            formData.append('memo', document.getElementById('memoInput').value + ` (ผิด2:${currentStats.s2}, ผิด3:${currentStats.s3}, ผิด4+:${currentStats.s4})`);
             fetch(GOOGLE_SHEET_URL, { method: 'POST', body: formData })
             .then(() => { alert("✅ ส่งข้อมูลลง Google Sheet สำเร็จ!"); btn.innerHTML = originalText; btn.disabled = false; })
             .catch(error => { alert("❌ เกิดข้อผิดพลาด: " + error); btn.innerHTML = originalText; btn.disabled = false; });
@@ -182,23 +197,26 @@
                 date: new Date().toLocaleString('th-TH'),
                 score: globalScore,
                 memo: document.getElementById('memoInput').value || "-",
-                win: document.getElementById('winCount').innerText,
-                loss: document.getElementById('lossCount').innerText
+                win: currentStats.win,
+                loss: currentStats.loss,
+                s2: currentStats.s2,
+                s3: currentStats.s3,
+                s4: currentStats.s4
             };
-            shoeArchive.unshift(shoe); // นำไปต่อไว้บนสุด
+            shoeArchive.unshift(shoe);
             localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
             renderArchive();
             alert('💾 บันทึกขอนไพ่ลงคลังประวัติเรียบร้อยแล้ว!');
         }
 
         function loadShoeFromArchive(index) {
-            if(confirm('ต้องการเปิดขอนไพ่นี้ขึ้นมาดูหรือไม่? (ข้อมูลที่แสดงบนกระดานปัจจุบันจะถูกทับ)')) {
+            if(confirm('ต้องการเปิดขอนไพ่นี้ขึ้นมาดูหรือไม่? (ข้อมูลบนกระดานปัจจุบันจะถูกทับ)')) {
                 globalScore = shoeArchive[index].score;
                 document.getElementById('memoInput').value = shoeArchive[index].memo !== "-" ? shoeArchive[index].memo : "";
                 localStorage.setItem('baccaratScore', globalScore);
                 localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value);
                 analyze();
-                window.scrollTo({ top: 0, behavior: 'smooth' }); // เลื่อนจอกลับไปด้านบน
+                window.scrollTo({ top: 0, behavior: 'smooth' });
             }
         }
 
@@ -214,23 +232,30 @@
             let html = '';
             shoeArchive.forEach((shoe, index) => {
                 let scorePreview = shoe.score.length > 20 ? shoe.score.substring(0,20) + '...' : shoe.score;
-                // เปลี่ยนสี B P T ให้ดูง่ายขึ้นในตาราง
                 let formattedScore = scorePreview.replace(/B/g, '<span class="text-red-500 font-bold">B</span>')
                                                  .replace(/P/g, '<span class="text-blue-500 font-bold">P</span>')
                                                  .replace(/T/g, '<span class="text-green-500 font-bold">T</span>');
+                
+                // สำหรับขอนเก่าที่บันทึกก่อนมีฟีเจอร์นับไม้ติด ให้แสดงผลเป็น 0
+                let ls2 = shoe.s2 || 0; let ls3 = shoe.s3 || 0; let ls4 = shoe.s4 || 0;
 
                 html += `<tr class="border-b hover:bg-slate-100 transition">
-                    <td class="p-3 text-xs text-slate-500 whitespace-nowrap">${shoe.date}</td>
-                    <td class="p-3 text-xs text-slate-700">
+                    <td class="p-3 text-xs text-slate-500 whitespace-nowrap align-top">${shoe.date}</td>
+                    <td class="p-3 text-xs text-slate-700 align-top">
                         <div class="font-semibold text-sm mb-1">${shoe.memo}</div>
                         <div class="font-mono tracking-widest bg-white px-2 py-1 rounded border inline-block">${formattedScore}</div>
                     </td>
-                    <td class="p-3 text-center text-sm font-bold">
-                        <span class="text-green-600">${shoe.win}</span> <span class="text-slate-300">/</span> <span class="text-red-600">${shoe.loss}</span>
+                    <td class="p-3 text-center align-top">
+                        <div class="text-sm font-bold mb-1"><span class="text-green-600">W:${shoe.win}</span> / <span class="text-red-600">L:${shoe.loss}</span></div>
+                        <div class="text-[10px] text-red-500 bg-red-50 px-1 py-1 rounded border border-red-100 whitespace-nowrap">
+                            ผิดติด: [2ไม้: ${ls2}] [3ไม้: ${ls3}] [4ไม้+: ${ls4}]
+                        </div>
                     </td>
-                    <td class="p-3 text-center whitespace-nowrap">
-                        <button onclick="loadShoeFromArchive(${index})" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded text-xs font-semibold mr-1 shadow-sm">เปิดดู</button>
-                        <button onclick="deleteShoeFromArchive(${index})" class="bg-red-100 hover:bg-red-200 text-red-700 px-3 py-1.5 rounded text-xs font-semibold shadow-sm">ลบ</button>
+                    <td class="p-3 text-center whitespace-nowrap align-top">
+                        <div class="flex flex-col gap-1">
+                            <button onclick="loadShoeFromArchive(${index})" class="bg-blue-100 hover:bg-blue-200 text-blue-700 px-2 py-1 rounded text-xs font-semibold shadow-sm">เปิดดู</button>
+                            <button onclick="deleteShoeFromArchive(${index})" class="bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded text-xs font-semibold shadow-sm">ลบ</button>
+                        </div>
                     </td>
                 </tr>`;
             });
@@ -319,25 +344,59 @@
         }
 
         function analyze() {
-            let pureHistory = []; let tableHTML = ''; let wins = 0, losses = 0;
+            let pureHistory = []; let tableHTML = ''; 
+            currentStats = { win: 0, loss: 0, s2: 0, s3: 0, s4: 0 };
+            let currentLossStreak = 0;
+
             for (let i = 0; i < globalScore.length; i++) {
                 let cur = globalScore[i]; let adv = getBetAdvice(pureHistory);
                 let st = ''; let sc = '';
                 if (adv.bet) {
-                    if (cur === 'T') { st = '⏸️ ข้าม (เสมอ)'; sc = 'text-slate-500'; }
-                    else if (adv.bet === cur) { st = '🟢 ชนะ'; sc = 'text-green-600 font-bold'; wins++; }
-                    else { st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; losses++; }
+                    if (cur === 'T') { 
+                        st = '⏸️ ข้าม (เสมอ)'; sc = 'text-slate-500'; 
+                        // เสมอ ไม่นับว่าเสียไม้ และไม่ตัดสถิติไม้ที่เสียติดกัน
+                    }
+                    else if (adv.bet === cur) { 
+                        st = '🟢 ชนะ'; sc = 'text-green-600 font-bold'; 
+                        currentStats.win++; 
+                        // สรุปยอดไม้ที่เสียติดกัน เมื่อชนะแล้วล้างค่า
+                        if (currentLossStreak === 2) currentStats.s2++;
+                        else if (currentLossStreak === 3) currentStats.s3++;
+                        else if (currentLossStreak >= 4) currentStats.s4++;
+                        currentLossStreak = 0;
+                    }
+                    else { 
+                        st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; 
+                        currentStats.loss++; 
+                        currentLossStreak++; // เพิ่มจำนวนตาที่เสียติดกัน
+                    }
                 } else { st = '⏸️ ข้าม'; sc = 'text-slate-400'; }
+
                 let formatBadge = (c) => `<span class="bg-${c==='B'?'red':c==='P'?'blue':'green'}-500 text-white px-2 py-1 rounded text-xs font-bold w-[24px] inline-block text-center shadow-sm">${c}</span>`;
                 tableHTML = `<tr class="border-b hover:bg-slate-100 transition"><td class="p-3 text-center text-slate-500">${i+1}</td><td class="p-3">${adv.priority?`${adv.priority} (${adv.colorCode==='RED'?'<span class="text-red-500 font-bold">แดง</span>':'<span class="text-blue-500 font-bold">น้ำเงิน</span>'})`:'-'}</td><td class="p-3 text-center">${adv.bet?formatBadge(adv.bet):'-'}</td><td class="p-3 text-center">${formatBadge(cur)}</td><td class="p-3 ${sc}">${st}</td></tr>` + tableHTML;
                 if(cur !== 'T') pureHistory.push(cur);
             }
+
+            // ถ้าจบขอนแล้วยังเสียติดกันอยู่ ให้บวกสถิติเข้าไปด้วย
+            if (currentLossStreak === 2) currentStats.s2++;
+            else if (currentLossStreak === 3) currentStats.s3++;
+            else if (currentLossStreak >= 4) currentStats.s4++;
+
+            // อัปเดต UI หน้า Dashboard
             document.getElementById('historyTable').innerHTML = tableHTML || '<tr><td colspan="5" class="p-6 text-center text-slate-400">ยังไม่มีประวัติการกด</td></tr>';
-            document.getElementById('winCount').innerText = wins; document.getElementById('lossCount').innerText = losses;
+            document.getElementById('winCount').innerText = currentStats.win; 
+            document.getElementById('lossCount').innerText = currentStats.loss;
+            document.getElementById('streak2').innerText = currentStats.s2;
+            document.getElementById('streak3').innerText = currentStats.s3;
+            document.getElementById('streak4').innerText = currentStats.s4;
+            
             document.getElementById('totalHands').innerText = `รวม: ${globalScore.length} ตา`;
-            let total = wins + losses; document.getElementById('winRate').innerText = (total > 0 ? (wins/total*100).toFixed(2) : 0) + '%';
+            let total = currentStats.win + currentStats.loss; 
+            document.getElementById('winRate').innerText = (total > 0 ? (currentStats.win/total*100).toFixed(2) : 0) + '%';
+            
             renderRoads(globalScore);
-            renderArchive(); // อัปเดตตารางคลังประวัติทุกครั้งด้วย
+            renderArchive(); 
+            
             let nextAdv = getBetAdvice(pureHistory);
             let nextDiv = document.getElementById('nextBetResult'); let nextRea = document.getElementById('nextBetReason'); let card = document.getElementById('nextBetCard');
             if (nextAdv.bet) {
@@ -366,7 +425,6 @@
             document.getElementById('grid-cp').innerHTML = renderCol(groupIntoColumns(cp), c => `<div class="cp-cell cp-${c}">/</div>`);
         }
 
-        // เริ่มต้นการทำงาน 
         analyze();
     </script>
 </body>
