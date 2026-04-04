@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI + 4-Road Advisor</title>
+    <title>Baccarat Pro AI + Bulk Import</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -79,12 +79,12 @@
 
             <div class="mt-4 text-left border-t border-slate-100 pt-4">
                 <label class="text-sm font-bold text-slate-600 flex items-center gap-2 mb-2">
-                    <span>📋 วางสกอร์แบบข้อความ (Copy/Paste)</span>
+                    <span>📋 วางสกอร์หน้ากระดานปัจจุบัน</span>
                 </label>
                 <div class="flex gap-2">
                     <input type="text" id="pasteInput" 
                         class="flex-1 p-3 border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-indigo-400 focus:outline-none uppercase font-mono tracking-widest placeholder:text-slate-400 placeholder:normal-case placeholder:tracking-normal"
-                        placeholder="วางสกอร์ที่นี่ เช่น bbbpbpppt">
+                        placeholder="วางสกอร์ 1 ขอน เช่น bbbpbpppt">
                     <button onclick="loadPastedScore()" class="touch-manipulation bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow whitespace-nowrap transition-colors">
                         โหลดสกอร์
                     </button>
@@ -162,9 +162,22 @@
             <div class="p-4 bg-slate-800 text-white font-semibold flex justify-between items-center">
                 <span>🗂️ คลังประวัติขอนไพ่ (Saved Shoes)</span>
             </div>
+            
+            <div class="p-4 bg-indigo-50 border-b">
+                <label class="text-sm font-bold text-indigo-800 flex items-center gap-2 mb-2">
+                    <span>📥 นำเข้าข้อมูลหลายขอน (Bulk Import)</span>
+                </label>
+                <textarea id="bulkPasteInput" 
+                    class="w-full p-2 border border-indigo-200 rounded-lg text-slate-700 focus:ring-2 focus:ring-indigo-400 focus:outline-none uppercase font-mono text-xs placeholder:text-slate-400 placeholder:normal-case"
+                    rows="3" placeholder="วางสกอร์หลายๆ บรรทัดที่นี่ (1 บรรทัด = 1 ขอน)\nBBPBPBPP...\nPPBBPB..."></textarea>
+                <button onclick="bulkImportScores()" class="mt-2 w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg shadow transition-colors">
+                    ประมวลผลและเซฟลงคลังทั้งหมดทันที
+                </button>
+            </div>
+
             <div class="p-4 bg-slate-50 border-b grid grid-cols-1 md:grid-cols-2 gap-2">
-                <button onclick="saveShoeToArchive()" class="w-full bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-3 rounded-xl shadow transition-colors flex items-center justify-center gap-2">
-                    <span>💾</span> บันทึกขอนลงเครื่อง
+                <button onclick="saveShoeToArchive()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl shadow transition-colors flex items-center justify-center gap-2">
+                    <span>💾</span> บันทึกขอนบนกระดาน
                 </button>
                 <button onclick="exportForAI()" class="w-full bg-fuchsia-600 hover:bg-fuchsia-700 text-white font-bold py-3 rounded-xl shadow transition-colors flex items-center justify-center gap-2">
                     <span>🤖</span> คัดลอกข้อมูลส่งให้ AI
@@ -235,11 +248,63 @@
             } 
         }
         function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); localStorage.setItem('baccaratShoeNo', document.getElementById('shoeNoInput').value); }
+        
         function loadPastedScore() {
             let inputField = document.getElementById('pasteInput'); let inputVal = inputField.value.toUpperCase(); let filtered = inputVal.replace(/[^BPT]/g, '');
             if (filtered.length === 0) { alert("ไม่พบสกอร์ที่ถูกต้อง (กรุณาใช้เฉพาะตัวอักษร B, P, หรือ T)"); return; }
             if (globalScore.length > 0) { if (confirm("กระดานปัจจุบันมีสกอร์อยู่แล้ว!\n\nกด [OK] เพื่อ 'แทนที่' ล้างของเดิมทิ้งทั้งหมด\nกด [Cancel] เพื่อ 'ต่อท้าย' สกอร์เดิม")) { globalScore = filtered; } else { globalScore += filtered; } } else { globalScore = filtered; }
             localStorage.setItem('baccaratScore', globalScore); inputField.value = ""; analyze();
+        }
+
+        // --- Bulk Import Logic (ใหม่) ---
+        function bulkImportScores() {
+            let bulkText = document.getElementById('bulkPasteInput').value.toUpperCase();
+            let lines = bulkText.split('\n');
+            let importedCount = 0;
+
+            // ประมวลผลจากล่างขึ้นบน เพื่อให้บรรทัดบนสุดไปอยู่บนสุดของตาราง Archive
+            lines.reverse().forEach((line, index) => {
+                let filtered = line.replace(/[^BPT]/g, '');
+                if (filtered.length > 0) {
+                    let tempPure = []; let ls = 0;
+                    let tStats = { w: 0, l: 0, s2: 0, s3: 0, s4: 0, s5: 0, s6: 0, s7: 0, s8: 0, s9: 0 };
+                    
+                    for(let i=0; i<filtered.length; i++){
+                        let c = filtered[i]; let adv = getBetAdvice(tempPure);
+                        if(adv.bet){
+                            if(c === 'T') { }
+                            else if(adv.bet === c) {
+                                tStats.w++;
+                                if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
+                                ls = 0;
+                            } else { tStats.l++; ls++; }
+                        }
+                        if(c !== 'T') tempPure.push(c);
+                    }
+                    if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
+
+                    let newShoe = {
+                        id: Date.now() + Math.random().toString(36).substr(2, 9) + index,
+                        shoeNo: "นำเข้า",
+                        date: new Date().toLocaleString('th-TH'),
+                        score: filtered,
+                        memo: "Bulk Import",
+                        win: tStats.w, loss: tStats.l,
+                        s2: tStats.s2, s3: tStats.s3, s4: tStats.s4, s5: tStats.s5, s6: tStats.s6, s7: tStats.s7, s8: tStats.s8, s9: tStats.s9
+                    };
+                    shoeArchive.unshift(newShoe);
+                    importedCount++;
+                }
+            });
+
+            if (importedCount > 0) {
+                localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive));
+                renderArchive();
+                alert(`✅ ประมวลผลและนำเข้าสำเร็จ ${importedCount} ขอน!`);
+                document.getElementById('bulkPasteInput').value = '';
+            } else {
+                alert("❌ ไม่พบข้อมูลสกอร์ที่ถูกต้อง (ใช้ 1 บรรทัดต่อ 1 ขอน และใช้เฉพาะ B, P, T)");
+            }
         }
 
         function saveToCloud() {
@@ -371,7 +436,6 @@
             return { color: lastColor, len: count };
         }
 
-        // --- ฟังก์ชัน AI Caddie ตัวใหม่ (สแกน 4 เค้าไพ่) ---
         function updateAIRecommendation(pureHistArr) {
             let recDiv = document.getElementById('aiRecommendationCard');
             if (pureHistArr.length < 20) {
@@ -383,19 +447,12 @@
                 return;
             }
 
-            // คำนวณทั้ง 4 ตาราง
-            let br = calculateBigRoadPure(pureHistArr);
-            let beb = groupIntoColumns(calculateDerivedRoad(br, 1));
-            let sr = groupIntoColumns(calculateDerivedRoad(br, 2));
-            let cp = groupIntoColumns(calculateDerivedRoad(br, 3));
-
-            // หาความยาวเสาสูงสุดของแต่ละตาราง
+            let br = calculateBigRoadPure(pureHistArr); let beb = groupIntoColumns(calculateDerivedRoad(br, 1)); let sr = groupIntoColumns(calculateDerivedRoad(br, 2)); let cp = groupIntoColumns(calculateDerivedRoad(br, 3));
             let maxBr = 0; br.forEach(c => { if(c.length > maxBr) maxBr = c.length; });
             let maxBeb = 0; beb.forEach(c => { if(c.length > maxBeb) maxBeb = c.length; });
             let maxSr = 0; sr.forEach(c => { if(c.length > maxSr) maxSr = c.length; });
             let maxCp = 0; cp.forEach(c => { if(c.length > maxCp) maxCp = c.length; });
 
-            // เช็คว่าถ้าทุกตารางเตี้ยหมด (ไม่มีอันไหนถึง 3 เม็ดเลย) หรือ ถนนใหญ่เตี้ยมาก
             let isSuperChoppy = (maxBr < 3 && maxBeb < 3 && maxSr < 3 && maxCp < 3);
 
             if (isSuperChoppy || maxBr < 3) {
@@ -405,11 +462,7 @@
                 </div>`;
             } else {
                 let strongRoads = [];
-                if(maxBr >= 3) strongRoads.push("ถนนใหญ่");
-                if(maxBeb >= 3) strongRoads.push("ตาไก่");
-                if(maxSr >= 3) strongRoads.push("ถนนเล็ก");
-                if(maxCp >= 3) strongRoads.push("แมลงสาบ");
-
+                if(maxBr >= 3) strongRoads.push("ถนนใหญ่"); if(maxBeb >= 3) strongRoads.push("ตาไก่"); if(maxSr >= 3) strongRoads.push("ถนนเล็ก"); if(maxCp >= 3) strongRoads.push("แมลงสาบ");
                 recDiv.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
                     <h3 class="font-bold text-emerald-700 flex items-center gap-2">🤖 AI แนะนำ: ใช้ <span class="bg-emerald-500 text-white px-2 py-0.5 rounded">แผน A (รอผิด 2)</span></h3>
                     <p class="text-sm text-emerald-800 mt-2"><strong>เหตุผล:</strong> สแกน 4 เค้าไพ่แล้วพบ "โมเมนตัมมังกร" ให้เกาะในตาราง: <strong>${strongRoads.join(", ")}</strong><br>ระบบของคุณจะทำงานได้ดีเยี่ยมในสภาวะนี้ <strong>แนะนำให้รอผิดแค่ 2 ไม้ติด แล้วเริ่มเดินเงินบุกทำกำไร +3 หน่วยได้เลยครับ!</strong></p>
@@ -427,19 +480,13 @@
                 let st = ''; let sc = '';
                 
                 if (adv.bet) {
-                    if (cur === 'T') { 
-                        st = '⏸️ ข้าม (เสมอ)'; sc = 'text-slate-500'; 
-                    }
+                    if (cur === 'T') { st = '⏸️ ข้าม (เสมอ)'; sc = 'text-slate-500'; }
                     else if (adv.bet === cur) { 
-                        st = '🟢 ชนะ'; sc = 'text-green-600 font-bold'; 
-                        currentStats.win++; 
+                        st = '🟢 ชนะ'; sc = 'text-green-600 font-bold'; currentStats.win++; 
                         if (currentLossStreak === 2) currentStats.s2++; else if (currentLossStreak === 3) currentStats.s3++; else if (currentLossStreak === 4) currentStats.s4++; else if (currentLossStreak === 5) currentStats.s5++; else if (currentLossStreak === 6) currentStats.s6++; else if (currentLossStreak === 7) currentStats.s7++; else if (currentLossStreak === 8) currentStats.s8++; else if (currentLossStreak >= 9) currentStats.s9++;
                         currentLossStreak = 0;
                     }
-                    else { 
-                        st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; 
-                        currentStats.loss++; currentLossStreak++; 
-                    }
+                    else { st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; currentStats.loss++; currentLossStreak++; }
                 } else { st = '⏸️ ข้าม'; sc = 'text-slate-400'; }
 
                 let formatBadge = (c) => `<span class="bg-${c==='B'?'red':c==='P'?'blue':'green'}-500 text-white px-2 py-1 rounded text-xs font-bold w-[24px] inline-block text-center shadow-sm">${c}</span>`;
@@ -450,17 +497,13 @@
             if (currentLossStreak === 2) currentStats.s2++; else if (currentLossStreak === 3) currentStats.s3++; else if (currentLossStreak === 4) currentStats.s4++; else if (currentLossStreak === 5) currentStats.s5++; else if (currentLossStreak === 6) currentStats.s6++; else if (currentLossStreak === 7) currentStats.s7++; else if (currentLossStreak === 8) currentStats.s8++; else if (currentLossStreak >= 9) currentStats.s9++;
 
             document.getElementById('historyTable').innerHTML = tableHTML || '<tr><td colspan="5" class="p-6 text-center text-slate-400">ยังไม่มีประวัติการกด</td></tr>';
-            
             document.getElementById('winCount').innerText = currentStats.win; document.getElementById('lossCount').innerText = currentStats.loss;
             document.getElementById('streak2').innerText = currentStats.s2; document.getElementById('streak3').innerText = currentStats.s3; document.getElementById('streak4').innerText = currentStats.s4; document.getElementById('streak5').innerText = currentStats.s5; document.getElementById('streak6').innerText = currentStats.s6; document.getElementById('streak7').innerText = currentStats.s7; document.getElementById('streak8').innerText = currentStats.s8; document.getElementById('streak9').innerText = currentStats.s9;
             
             document.getElementById('totalHands').innerText = `รวม: ${globalScore.length} ตา`;
             let total = currentStats.win + currentStats.loss; document.getElementById('winRate').innerText = (total > 0 ? (currentStats.win/total*100).toFixed(2) : 0) + '%';
             
-            renderRoads(globalScore); renderArchive(); 
-            
-            // อัปเดต AI Advisor
-            updateAIRecommendation(pureHistory);
+            renderRoads(globalScore); renderArchive(); updateAIRecommendation(pureHistory);
             
             let nextAdv = getBetAdvice(pureHistory);
             let nextDiv = document.getElementById('nextBetResult'); let nextRea = document.getElementById('nextBetReason'); let card = document.getElementById('nextBetCard');
