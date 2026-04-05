@@ -3,29 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI (Priority Classic + 4-Road Radar)</title>
+    <title>Baccarat Pro AI (Priority Classic + Full Archive Stats)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
         body { font-family: 'Kanit', sans-serif; }
-        
-        /* Bead Plate */
         .bead-plate-container { display: grid; grid-template-rows: repeat(6, 30px); grid-auto-flow: column; grid-auto-columns: 30px; gap: 1px; background-color: #cbd5e1; border: 1px solid #cbd5e1; padding: 1px; overflow-x: auto; border-radius: 8px; margin-top: 8px; }
         .bead-cell-wrap { background-color: #f8fafc; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .bead-mark { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         .bead-B { background-color: #ef4444; } .bead-P { background-color: #3b82f6; } .bead-T { background-color: #22c55e; }
-
-        /* Roads */
         .br-cell { position: relative; width: 24px; height: 24px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; background: white;}
         .br-B { border-color: #ef4444; color: #ef4444; } .br-P { border-color: #3b82f6; color: #3b82f6; }
-        .br-tie-line { position: absolute; width: 100%; height: 3px; background-color: #22c55e; transform: rotate(-45deg); }
         .beb-cell { width: 16px; height: 16px; border-radius: 50%; border: 2px solid; background: transparent; }
         .beb-RED { border-color: #ef4444; } .beb-BLUE { border-color: #3b82f6; }
-        .sr-cell { width: 16px; height: 16px; border-radius: 50%; }
-        .sr-RED { background-color: #ef4444; } .sr-BLUE { background-color: #3b82f6; }
-        .cp-cell { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
-        .cp-RED { color: #ef4444; } .cp-BLUE { color: #3b82f6; }
-
         .road-container { min-height: 100px; display: flex; gap: 4px; overflow-x: auto; padding: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .road-col { display: flex; flex-direction: column; gap: 4px; }
     </style>
@@ -33,7 +23,6 @@
 <body class="bg-slate-200 min-h-screen p-2 md:p-6 pb-20">
 
     <div class="max-w-5xl mx-auto space-y-4">
-
         <div class="bg-white rounded-2xl shadow-sm p-4 text-center">
             <div class="flex justify-between text-xs md:text-sm font-bold mb-1">
                 <span id="shoePhaseText" class="text-blue-600">กำลังโหลดข้อมูล...</span>
@@ -43,99 +32,63 @@
                 <div id="shoeProgressBar" class="bg-blue-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
             <div class="flex gap-2 mt-3">
-                <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายถนนใหญ่</button>
-                <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายตาไก่ (แนะนำ)</button>
+                <button id="btnModeOld" onclick="setMode('OLD')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายถนนใหญ่</button>
+                <button id="btnModeNew" onclick="setMode('NEW')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายตาไก่ (แนะนำ)</button>
             </div>
         </div>
-        
-        <div id="aiRecommendationCard"></div>
 
-        <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 text-center">
+        <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 text-center border-t-4 border-indigo-500">
+            <div id="scoreDisplay" class="bead-plate-container shadow-inner mb-6"></div>
+
+            <div class="grid grid-cols-3 gap-2 md:gap-4">
+                <button onclick="addScore('P')" class="bg-blue-500 text-white font-bold py-6 rounded-2xl shadow-lg text-3xl">P</button>
+                <button onclick="addScore('T')" class="bg-green-500 text-white font-bold py-6 rounded-2xl shadow-lg text-3xl">T</button>
+                <button onclick="addScore('B')" class="bg-red-500 text-white font-bold py-6 rounded-2xl shadow-lg text-3xl">B</button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 mt-4">
+                <button onclick="undoScore()" class="bg-slate-500 text-white py-2 rounded-lg font-bold text-xs">⬅️ Back</button>
+                <button onclick="clearScore()" class="bg-slate-800 text-white py-2 rounded-lg font-bold text-xs">🔄 Clear</button>
+                <button onclick="saveShoeToArchive()" class="bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">💾 Save</button>
+            </div>
+
+            <div class="mt-4 border-t pt-4">
+                <div class="grid grid-cols-3 gap-2 mb-3">
+                    <div class="bg-green-50 p-2 rounded-lg text-center"><div class="text-[10px] text-green-600">ชนะ</div><div id="winCount" class="text-xl font-bold">0</div></div>
+                    <div class="bg-red-50 p-2 rounded-lg text-center"><div class="text-[10px] text-red-600">แพ้</div><div id="lossCount" class="text-xl font-bold">0</div></div>
+                    <div class="bg-blue-50 p-2 rounded-lg text-center"><div class="text-[10px] text-blue-600">Win Rate</div><div id="winRate" class="text-xl font-bold">0%</div></div>
+                </div>
+                <div class="grid grid-cols-4 md:grid-cols-8 gap-1">
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 2</div><div id="streak2" class="text-sm font-bold">0</div></div>
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 3</div><div id="streak3" class="text-sm font-bold">0</div></div>
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 4</div><div id="streak4" class="text-sm font-bold">0</div></div>
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 5</div><div id="streak5" class="text-sm font-bold">0</div></div>
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 6</div><div id="streak6" class="text-sm font-bold">0</div></div>
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 7</div><div id="streak7" class="text-sm font-bold">0</div></div>
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 8</div><div id="streak8" class="text-sm font-bold">0</div></div>
+                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 9+</div><div id="streak9" class="text-sm font-bold">0</div></div>
+                </div>
+            </div>
             
-            <div class="mt-2 text-left">
-                <div class="text-sm font-bold text-slate-600">กระดานลูกปัด (Bead Plate)</div>
-                <div id="scoreDisplay" class="bead-plate-container shadow-inner"></div>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 md:gap-4 mt-6">
-                <button onclick="addScore('P')" class="touch-manipulation bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(29,78,216)] active:shadow-[0_0px_0_rgb(29,78,216)] active:translate-y-1 transition-all text-xl md:text-2xl">P</button>
-                <button onclick="addScore('T')" class="touch-manipulation bg-green-500 hover:bg-green-600 active:bg-green-700 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(21,128,61)] active:shadow-[0_0px_0_rgb(21,128,61)] active:translate-y-1 transition-all text-xl md:text-2xl">T</button>
-                <button onclick="addScore('B')" class="touch-manipulation bg-red-500 hover:bg-red-600 active:bg-red-700 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(185,28,28)] active:shadow-[0_0px_0_rgb(185,28,28)] active:translate-y-1 transition-all text-xl md:text-2xl">B</button>
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 md:gap-4 mt-4">
-                <button onclick="undoScore()" class="touch-manipulation bg-slate-500 hover:bg-slate-600 text-white font-bold py-3 rounded-xl shadow text-sm md:text-base">⬅️ Back</button>
-                <button onclick="clearScore()" class="touch-manipulation bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl shadow text-sm md:text-base">🔄 Clear</button>
-                <button onclick="saveShoeToArchive()" class="touch-manipulation bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow text-sm md:text-base">💾 Save</button>
-            </div>
-
-            <div class="mt-6 text-left border-t border-slate-100 pt-4">
-                <div class="flex justify-between items-center mb-2">
-                    <span class="text-sm font-bold text-slate-600 flex items-center gap-2">📝 ประวัติแบบตาต่อตา (<span id="curLabel">ตาไก่</span>)</span>
-                    <span class="text-sm font-bold text-slate-500" id="totalHands">รวม: 0 ตา</span>
-                </div>
-                <div class="overflow-x-auto max-h-64 border border-slate-200 rounded-lg">
-                    <table class="w-full text-left border-collapse relative">
-                        <thead class="sticky top-0 bg-slate-100 shadow-sm z-10">
-                            <tr class="text-slate-600 text-sm whitespace-nowrap">
-                                <th class="p-3 border-b text-center">ตาที่</th>
-                                <th class="p-3 border-b">สแกน</th>
-                                <th class="p-3 border-b text-center">สั่งแทง</th>
-                                <th class="p-3 border-b text-center">ผลที่ออก</th>
-                                <th class="p-3 border-b">สถานะ</th>
-                            </tr>
-                        </thead>
-                        <tbody id="historyTable" class="text-sm"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <div class="mt-4 border-t border-slate-100 pt-4">
-                <div class="grid grid-cols-3 gap-3">
-                    <div class="bg-green-50 p-2 md:p-3 rounded-xl border border-green-200"><div class="text-green-600 font-semibold text-xs">ชนะ</div><div class="text-xl md:text-2xl font-bold" id="winCount">0</div></div>
-                    <div class="bg-red-50 p-2 md:p-3 rounded-xl border border-red-200"><div class="text-red-600 font-semibold text-xs">แพ้</div><div class="text-xl md:text-2xl font-bold" id="lossCount">0</div></div>
-                    <div class="bg-blue-50 p-2 md:p-3 rounded-xl border border-blue-200"><div class="text-blue-600 font-semibold text-xs">Win Rate</div><div class="text-xl md:text-2xl font-bold" id="winRate">0%</div></div>
-                </div>
-                <div class="mt-3 text-left">
-                    <div class="text-xs font-bold text-slate-500 mb-1">สถิติแพ้ติดกัน (Losing Streaks)</div>
-                    <div class="grid grid-cols-4 md:grid-cols-8 gap-1 md:gap-2">
-                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 2</span><div class="text-sm font-bold" id="streak2">0</div></div>
-                        <div class="bg-red-50 p-1 rounded-lg border border-red-100 text-red-600 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 3</span><div class="text-sm font-bold" id="streak3">0</div></div>
-                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 4</span><div class="text-sm font-bold" id="streak4">0</div></div>
-                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 5</span><div class="text-sm font-bold" id="streak5">0</div></div>
-                        <div class="bg-red-100 p-1 rounded-lg border border-red-200 text-red-700 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 6</span><div class="text-sm font-bold" id="streak6">0</div></div>
-                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 7</span><div class="text-sm font-bold" id="streak7">0</div></div>
-                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 8</span><div class="text-sm font-bold" id="streak8">0</div></div>
-                        <div class="bg-red-200 p-1 rounded-lg border border-red-300 text-red-800 flex flex-col items-center"><span class="text-[10px] font-semibold">ติด 9+</span><div class="text-sm font-bold" id="streak9">0</div></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mt-4 text-left border-t border-slate-100 pt-4 flex gap-2">
-                <input type="number" id="shoeNoInput" class="w-20 p-3 border rounded-lg text-center font-bold" oninput="saveMemo()" placeholder="1">
-                <input type="text" id="memoInput" class="flex-1 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm" placeholder="Memo..." oninput="saveMemo()">
+            <div class="mt-4 flex gap-2">
+                <input type="number" id="shoeNoInput" class="w-20 p-2 border rounded text-center font-bold" placeholder="ขอนที่">
+                <input type="text" id="memoInput" class="flex-1 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs" placeholder="Memo...">
             </div>
         </div>
 
-        <div id="nextBetCard" class="bg-slate-800 rounded-2xl shadow-lg p-6 text-center text-white transition-all">
-            <h2 class="text-lg text-white/80 font-semibold mb-2">🔮 คำทำนายตาต่อไป</h2>
-            <div id="nextBetResult" class="text-4xl md:text-6xl font-bold mb-4 uppercase">รอสถิติ...</div>
-            <div id="nextBetReason" class="text-sm bg-black/20 inline-block px-4 py-1 rounded-full">กรุณากดสกอร์...</div>
-        </div>
-
-        <div class="bg-white rounded-2xl shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div><div class="text-xs font-bold text-slate-500 mb-1 uppercase">1. ถนนใหญ่</div><div id="grid-br" class="road-container"></div></div>
-            <div><div class="text-xs font-bold text-slate-500 mb-1 uppercase">2. ตาไก่</div><div id="grid-beb" class="road-container"></div></div>
-            <div><div class="text-xs font-bold text-slate-500 mb-1 uppercase">3. ถนนเล็ก</div><div id="grid-sr" class="road-container"></div></div>
-            <div><div class="text-xs font-bold text-slate-500 mb-1 uppercase">4. แมลงสาบ</div><div id="grid-cp" class="road-container"></div></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="bg-white p-2 rounded-xl border-l-4 border-indigo-500"><div id="grid-beb" class="road-container"></div></div>
+            <div class="bg-white p-2 rounded-xl border-l-4 border-slate-300"><div id="grid-br" class="road-container"></div></div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-10 border-t-4 border-slate-800">
-            <div class="p-4 bg-slate-800 text-white font-semibold text-sm">🗂️ Saved Shoes</div>
+            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase tracking-widest">🗂️ คลังประวัติขอนไพ่และสถิติสะสม</div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs">
-                    <thead><tr class="bg-slate-50 text-slate-500 font-bold uppercase"><th class="p-3 border-b">ขอน</th><th class="p-3 border-b">สถิติ</th><th class="p-3 border-b text-center">จัดการ</th></tr></thead>
-                    <tbody id="archiveTable"></tbody>
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-slate-50 text-[9px] text-slate-500 uppercase font-black">
+                        <tr><th class="p-3 border-b">วันเวลา / No.</th><th class="p-3 border-b text-center">สถิติทายผิดติดต่อกัน (Losing Streaks)</th><th class="p-3 border-b text-center">จัดการ</th></tr>
+                    </thead>
+                    <tbody id="archiveTable" class="text-[10px]"></tbody>
                 </table>
             </div>
         </div>
@@ -145,21 +98,17 @@
         let globalScore = localStorage.getItem('baccaratScore') || "";
         let currentMode = localStorage.getItem('baccaratMode') || "NEW";
         let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive') || "[]");
-        document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
-        document.getElementById('shoeNoInput').value = localStorage.getItem('baccaratShoeNo') || "1";
 
         function setMode(m) { 
             currentMode = m; localStorage.setItem('baccaratMode', m);
-            document.getElementById('btnOld').className = m === 'OLD' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
-            document.getElementById('btnNew').className = m === 'NEW' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
-            document.getElementById('curLabel').innerText = m === 'NEW' ? "ตาไก่" : "ถนนใหญ่";
+            document.getElementById('btnModeOld').className = m === 'OLD' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
+            document.getElementById('btnModeNew').className = m === 'NEW' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
             analyze();
         }
 
         function addScore(c) { globalScore += c; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function clearScore() { if(confirm("Clear?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
-        function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); localStorage.setItem('baccaratShoeNo', document.getElementById('shoeNoInput').value); }
 
         function calculateRoads(pure) {
             let br = []; let cur = [];
@@ -174,7 +123,7 @@
                         road.push(color);
                     }
                 } return road;
-            }; return { br, beb: getD(1), sr: getD(2), cp: getD(3) };
+            }; return { br, beb: getD(1) };
         }
 
         function getAI(pure) {
@@ -187,39 +136,29 @@
             let p2 = (bebS && bebS.n >= 2) ? { n: 'BEB', c: bebS.c } : null;
             let sel = (currentMode === 'NEW') ? (p2 || p1) : (p1 || p2);
             if (!sel) return null;
-            let test = (h, c) => {
-                let nR = calculateRoads([...h, c]);
-                if (sel.n === 'BR') return nR.br[nR.br.length-1].length > sel.len && nR.br[nR.br.length-1][0] === sel.c;
-                return nR.beb[nR.beb.length-1] === sel.c;
-            };
-            if (test(pure, 'B')) return { b: 'BANKER', r: sel.n };
-            if (test(pure, 'P')) return { b: 'PLAYER', r: sel.n };
-            return null;
+            let nextR = calculateRoads([...pure, 'B']);
+            if (sel.n === 'BR') return (nextR.br[nextR.br.length-1].length > sel.len) ? 'B' : 'P';
+            return (nextR.beb.pop() === sel.c) ? 'B' : 'P';
         }
 
         function analyze() {
-            let pure = []; let streaks = { 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 }; let curL = 0;
-            let win=0, loss=0, tableH = "";
+            let pure = []; let streaks = { 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 }; 
+            let win=0, loss=0, curL = 0;
 
             for (let i = 0; i < globalScore.length; i++) {
-                let c = globalScore[i], adv = getAI(pure), st = "-", cls = "text-slate-400";
+                let c = globalScore[i], adv = getAI(pure);
                 if (adv && c !== 'T') {
-                    if (adv.b[0] === c) { st = "WIN"; cls = "text-green-600 font-bold"; win++; if(curL >= 2) streaks[Math.min(curL, 9)]++; curL = 0; }
-                    else { st = "LOSE"; cls = "text-red-600 font-bold"; loss++; curL++; }
-                }
-                tableH = `<tr class="border-b"><td class="p-2 text-center">${i+1}</td><td class="p-2 font-bold">${adv?adv.r:'-'}</td><td class="p-2 text-center">${adv?adv.b[0]:'-'}</td><td class="p-2 text-center">${c}</td><td class="p-2 ${cls}">${st}</td></tr>` + tableH;
-                if (c !== 'T') pure.push(c);
+                    if (adv === c) { win++; if(curL >= 2) streaks[Math.min(curL, 9)]++; curL = 0; }
+                    else { loss++; curL++; }
+                } if (c !== 'T') pure.push(c);
             }
             if(curL >= 2) streaks[Math.min(curL, 9)]++;
 
-            document.getElementById('historyTable').innerHTML = tableH;
-            document.getElementById('winCount').innerText = win; document.getElementById('lossCount').innerText = loss;
+            // Update UI Stats
+            document.getElementById('winCount').innerText = win; 
+            document.getElementById('lossCount').innerText = loss;
             document.getElementById('winRate').innerText = (win+loss>0 ? (win/(win+loss)*100).toFixed(1) : 0) + '%';
             for(let i=2; i<=9; i++) document.getElementById('streak'+i).innerText = streaks[i];
-
-            let next = getAI(pure);
-            document.getElementById('nextBetResult').innerText = next ? next.b : '...';
-            document.getElementById('nextBetCard').className = next ? (next.b==='BANKER'?'bg-red-600 rounded-2xl p-6 text-white':'bg-blue-600 rounded-2xl p-6 text-white') : 'bg-slate-800 rounded-2xl p-6 text-white';
 
             renderRoads(globalScore); renderArchive(); updateDangerBar(globalScore.length);
         }
@@ -233,24 +172,47 @@
             let bp=''; for (let i = 0; i < 72; i++) bp += `<div class="bead-cell-wrap">${sc[i]?`<div class="bead-mark bead-${sc[i]}">${sc[i]}</div>`:''}</div>`;
             document.getElementById('scoreDisplay').innerHTML = bp;
             let pure = sc.replace(/T/g, '').split(''); let r = calculateRoads(pure);
-            let draw = (id, data, fn) => {
-                let cols = []; let cur = []; for(let s of data){ if(cur.length===0 || cur[0]===s) cur.push(s); else { cols.push(cur); cur=[s]; } }
-                if(cur.length>0) cols.push(cur);
-                document.getElementById(id).innerHTML = cols.map(col => `<div class="road-col">${col.map(fn).join('')}</div>`).join('');
+            let draw=(id,data,cls)=>{
+                let cArr=[];let uArr=[];for(let x of data){if(uArr.length===0||uArr[0]===x)uArr.push(x);else{cArr.push(uArr);uArr=[x]}}if(uArr.length>0)cArr.push(uArr);
+                document.getElementById(id).innerHTML=cArr.map(col=>`<div class="road-col">${col.map(s=>`<div class="${cls} ${cls}-${s}"></div>`).join('')}</div>`).join('');
             };
             draw('grid-br', pure, s => `<div class="br-cell br-${s}"></div>`);
             draw('grid-beb', r.beb, s => `<div class="beb-cell beb-${s}"></div>`);
-            draw('grid-sr', r.sr, s => `<div class="sr-cell sr-${s}"></div>`);
-            draw('grid-cp', r.cp, s => `<div class="cp-cell cp-${s}">/</div>`);
         }
 
-        function saveShoeToArchive() { if(!globalScore) return; shoeArchive.unshift({id:Date.now(), shoe:document.getElementById('shoeNoInput').value, date:new Date().toLocaleString('th-TH'), score:globalScore, win:document.getElementById('winCount').innerText, loss:document.getElementById('lossCount').innerText}); localStorage.setItem('baccaratArchive',JSON.stringify(shoeArchive)); renderArchive(); alert("Saved!"); }
-        function renderArchive() {
-            let h=''; shoeArchive.forEach((s,idx)=> h+=`<tr class="border-b"><td class="p-3"><div class="font-bold text-indigo-600">${s.date} (No.${s.shoe})</div></td><td class="p-3 text-center">W:${s.win} L:${s.loss}</td><td class="p-3 text-center"><div class="flex gap-1"><button onclick="loadShoe(${idx})" class="bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold">เปิด</button><button onclick="delShoe(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">ลบ</button></div></td></tr>`);
-            document.getElementById('archiveTable').innerHTML=h;
+        function saveShoeToArchive() { 
+            if(!globalScore) return; 
+            let streaks = { 2: document.getElementById('streak2').innerText, 3: document.getElementById('streak3').innerText, 4: document.getElementById('streak4').innerText, 5: document.getElementById('streak5').innerText, 6: document.getElementById('streak6').innerText, 7: document.getElementById('streak7').innerText, 8: document.getElementById('streak8').innerText, 9: document.getElementById('streak9').innerText };
+            let entry = { id: Date.now(), shoe: document.getElementById('shoeNoInput').value || "?", date: new Date().toLocaleString('th-TH'), score: globalScore, win: document.getElementById('winCount').innerText, loss: document.getElementById('lossCount').innerText, s: streaks };
+            shoeArchive.unshift(entry); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("บันทึกสถิติสำเร็จ!"); 
         }
+
+        function renderArchive() {
+            let h=''; shoeArchive.forEach((s,idx)=>{
+                let st = s.s || { 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 };
+                h+=`<tr class="border-b hover:bg-slate-50">
+                    <td class="p-3">
+                        <div class="font-bold text-indigo-600">ขอน ${s.shoe}</div>
+                        <div class="text-[8px] text-slate-400">${s.date}</div>
+                        <div class="font-bold text-green-600 mt-1">W:${s.win} L:${s.loss}</div>
+                    </td>
+                    <td class="p-3">
+                        <div class="grid grid-cols-4 gap-1 text-[8px] font-bold text-red-500">
+                            <span>[2]:${st[2]}</span><span>[3]:${st[3]}</span><span>[4]:${st[4]}</span><span>[5]:${st[5]}</span>
+                            <span>[6]:${st[6]}</span><span>[7]:${st[7]}</span><span>[8]:${st[8]}</span><span>[9+]:${st[9]}</span>
+                        </div>
+                    </td>
+                    <td class="p-3 text-right">
+                        <button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold mr-1">เปิด</button>
+                        <button onclick="delShoe(${idx})" class="bg-red-500 text-white px-2 py-1 rounded font-bold">ลบ</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('archiveTable').innerHTML = h || '<tr><td colspan="3" class="p-5 text-center text-slate-300">ไม่มีข้อมูล</td></tr>';
+        }
+
         function loadShoe(idx) { let s=shoeArchive[idx]; globalScore=s.score; document.getElementById('shoeNoInput').value=s.shoe; analyze(); window.scrollTo({top:0, behavior:'smooth'}); }
-        function delShoe(idx) { if(confirm("ลบ?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive',JSON.stringify(shoeArchive)); analyze(); } }
+        function delShoe(idx) { if(confirm("ลบ?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
 
         setMode(currentMode);
     </script>
