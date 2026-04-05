@@ -3,11 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Priority Pro AI (Full Restore + History Table)</title>
+    <title>Baccarat Priority Pro AI (Anti-Zoom Fixed)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
         body { font-family: 'Kanit', sans-serif; background-color: #f1f5f9; }
+        
+        /* สั่งให้ปุ่มไม่ซูมเวลาโดน Double Tap */
+        button { touch-action: manipulation; }
+
         .bead-plate-container { display: grid; grid-template-rows: repeat(6, 30px); grid-auto-flow: column; grid-auto-columns: 30px; gap: 1px; background-color: #cbd5e1; border: 1px solid #cbd5e1; padding: 1px; overflow-x: auto; border-radius: 8px; margin-top: 8px; }
         .bead-cell-wrap { background-color: #f8fafc; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .bead-mark { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
@@ -31,7 +35,7 @@
 
         <div class="bg-white rounded-2xl shadow-sm p-4 text-center border-b-2 border-indigo-100">
             <div class="flex justify-between text-[10px] md:text-xs font-bold mb-1 uppercase tracking-wider">
-                <span id="shoePhaseText" class="text-blue-600">กำลังสแกนหาเค้าไพ่...</span>
+                <span id="shoePhaseText" class="text-blue-600">สแกนระบบ...</span>
                 <span id="shoeHandsText" class="text-slate-400">0 ตา</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-2 mb-3">
@@ -62,26 +66,20 @@
 
             <div class="mt-4 text-left">
                 <div class="flex justify-between mb-2 items-center">
-                    <span class="text-xs font-bold text-slate-600 uppercase">📝 ประวัติตาต่อตา (Real-time)</span>
+                    <span class="text-xs font-bold text-slate-600 uppercase">📝 ประวัติตาต่อตา</span>
                 </div>
                 <div class="overflow-x-auto max-h-60 border rounded-xl shadow-inner">
                     <table class="w-full text-left text-[10px] md:text-xs">
                         <thead class="bg-slate-50 sticky top-0">
-                            <tr>
-                                <th class="p-2 border-b">ตา</th>
-                                <th class="p-2 border-b">Priority</th>
-                                <th class="p-2 border-b text-center">สั่งแทง</th>
-                                <th class="p-2 border-b text-center">ผล</th>
-                                <th class="p-2 border-b text-center">สถานะ</th>
-                            </tr>
+                            <tr><th class="p-2 border-b">ตา</th><th class="p-2 border-b">Priority</th><th class="p-2 border-b text-center">สั่งแทง</th><th class="p-2 border-b text-center">ผล</th><th class="p-2 border-b text-center">สถานะ</th></tr>
                         </thead>
                         <tbody id="historyTable"></tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="mt-4 border-t pt-4">
-                <div class="grid grid-cols-3 gap-2 mb-3 text-center">
+            <div class="mt-4 border-t pt-4 text-center">
+                <div class="grid grid-cols-3 gap-2 mb-3">
                     <div class="bg-green-50 p-2 rounded-lg"><div class="text-[10px] text-green-600 font-bold">ชนะ</div><div id="winCount" class="text-xl font-bold text-green-700">0</div></div>
                     <div class="bg-red-50 p-2 rounded-lg"><div class="text-[10px] text-red-600 font-bold">แพ้</div><div id="lossCount" class="text-xl font-bold text-red-700">0</div></div>
                     <div class="bg-blue-50 p-2 rounded-lg"><div class="text-[10px] text-blue-600 font-bold">Win Rate</div><div id="winRate" class="text-xl font-bold text-blue-700">0%</div></div>
@@ -91,32 +89,29 @@
 
             <div class="mt-4 flex gap-2 border-t pt-4">
                 <input type="number" id="shoeNoInput" class="w-20 p-3 border rounded-xl text-center font-bold" oninput="saveMemo()" placeholder="No.">
-                <input type="text" id="memoInput" class="flex-1 p-3 bg-yellow-50 border rounded-xl text-sm" oninput="saveMemo()" placeholder="บันทึกช่วยจำ (Memo)">
+                <input type="text" id="memoInput" class="flex-1 p-3 bg-yellow-50 border rounded-xl text-sm" oninput="saveMemo()" placeholder="Memo...">
             </div>
         </div>
 
         <div id="nextBetCard" class="bg-slate-800 rounded-3xl shadow-xl p-8 text-center text-white transition-all">
             <div id="nextBetResult" class="text-5xl font-black mb-2 uppercase">รอสถิติ...</div>
-            <div id="nextBetReason" class="text-xs opacity-50">กรุณากดหรือวางสกอร์...</div>
+            <div id="nextBetReason" class="text-xs opacity-50">กรุณากดหรือสแกนสกอร์...</div>
         </div>
 
         <div class="bg-slate-800 rounded-2xl shadow-xl p-4 md:p-6 text-white border-b-4 border-indigo-500">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-                <div class="text-left">
-                    <h3 class="font-bold text-sm uppercase text-indigo-300">📊 ศูนย์วิเคราะห์สถิติรวมทุกขอน</h3>
-                    <p class="text-[10px] opacity-50 italic">ดึงข้อมูลจากคลังมาประมวลผล</p>
-                </div>
+                <div class="text-left"><h3 class="font-bold text-sm uppercase text-indigo-300">📊 ศูนย์วิเคราะห์สถิติรวม</h3></div>
                 <div class="flex gap-2 w-full md:w-auto">
-                    <button onclick="analyzeAllShoes()" class="flex-1 bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all shadow-lg">🚀 วิเคราะห์สะสม</button>
-                    <button onclick="copyScoresForAI()" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all shadow-lg">📋 Copy ข้อมูลให้ AI</button>
+                    <button onclick="analyzeAllShoes()" class="flex-1 bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all">🚀 วิเคราะห์สะสม</button>
+                    <button onclick="copyScoresForAI()" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all">📋 Copy ให้ AI</button>
                 </div>
             </div>
             <div id="globalResult" class="hidden space-y-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div class="bg-white/10 p-3 rounded-xl text-center"><div class="text-[10px] opacity-60">สแกนทั้งหมด</div><div id="gTotal" class="text-xl font-bold">0</div></div>
+                    <div class="bg-white/10 p-3 rounded-xl text-center"><div class="text-[10px] opacity-60">สแกนรวม</div><div id="gTotal" class="text-xl font-bold">0</div></div>
                     <div class="bg-green-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-green-400">ชนะรวม</div><div id="gWin" class="text-xl font-bold">0</div></div>
                     <div class="bg-red-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-red-400">แพ้รวม</div><div id="gLoss" class="text-xl font-bold">0</div></div>
-                    <div class="bg-blue-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-blue-400">Win Rate รวม</div><div id="gRate" class="text-xl font-bold">0%</div></div>
+                    <div class="bg-blue-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-blue-400">Win Rate</div><div id="gRate" class="text-xl font-bold">0%</div></div>
                 </div>
                 <div id="gStreaks" class="grid grid-cols-4 md:grid-cols-8 gap-2 bg-black/20 p-3 rounded-xl"></div>
             </div>
@@ -130,7 +125,7 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-10 border-t-4 border-slate-800">
-            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase">🗂️ คลังประวัติขอนไพ่และสถิติ</div>
+            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase">🗂️ คลังประวัติและสถิติ</div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead><tr class="bg-slate-100 text-slate-500 font-bold uppercase"><th class="p-3 border-b">ขอน / เวลา</th><th class="p-3 border-b text-center">สถิติผิดสะสม (2-9+)</th><th class="p-3 border-b text-center">จัดการ</th></tr></thead>
@@ -143,9 +138,8 @@
     <script>
         let globalScore = localStorage.getItem('baccaratScore') || "";
         let currentMode = localStorage.getItem('baccaratMode') || "NEW"; 
-        let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive') || "[]");
-        document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
-        document.getElementById('shoeNoInput').value = localStorage.getItem('baccaratShoeNo') || "1";
+        let rawArch = localStorage.getItem('baccaratArchive') || localStorage.getItem('archive') || "[]";
+        let shoeArchive = JSON.parse(rawArch);
 
         function setMode(m) {
             currentMode = m; localStorage.setItem('baccaratMode', m);
@@ -156,7 +150,7 @@
 
         function addScore(c) { globalScore += c; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); }
-        function clearScore() { if(confirm("ล้างกระดาน?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
+        function clearScore() { if(confirm("Clear?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
         function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); localStorage.setItem('baccaratShoeNo', document.getElementById('shoeNoInput').value); }
 
         function calcRoads(pure) {
@@ -214,13 +208,10 @@
         function analyze() {
             let res = forceStats(globalScore, currentMode);
             let tableH = ""; let pure = [];
-            
-            // Generate History Table
             for (let i = 0; i < globalScore.length; i++) {
                 let c = globalScore[i], idx = i+1, adv = getAI(pure, currentMode), st="-", cls="text-slate-400";
                 if(adv && c!=='T'){
-                    if(adv.b === c){ st="ชนะ"; cls="text-green-600 font-bold"; } 
-                    else { st="แพ้"; cls="text-red-600 font-bold"; }
+                    if(adv.b === c){ st="ชนะ"; cls="text-green-600 font-bold"; } else { st="แพ้"; cls="text-red-600 font-bold"; }
                 }
                 let badge = (char) => `<span class="bg-${char==='B'?'red':char==='P'?'blue':'green'}-500 text-white px-2 py-0.5 rounded text-[10px] font-bold inline-block w-6 text-center">${char}</span>`;
                 tableH = `<tr class="border-b"><td class="p-2 text-center text-slate-400">${idx}</td><td class="p-2 font-bold text-indigo-600">${adv?adv.r:'-'}</td><td class="p-2 text-center">${adv?badge(adv.b):'-'}</td><td class="p-2 text-center">${badge(c)}</td><td class="p-2 text-center ${cls}">${st}</td></tr>` + tableH;
@@ -231,33 +222,27 @@
             document.getElementById('winRate').innerText = (res.win+res.loss>0 ? (res.win/(res.win+res.loss)*100).toFixed(1) : 0) + '%';
             document.getElementById('streakDashboard').innerHTML = Object.keys(res.streaks).map(i => `<div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold">ติด ${i}</div><div class="text-sm font-bold text-red-700">${res.streaks[i]}</div></div>`).join('');
             
-            // AI Radar Logic
             let l = globalScore.length;
-            let p = Math.min((l/70)*100, 100);
-            document.getElementById('shoeProgressBar').style.width = p + '%';
+            document.getElementById('shoeProgressBar').style.width = Math.min((l/70)*100, 100) + '%';
             document.getElementById('shoeHandsText').innerText = l + " ตา";
             let t = document.getElementById('shoePhaseText'), rec = document.getElementById('aiRecommendationCard');
             if (l < 15) {
-                t.innerText = "Phase 1: รอเก็บข้อมูล"; t.className = "text-blue-600";
-                rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-xl text-xs">🧠 <b>AI Radar:</b> รอเก็บข้อมูลให้ครบ 15 ตาเพื่อความแม่นยำ</div>`;
+                t.innerText = "Phase 1: รอเก็บข้อมูล"; rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-xl text-xs">🧠 <b>AI Radar:</b> รอครบ 15 ตาเพื่อความแม่นยำ</div>`;
             } else if (l <= 40) {
-                t.innerText = "Phase 2: Prime Time"; t.className = "text-emerald-600";
-                rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-3 rounded-xl text-xs">✅ <b>AI Recommendation:</b> ช่วงนาทีทอง แนะนำใช้ <b>แผน A (รอผิด 2)</b></div>`;
+                t.innerText = "Phase 2: Prime Time"; rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-3 rounded-xl text-xs">✅ <b>AI Recommendation:</b> นาทีทอง แนะนำ <b>แผน A (รอผิด 2)</b></div>`;
             } else {
-                t.innerText = "Phase 3: Danger Zone"; t.className = "text-red-600";
-                rec.innerHTML = `<div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-xl text-xs">🚨 <b>Caution:</b> ปลายขอนมีความผันผวน แนะนำใช้ <b>แผน B (รอผิด 4)</b></div>`;
+                t.innerText = "Phase 3: Danger Zone"; rec.innerHTML = `<div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-xl text-xs">🚨 <b>Caution:</b> ท้ายขอนผันผวน แนะนำ <b>แผน B (รอผิด 4)</b></div>`;
             }
 
             let next = getAI(pure, currentMode);
             document.getElementById('nextBetResult').innerText = next ? (next.b==='B'?'BANKER':'PLAYER') : 'รอสถิติ...';
-            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กำลังวิเคราะห์...";
+            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "รอสกอร์...";
             document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl shadow-xl p-8 text-white transition-all scale-[1.02]':'bg-blue-600 rounded-3xl shadow-xl p-8 text-white transition-all scale-[1.02]') : 'bg-slate-800 rounded-3xl p-8 text-white';
-
             renderRoads(globalScore); renderArchive();
         }
 
         function analyzeAllShoes() {
-            if(!shoeArchive.length) return alert("ไม่มีข้อมูลในคลังครับ");
+            if(!shoeArchive.length) return alert("ไม่มีข้อมูลในคลัง");
             let gW=0, gL=0, gT=0, gS={ 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 };
             shoeArchive.forEach(s => {
                 let res = forceStats(s.score, currentMode);
@@ -271,8 +256,8 @@
         }
 
         function copyScoresForAI() {
-            if(!shoeArchive.length) return alert("ไม่มีข้อมูลในคลังครับ");
-            let data = "=== ARCHIVE DATA ===\n" + shoeArchive.map(s => `No:${s.shoe} Memo:${s.memo} Score:${s.score}`).join('\n');
+            if(!shoeArchive.length) return alert("ไม่มีข้อมูลในคลัง");
+            let data = shoeArchive.map(s => `No:${s.shoe} Memo:${s.memo} Score:${s.score}`).join('\n');
             navigator.clipboard.writeText(data).then(() => alert("ก๊อปปี้เรียบร้อย!"));
         }
 
@@ -297,13 +282,13 @@
         function renderArchive() {
             let h=''; shoeArchive.forEach((s,idx)=>{
                 let res = forceStats(s.score, currentMode); let st = res.streaks;
-                h+=`<tr class="border-b hover:bg-slate-50"><td class="p-3"><div class="font-bold text-indigo-600 text-xs">ขอน:${s.shoe}</div><div class="text-[9px] text-slate-400">${s.date}</div><div class="font-bold text-green-600">W:${res.win} L:${res.loss}</div></td><td class="p-3"><div class="font-semibold text-[10px] text-slate-600 mb-1 truncate w-32">${s.memo}</div><div class="grid grid-cols-4 gap-1 text-[8px] font-bold text-red-500 bg-red-50 p-1 rounded"><span>[2]:${st[2]}</span><span>[3]:${st[3]}</span><span>[4]:${st[4]}</span><span>[5]:${st[5]}</span><span>[6]:${st[6]}</span><span>[7]:${st[7]}</span><span>[8]:${st[8]}</span><span>[9+]:${st[9]}</span></div></td><td class="p-3 text-right"><div class="flex flex-col gap-1"><button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold text-[10px]">เปิด</button><button onclick="delShoe(${idx})" class="bg-red-500 text-white px-2 py-1 rounded font-bold text-[10px]">ลบ</button></div></td></tr>`;
+                h+=`<tr class="border-b hover:bg-slate-50"><td class="p-3"><div class="font-bold text-indigo-600 text-xs">ขอน:${s.shoe}</div><div class="text-[9px] text-slate-400">${s.date}</div><div class="font-bold text-green-600">W:${res.win} L:${res.loss}</div></td><td class="p-3"><div class="font-semibold text-[10px] text-slate-600 mb-1 truncate w-32">${s.memo}</div><div class="grid grid-cols-4 gap-1 text-[8px] font-bold text-red-500 bg-red-50 p-1 rounded"><span>[2]:${st[2]}</span><span>[3]:${st[3]}</span><span>[4]:${st[4]}</span><span>[5]:${st[5]}</span><span>[6]:${st[6]}</span><span>[7]:${st[7]}</span><span>[8]:${st[8]}</span><span>[9+]:${st[9]}</span></div></td><td class="p-3 text-right"><div class="flex flex-col gap-1"><button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold text-[10px]">เปิด</button><button onclick="delShoe(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold text-[10px]">ลบ</button></div></td></tr>`;
             });
             document.getElementById('archiveTable').innerHTML = h;
         }
 
         function loadShoe(idx) { let s=shoeArchive[idx]; globalScore=s.score; document.getElementById('shoeNoInput').value=s.shoe; document.getElementById('memoInput').value=s.memo; analyze(); window.scrollTo({top:0, behavior:'smooth'}); }
-        function delShoe(idx) { if(confirm("ลบ?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
+        function delShoe(idx) { if(confirm("Del?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
 
         setMode(currentMode);
     </script>
