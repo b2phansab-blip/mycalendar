@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI (Fixed Rendering)</title>
+    <title>Baccarat Pro AI (Ultimate Fix)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -13,17 +13,16 @@
         .bead-mark { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         .bg-B { background-color: #ef4444; } .bg-P { background-color: #3b82f6; } .bg-T { background-color: #22c55e; }
         
-        /* Road Styles - ซ่อมจุดที่ทำให้แสดงผลเพี้ยน */
         .road-container { min-height: 100px; display: flex; gap: 4px; overflow-x: auto; padding: 8px; background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; }
         .road-col { display: flex; flex-direction: column; gap: 4px; }
-        .br-cell { position: relative; width: 22px; height: 22px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; background: white; }
-        .br-B { border-color: #ef4444; } .br-P { border-color: #3b82f6; }
-        .beb-cell { width: 14px; height: 14px; border-radius: 50%; border: 2px solid; }
-        .beb-RED { border-color: #ef4444; } .beb-BLUE { border-color: #3b82f6; }
-        .sr-cell { width: 14px; height: 14px; border-radius: 50%; }
-        .sr-RED { background-color: #ef4444; } .sr-BLUE { background-color: #3b82f6; }
-        .cp-cell { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 16px; line-height: 1; }
-        .cp-RED { color: #ef4444; } .cp-BLUE { color: #3b82f6; }
+        
+        /* วงกลมมาตรฐานเพื่อป้องกันโค้ดยึกยือ */
+        .dot-circle { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid; background: white; }
+        .dot-B { border-color: #ef4444; } .dot-P { border-color: #3b82f6; }
+        .solid-circle { width: 14px; height: 14px; border-radius: 50%; }
+        .solid-RED { background-color: #ef4444; } .solid-BLUE { background-color: #3b82f6; }
+        .slash-mark { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .slash-RED { color: #ef4444; } .slash-BLUE { color: #3b82f6; }
     </style>
 </head>
 <body class="p-2 md:p-4 pb-20">
@@ -34,31 +33,29 @@
 
         <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 text-center border-t-4 border-indigo-500">
             <div class="flex gap-2 mb-4">
-                <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-lg border">สายถนนใหญ่</button>
-                <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-lg border">สายตาไก่</button>
+                <button id="btnModeOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all border">สายถนนใหญ่</button>
+                <button id="btnModeNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-lg transition-all border">สายตาไก่ (แนะนำ)</button>
             </div>
 
-            <div class="text-left mb-4">
-                <div class="text-xs font-bold text-slate-500 uppercase mb-2">Bead Plate</div>
-                <div id="scoreDisplay" class="bead-plate-container shadow-inner"></div>
-            </div>
+            <div id="scoreDisplay" class="bead-plate-container shadow-inner mb-6"></div>
 
             <div class="grid grid-cols-3 gap-2 md:gap-4 mb-6">
-                <button onclick="addScore('P')" class="bg-blue-500 text-white font-bold py-5 rounded-2xl shadow-lg text-2xl">P</button>
-                <button onclick="addScore('T')" class="bg-green-500 text-white font-bold py-5 rounded-2xl shadow-lg text-2xl">T</button>
-                <button onclick="addScore('B')" class="bg-red-500 text-white font-bold py-5 rounded-2xl shadow-lg text-2xl">B</button>
+                <button onclick="addScore('P')" class="bg-blue-500 text-white font-bold py-5 rounded-2xl shadow-lg text-2xl active:scale-95">P</button>
+                <button onclick="addScore('T')" class="bg-green-500 text-white font-bold py-5 rounded-2xl shadow-lg text-2xl active:scale-95">T</button>
+                <button onclick="addScore('B')" class="bg-red-500 text-white font-bold py-5 rounded-2xl shadow-lg text-2xl active:scale-95">B</button>
             </div>
 
-            <div class="grid grid-cols-2 gap-2">
-                <button onclick="undoScore()" class="bg-slate-500 text-white py-2 rounded-lg font-bold">⬅️ Back</button>
-                <button onclick="clearScore()" class="bg-slate-800 text-white py-2 rounded-lg font-bold">🔄 Clear</button>
+            <div class="grid grid-cols-3 gap-2">
+                <button onclick="undoScore()" class="bg-slate-500 text-white py-2 rounded-lg font-bold text-xs">⬅️ Back</button>
+                <button onclick="clearScore()" class="bg-slate-800 text-white py-2 rounded-lg font-bold text-xs">🔄 Clear</button>
+                <button onclick="saveShoe()" class="bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">💾 Save</button>
             </div>
 
             <div class="mt-6 border-t pt-4">
                 <div class="grid grid-cols-3 gap-2 mb-4">
-                    <div class="bg-green-50 p-2 rounded-lg"><div class="text-xs text-green-600">ชนะ</div><div id="winCount" class="text-xl font-bold">0</div></div>
-                    <div class="bg-red-50 p-2 rounded-lg"><div class="text-xs text-red-600">แพ้</div><div id="lossCount" class="text-xl font-bold">0</div></div>
-                    <div class="bg-blue-50 p-2 rounded-lg"><div class="text-xs text-blue-600">Win Rate</div><div id="winRate" class="text-xl font-bold">0%</div></div>
+                    <div class="bg-green-50 p-2 rounded-lg"><div class="text-xs text-green-600 font-bold">ชนะ</div><div id="winCount" class="text-xl font-bold">0</div></div>
+                    <div class="bg-red-50 p-2 rounded-lg"><div class="text-xs text-red-600 font-bold">แพ้</div><div id="lossCount" class="text-xl font-bold">0</div></div>
+                    <div class="bg-blue-50 p-2 rounded-lg"><div class="text-xs text-blue-600 font-bold">Win Rate</div><div id="winRate" class="text-xl font-bold">0%</div></div>
                 </div>
                 <div id="streakDashboard" class="grid grid-cols-4 md:grid-cols-8 gap-1"></div>
             </div>
@@ -72,7 +69,10 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-10 border-t-4 border-slate-800">
-            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase">🗂️ คลังประวัติขอนไพ่</div>
+            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase flex justify-between items-center">
+                <span>🗂️ คลังประวัติขอนไพ่</span>
+                <button onclick="localStorage.removeItem('baccaratArchive'); location.reload();" class="text-red-400 text-[10px]">ล้างคลัง</button>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left text-xs border-collapse">
                     <tbody id="archiveTable"></tbody>
@@ -84,7 +84,7 @@
     <script>
         let globalScore = localStorage.getItem('baccaratScore') || "";
         let currentMode = localStorage.getItem('baccaratMode') || "NEW";
-        let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive') || "[]");
+        let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive') || localStorage.getItem('archive') || "[]");
 
         function setMode(m) {
             currentMode = m; localStorage.setItem('baccaratMode', m);
@@ -95,9 +95,9 @@
 
         function addScore(c) { globalScore += c; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); }
-        function clearScore() { if(confirm("Clear current?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
+        function clearScore() { if(confirm("Clear shoe?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
 
-        function calculateRoads(pure) {
+        function calcRoads(pure) {
             let br = []; let cur = [];
             for (let s of pure) { if (cur.length === 0 || cur[0] === s) cur.push(s); else { br.push(cur); cur = [s]; } }
             if (cur.length > 0) br.push(cur);
@@ -106,8 +106,7 @@
                 for (let c = off; c < br.length; c++) {
                     for (let r = 0; r < br[c].length; r++) {
                         if (c === off && r === 0) continue;
-                        let color = (r === 0) ? (br[c-1].length === br[c-1-off].length ? 'RED' : 'BLUE') : (br[c-off].length >= r + 1 ? 'RED' : br[c-off].length === r ? 'BLUE' : 'RED');
-                        road.push(color);
+                        road.push((r === 0) ? (br[c-1].length === br[c-1-off].length ? 'RED' : 'BLUE') : (br[c-off].length >= r + 1 ? 'RED' : br[c-off].length === r ? 'BLUE' : 'RED'));
                     }
                 } return road;
             }; return { br, beb: getD(1), sr: getD(2), cp: getD(3) };
@@ -115,64 +114,79 @@
 
         function getAI(pure) {
             if (pure.length < 5) return null;
-            let r = calculateRoads(pure);
+            let r = calcRoads(pure);
             let getS = (arr) => { if(!arr.length) return null; let l=arr[arr.length-1], n=0; for(let i=arr.length-1;i>=0;i--){if(arr[i]===l)n++; else break;} return {c:l,n:n}; };
             let streaks = { BR: {c:r.br[r.br.length-1][0], n:r.br[r.br.length-1].length}, BEB: getS(r.beb), SR: getS(r.sr), CP: getS(r.cp) };
             let pOrder = currentMode === 'NEW' ? ['BEB','BR','SR','CP'] : ['BR','BEB','SR','CP'];
             let sel = null;
             for(let p of pOrder) { if(streaks[p] && streaks[p].n >= 2) { sel = {name: p, c: streaks[p].c}; break; } }
             if (!sel) return null;
-            let test = (h, c) => {
-                let nR = calculateRoads([...h, c]);
+            let test = (c) => {
+                let nR = calcRoads([...pure, c]);
                 if (sel.name === 'BR') return nR.br[nR.br.length-1].length > streaks.BR.n;
                 let k = sel.name.toLowerCase(); return nR[k][nR[k].length-1] === sel.c;
             };
-            return test(pure, 'B') ? 'B' : 'P';
+            return test('B') ? 'B' : 'P';
         }
 
-        function analyze() {
+        function analyzeStats(scoreStr) {
             let pure = []; let win=0, loss=0, ls=0;
             let streaks = { 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 };
-
-            for (let i = 0; i < globalScore.length; i++) {
-                let c = globalScore[i], adv = getAI(pure);
+            for (let i = 0; i < scoreStr.length; i++) {
+                let c = scoreStr[i], adv = getAI(pure);
                 if (adv && c !== 'T') {
-                    if (adv === c) { win++; if(ls>=2) streaks[Math.min(ls,9)]++; ls=0; }
+                    if (adv === c) { win++; if(ls>=2) streaks[Math.min(ls, 9)]++; ls=0; }
                     else { loss++; ls++; }
                 } if (c !== 'T') pure.push(c);
             }
-            if(ls>=2) streaks[Math.min(ls,9)]++;
-
-            document.getElementById('winCount').innerText = win; document.getElementById('lossCount').innerText = loss;
-            document.getElementById('winRate').innerText = (win+loss>0 ? (win/(win+loss)*100).toFixed(1) : 0) + '%';
-            document.getElementById('streakDashboard').innerHTML = Object.keys(streaks).map(i => `<div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold">ติด ${i}</div><div class="text-sm font-bold">${streaks[i]}</div></div>`).join('');
-
-            renderRoads(globalScore); renderArchive(); updateAIRecommendation(pure.length);
+            if(ls>=2) streaks[Math.min(ls, 9)]++;
+            return { win, loss, streaks };
         }
 
-        function renderRoads(sc) {
-            let bp=''; for (let i = 0; i < 72; i++) bp += `<div class="bead-cell-wrap">${sc[i]?`<div class="bead-mark bg-${sc[i]}">${sc[i]}</div>`:''}</div>`;
-            document.getElementById('scoreDisplay').innerHTML = bp;
-            let pure = sc.replace(/T/g, '').split(''); let r = calculateRoads(pure);
-            let draw=(id, data, fn)=>{
-                let cols=[]; let u=[]; for(let x of data){if(u.length===0||u[0]===x)u.push(x);else{cols.push(u);u=[x]}}if(u.length>0)cols.push(u);
-                document.getElementById(id).innerHTML=cols.map(col=>`<div class="road-col">${col.map(fn).join('')}</div>`).join('');
-            };
-            draw('grid-br', pure, s => `<div class="br-cell br-${s}"></div>`);
-            draw('grid-beb', r.beb, s => `<div class="beb-cell beb-${s}"></div>`);
-            draw('grid-sr', r.sr, s => `<div class="sr-cell sr-${s}"></div>`);
-            draw('grid-cp', r.cp, s => `<div class="cp-cell cp-${s}">/</div>`);
-        }
-
-        function updateAIRecommendation(l) {
+        function analyze() {
+            let res = analyzeStats(globalScore);
+            document.getElementById('winCount').innerText = res.win;
+            document.getElementById('lossCount').innerText = res.loss;
+            document.getElementById('winRate').innerText = (res.win+res.loss>0 ? (res.win/(res.win+res.loss)*100).toFixed(1) : 0) + '%';
+            document.getElementById('streakDashboard').innerHTML = Object.keys(res.streaks).map(i => `<div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold">ติด ${i}</div><div class="text-sm font-bold">${res.streaks[i]}</div></div>`).join('');
+            
+            renderAllRoads(globalScore);
+            renderArchive();
+            
             let rec = document.getElementById('aiRecommendationCard');
-            if (l < 15) rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl text-xs">🧠 <b>AI:</b> รอข้อมูลให้ครบ 15 ตา...</div>`;
-            else rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl text-xs">✅ <b>AI:</b> ทางสะดวก แนะนำใช้แผน A (รอผิด 2) ครับ!</div>`;
+            if (globalScore.length < 15) rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl text-xs">🧠 <b>AI:</b> รอข้อมูลให้ครบ 15 ตา...</div>`;
+            else rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl text-xs">✅ <b>AI:</b> แนะนำใช้แผน A (รอผิด 2) ครับ!</div>`;
         }
+
+        function renderAllRoads(sc) {
+            // Bead Plate
+            let bpHTML = ''; for (let i = 0; i < 72; i++) bpHTML += `<div class="bead-cell-wrap">${sc[i]?`<div class="bead-mark bg-${sc[i]}">${sc[i]}</div>`:''}</div>`;
+            document.getElementById('scoreDisplay').innerHTML = bpHTML;
+
+            let pure = sc.replace(/T/g, '').split('');
+            let r = calcRoads(pure);
+            
+            let draw = (id, data, htmlFn) => {
+                let cols = []; let u = [];
+                for(let x of data){ if(u.length===0 || u[0]===x) u.push(x); else { cols.push(u); u=[x]; } }
+                if(u.length>0) cols.push(u);
+                document.getElementById(id).innerHTML = cols.map(c => `<div class="road-col">${c.map(htmlFn).join('')}</div>`).join('');
+            };
+
+            draw('grid-br', pure, s => `<div class="dot-circle dot-${s}"></div>`);
+            draw('grid-beb', r.beb, s => `<div class="dot-circle dot-${s === 'RED' ? 'B' : 'P'}"></div>`);
+            draw('grid-sr', r.sr, s => `<div class="solid-circle solid-${s}"></div>`);
+            draw('grid-cp', r.cp, s => `<div class="slash-mark slash-${s}">/</div>`);
+        }
+
+        function saveShoe() { if(!globalScore) return; shoeArchive.unshift({id:Date.now(), score:globalScore, date:new Date().toLocaleString('th-TH')}); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("Saved!"); }
 
         function renderArchive() {
-            let h=''; shoeArchive.forEach((s,idx)=> h+=`<tr class="border-b"><td class="p-3 font-bold text-indigo-600">${s.date}</td><td class="p-3 text-right"><button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-3 py-1 rounded font-bold">เปิด</button></td></tr>`);
-            document.getElementById('archiveTable').innerHTML = h;
+            let h=''; shoeArchive.forEach((s, idx) => {
+                let res = analyzeStats(s.score);
+                h+=`<tr class="border-b"><td class="p-3"><div class="font-bold text-indigo-600">${s.date}</div><div class="font-bold text-green-600">W:${res.win} L:${res.loss}</div></td><td class="p-3"><div class="grid grid-cols-4 gap-1 text-[9px] font-bold text-red-500"><span>[2]:${res.streaks[2]}</span><span>[4]:${res.streaks[4]}</span><span>[6]:${res.streaks[6]}</span><span>[8]:${res.streaks[8]}</span></div></td><td class="p-3 text-right"><button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold">เปิด</button></td></tr>`;
+            });
+            document.getElementById('archiveTable').innerHTML = h || '<tr><td class="p-5 text-center text-slate-300">ไม่มีข้อมูล</td></tr>';
         }
 
         function loadShoe(idx) { globalScore=shoeArchive[idx].score; analyze(); }
