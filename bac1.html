@@ -3,19 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI (Priority Classic + Full Archive Stats)</title>
+    <title>Baccarat Pro AI (Priority Classic + Archive Full Stats)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
         body { font-family: 'Kanit', sans-serif; }
+        
+        /* Bead Plate */
         .bead-plate-container { display: grid; grid-template-rows: repeat(6, 30px); grid-auto-flow: column; grid-auto-columns: 30px; gap: 1px; background-color: #cbd5e1; border: 1px solid #cbd5e1; padding: 1px; overflow-x: auto; border-radius: 8px; margin-top: 8px; }
         .bead-cell-wrap { background-color: #f8fafc; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .bead-mark { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
         .bead-B { background-color: #ef4444; } .bead-P { background-color: #3b82f6; } .bead-T { background-color: #22c55e; }
+
+        /* Roads */
         .br-cell { position: relative; width: 24px; height: 24px; border-radius: 50%; border: 2px solid; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: bold; background: white;}
         .br-B { border-color: #ef4444; color: #ef4444; } .br-P { border-color: #3b82f6; color: #3b82f6; }
+        .br-tie-line { position: absolute; width: 100%; height: 3px; background-color: #22c55e; transform: rotate(-45deg); }
         .beb-cell { width: 16px; height: 16px; border-radius: 50%; border: 2px solid; background: transparent; }
         .beb-RED { border-color: #ef4444; } .beb-BLUE { border-color: #3b82f6; }
+        .sr-cell { width: 16px; height: 16px; border-radius: 50%; }
+        .sr-RED { background-color: #ef4444; } .sr-BLUE { background-color: #3b82f6; }
+        .cp-cell { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 14px; }
+        .cp-RED { color: #ef4444; } .cp-BLUE { color: #3b82f6; }
+
         .road-container { min-height: 100px; display: flex; gap: 4px; overflow-x: auto; padding: 8px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; }
         .road-col { display: flex; flex-direction: column; gap: 4px; }
     </style>
@@ -23,6 +33,7 @@
 <body class="bg-slate-200 min-h-screen p-2 md:p-6 pb-20">
 
     <div class="max-w-5xl mx-auto space-y-4">
+
         <div class="bg-white rounded-2xl shadow-sm p-4 text-center">
             <div class="flex justify-between text-xs md:text-sm font-bold mb-1">
                 <span id="shoePhaseText" class="text-blue-600">กำลังโหลดข้อมูล...</span>
@@ -32,63 +43,80 @@
                 <div id="shoeProgressBar" class="bg-blue-500 h-3 rounded-full transition-all duration-500" style="width: 0%"></div>
             </div>
             <div class="flex gap-2 mt-3">
-                <button id="btnModeOld" onclick="setMode('OLD')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายถนนใหญ่</button>
-                <button id="btnModeNew" onclick="setMode('NEW')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายตาไก่ (แนะนำ)</button>
+                <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายถนนใหญ่</button>
+                <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-1 text-[10px] font-bold rounded-lg border transition-all">สายตาไก่ (แนะนำ)</button>
             </div>
         </div>
+        
+        <div id="aiRecommendationCard"></div>
 
         <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 text-center border-t-4 border-indigo-500">
-            <div id="scoreDisplay" class="bead-plate-container shadow-inner mb-6"></div>
-
-            <div class="grid grid-cols-3 gap-2 md:gap-4">
-                <button onclick="addScore('P')" class="bg-blue-500 text-white font-bold py-6 rounded-2xl shadow-lg text-3xl">P</button>
-                <button onclick="addScore('T')" class="bg-green-500 text-white font-bold py-6 rounded-2xl shadow-lg text-3xl">T</button>
-                <button onclick="addScore('B')" class="bg-red-500 text-white font-bold py-6 rounded-2xl shadow-lg text-3xl">B</button>
+            <div class="mt-2 text-left">
+                <div class="text-sm font-bold text-slate-600 uppercase tracking-tight">กระดานลูกปัด (Bead Plate)</div>
+                <div id="scoreDisplay" class="bead-plate-container shadow-inner"></div>
             </div>
 
-            <div class="grid grid-cols-3 gap-2 mt-4">
-                <button onclick="undoScore()" class="bg-slate-500 text-white py-2 rounded-lg font-bold text-xs">⬅️ Back</button>
-                <button onclick="clearScore()" class="bg-slate-800 text-white py-2 rounded-lg font-bold text-xs">🔄 Clear</button>
-                <button onclick="saveShoeToArchive()" class="bg-emerald-600 text-white py-2 rounded-lg font-bold text-xs">💾 Save</button>
+            <div class="grid grid-cols-3 gap-2 md:gap-4 mt-6">
+                <button onclick="addScore('P')" class="bg-blue-500 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(29,78,216)] active:translate-y-1 text-xl md:text-2xl">P</button>
+                <button onclick="addScore('T')" class="bg-green-500 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(21,128,61)] active:translate-y-1 text-xl md:text-2xl">T</button>
+                <button onclick="addScore('B')" class="bg-red-500 text-white font-bold py-4 md:py-6 rounded-xl shadow-[0_4px_0_rgb(185,28,28)] active:translate-y-1 text-xl md:text-2xl">B</button>
             </div>
 
-            <div class="mt-4 border-t pt-4">
-                <div class="grid grid-cols-3 gap-2 mb-3">
-                    <div class="bg-green-50 p-2 rounded-lg text-center"><div class="text-[10px] text-green-600">ชนะ</div><div id="winCount" class="text-xl font-bold">0</div></div>
-                    <div class="bg-red-50 p-2 rounded-lg text-center"><div class="text-[10px] text-red-600">แพ้</div><div id="lossCount" class="text-xl font-bold">0</div></div>
-                    <div class="bg-blue-50 p-2 rounded-lg text-center"><div class="text-[10px] text-blue-600">Win Rate</div><div id="winRate" class="text-xl font-bold">0%</div></div>
+            <div class="grid grid-cols-3 gap-2 md:gap-4 mt-4">
+                <button onclick="undoScore()" class="bg-slate-500 text-white font-bold py-3 rounded-xl shadow text-xs">⬅️ Back</button>
+                <button onclick="clearScore()" class="bg-slate-800 text-white font-bold py-3 rounded-xl shadow text-xs">🔄 Clear</button>
+                <button onclick="saveShoeToArchive()" class="bg-emerald-600 text-white font-bold py-3 rounded-xl shadow text-xs">💾 Save</button>
+            </div>
+
+            <div class="mt-4 border-t border-slate-100 pt-4">
+                <div class="grid grid-cols-3 gap-3">
+                    <div class="bg-green-50 p-2 md:p-3 rounded-xl border border-green-200"><div class="text-green-600 font-semibold text-xs">ชนะ</div><div class="text-xl md:text-2xl font-bold" id="winCount">0</div></div>
+                    <div class="bg-red-50 p-2 md:p-3 rounded-xl border border-red-200"><div class="text-red-600 font-semibold text-xs">แพ้</div><div class="text-xl md:text-2xl font-bold" id="lossCount">0</div></div>
+                    <div class="bg-blue-50 p-2 md:p-3 rounded-xl border border-blue-200"><div class="text-blue-600 font-semibold text-xs">Win Rate</div><div class="text-xl md:text-2xl font-bold" id="winRate">0%</div></div>
                 </div>
-                <div class="grid grid-cols-4 md:grid-cols-8 gap-1">
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 2</div><div id="streak2" class="text-sm font-bold">0</div></div>
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 3</div><div id="streak3" class="text-sm font-bold">0</div></div>
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 4</div><div id="streak4" class="text-sm font-bold">0</div></div>
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 5</div><div id="streak5" class="text-sm font-bold">0</div></div>
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 6</div><div id="streak6" class="text-sm font-bold">0</div></div>
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 7</div><div id="streak7" class="text-sm font-bold">0</div></div>
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 8</div><div id="streak8" class="text-sm font-bold">0</div></div>
-                    <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold uppercase">ติด 9+</div><div id="streak9" class="text-sm font-bold">0</div></div>
+                <div class="mt-3 text-left">
+                    <div class="text-xs font-bold text-slate-500 mb-1">สถิติแพ้ติดกัน (Losing Streaks) - <span id="curModeTxt"></span></div>
+                    <div class="grid grid-cols-4 md:grid-cols-8 gap-1 md:gap-2">
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 2</div><div id="streak2" class="text-sm font-bold">0</div></div>
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 3</div><div id="streak3" class="text-sm font-bold">0</div></div>
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 4</div><div id="streak4" class="text-sm font-bold">0</div></div>
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 5</div><div id="streak5" class="text-sm font-bold">0</div></div>
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 6</div><div id="streak6" class="text-sm font-bold">0</div></div>
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 7</div><div id="streak7" class="text-sm font-bold">0</div></div>
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 8</div><div id="streak8" class="text-sm font-bold">0</div></div>
+                        <div class="bg-red-50 p-1 border rounded text-center"><div class="text-[9px] font-bold text-red-400">ติด 9+</div><div id="streak9" class="text-sm font-bold">0</div></div>
+                    </div>
                 </div>
             </div>
-            
+
             <div class="mt-4 flex gap-2">
-                <input type="number" id="shoeNoInput" class="w-20 p-2 border rounded text-center font-bold" placeholder="ขอนที่">
-                <input type="text" id="memoInput" class="flex-1 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs" placeholder="Memo...">
+                <input type="number" id="shoeNoInput" class="w-20 p-3 border rounded-xl text-center font-bold" oninput="saveMemo()" placeholder="No.">
+                <input type="text" id="memoInput" class="flex-1 p-3 bg-yellow-50 border border-yellow-200 rounded-xl" oninput="saveMemo()" placeholder="Memo...">
             </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div class="bg-white p-2 rounded-xl border-l-4 border-indigo-500"><div id="grid-beb" class="road-container"></div></div>
-            <div class="bg-white p-2 rounded-xl border-l-4 border-slate-300"><div id="grid-br" class="road-container"></div></div>
+        <div id="nextBetCard" class="bg-slate-800 rounded-2xl shadow-lg p-6 text-center text-white transition-all">
+            <div id="nextBetResult" class="text-4xl md:text-6xl font-bold mb-2 uppercase">รอสถิติ...</div>
+            <div id="nextBetReason" class="text-xs bg-black/20 px-3 py-1 rounded-full">กรุณากดสกอร์...</div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div><div class="text-xs font-bold text-slate-500 mb-1">1. ถนนใหญ่</div><div id="grid-br" class="road-container"></div></div>
+            <div><div class="text-xs font-bold text-slate-500 mb-1">2. ตาไก่</div><div id="grid-beb" class="road-container"></div></div>
+            <div><div class="text-xs font-bold text-slate-500 mb-1">3. ถนนเล็ก</div><div id="grid-sr" class="road-container"></div></div>
+            <div><div class="text-xs font-bold text-slate-500 mb-1">4. แมลงสาบ</div><div id="grid-cp" class="road-container"></div></div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-10 border-t-4 border-slate-800">
-            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase tracking-widest">🗂️ คลังประวัติขอนไพ่และสถิติสะสม</div>
+            <div class="p-3 bg-slate-800 text-white font-bold text-sm uppercase">🗂️ คลังประวัติขอนไพ่และสถิติ</div>
             <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead class="bg-slate-50 text-[9px] text-slate-500 uppercase font-black">
-                        <tr><th class="p-3 border-b">วันเวลา / No.</th><th class="p-3 border-b text-center">สถิติทายผิดติดต่อกัน (Losing Streaks)</th><th class="p-3 border-b text-center">จัดการ</th></tr>
-                    </thead>
-                    <tbody id="archiveTable" class="text-[10px]"></tbody>
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead><tr class="bg-slate-100 text-slate-500 font-bold uppercase">
+                        <th class="p-3 border-b">วันเวลา / ขอน</th>
+                        <th class="p-3 border-b">สถิติผิดติดต่อกัน (Loss Streak)</th>
+                        <th class="p-3 border-b text-center">จัดการ</th>
+                    </tr></thead>
+                    <tbody id="archiveTable"></tbody>
                 </table>
             </div>
         </div>
@@ -98,17 +126,21 @@
         let globalScore = localStorage.getItem('baccaratScore') || "";
         let currentMode = localStorage.getItem('baccaratMode') || "NEW";
         let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive') || "[]");
+        document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
+        document.getElementById('shoeNoInput').value = localStorage.getItem('baccaratShoeNo') || "1";
 
         function setMode(m) { 
             currentMode = m; localStorage.setItem('baccaratMode', m);
-            document.getElementById('btnModeOld').className = m === 'OLD' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
-            document.getElementById('btnModeNew').className = m === 'NEW' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white shadow-sm" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
+            document.getElementById('btnOld').className = m === 'OLD' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
+            document.getElementById('btnNew').className = m === 'NEW' ? "flex-1 py-1 text-[10px] font-bold rounded-lg bg-indigo-600 text-white" : "flex-1 py-1 text-[10px] font-bold text-slate-400";
+            document.getElementById('curModeTxt').innerText = m === 'NEW' ? "ตาไก่" : "ถนนใหญ่";
             analyze();
         }
 
         function addScore(c) { globalScore += c; localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function undoScore() { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); }
-        function clearScore() { if(confirm("Clear?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
+        function clearScore() { if(confirm("Clear current?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
+        function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); localStorage.setItem('baccaratShoeNo', document.getElementById('shoeNoInput').value); }
 
         function calculateRoads(pure) {
             let br = []; let cur = [];
@@ -119,52 +151,59 @@
                 for (let c = off; c < br.length; c++) {
                     for (let r = 0; r < br[c].length; r++) {
                         if (c === off && r === 0) continue;
-                        let color = (r === 0) ? (br[c-1].length === br[c-1-off].length ? 'RED' : 'BLUE') : (br[c-off].length >= r + 1 ? 'RED' : br[c-off].length === r ? 'BLUE' : 'RED');
-                        road.push(color);
+                        let col = (r === 0) ? (br[c-1].length === br[c-1-off].length ? 'RED' : 'BLUE') : (br[c-off].length >= r + 1 ? 'RED' : br[c-off].length === r ? 'BLUE' : 'RED');
+                        road.push(col);
                     }
                 } return road;
-            }; return { br, beb: getD(1) };
+            }; return { br, beb: getD(1), sr: getD(2), cp: getD(3) };
         }
 
         function getAI(pure) {
             if (pure.length < 5) return null;
             let r = calculateRoads(pure);
-            let brS = { c: r.br[r.br.length-1][0], n: r.br[r.br.length-1].length };
             let getS = (arr) => { if(!arr.length) return null; let l=arr[arr.length-1], n=0; for(let i=arr.length-1;i>=0;i--){if(arr[i]===l)n++; else break;} return {c:l,n:n}; };
-            let bebS = getS(r.beb);
-            let p1 = brS.n >= 2 ? { n: 'BR', c: brS.c, len: brS.n } : null;
-            let p2 = (bebS && bebS.n >= 2) ? { n: 'BEB', c: bebS.c } : null;
-            let sel = (currentMode === 'NEW') ? (p2 || p1) : (p1 || p2);
+            let streaks = { BR: {c:r.br[r.br.length-1][0], n:r.br[r.br.length-1].length}, BEB: getS(r.beb), SR: getS(r.sr), CP: getS(r.cp) };
+            let pOrder = currentMode === 'NEW' ? ['BEB','BR','SR','CP'] : ['BR','BEB','SR','CP'];
+            let sel = null;
+            for(let p of pOrder) { if(streaks[p] && streaks[p].n >= 2) { sel = {name: p, c: streaks[p].c}; break; } }
             if (!sel) return null;
-            let nextR = calculateRoads([...pure, 'B']);
-            if (sel.n === 'BR') return (nextR.br[nextR.br.length-1].length > sel.len) ? 'B' : 'P';
-            return (nextR.beb.pop() === sel.c) ? 'B' : 'P';
+            let test = (h, c) => {
+                let nR = calculateRoads([...h, c]);
+                if (sel.name === 'BR') return nR.br[nR.br.length-1].length > streaks.BR.n && nR.br[nR.br.length-1][0] === sel.c;
+                let k = sel.name.toLowerCase(); return nR[k][nR[k].length-1] === sel.c;
+            };
+            if (test(pure, 'B')) return { b: 'BANKER', r: sel.name };
+            if (test(pure, 'P')) return { b: 'PLAYER', r: sel.name };
+            return null;
         }
 
         function analyze() {
             let pure = []; let streaks = { 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 }; 
-            let win=0, loss=0, curL = 0;
+            let win=0, loss=0, ls = 0;
 
             for (let i = 0; i < globalScore.length; i++) {
                 let c = globalScore[i], adv = getAI(pure);
                 if (adv && c !== 'T') {
-                    if (adv === c) { win++; if(curL >= 2) streaks[Math.min(curL, 9)]++; curL = 0; }
-                    else { loss++; curL++; }
+                    if (adv.b[0] === c) { win++; if(ls>=2) streaks[Math.min(ls, 9)]++; ls=0; }
+                    else { loss++; ls++; }
                 } if (c !== 'T') pure.push(c);
             }
-            if(curL >= 2) streaks[Math.min(curL, 9)]++;
+            if(ls>=2) streaks[Math.min(ls, 9)]++;
 
-            // Update UI Stats
-            document.getElementById('winCount').innerText = win; 
-            document.getElementById('lossCount').innerText = loss;
+            document.getElementById('winCount').innerText = win; document.getElementById('lossCount').innerText = loss;
             document.getElementById('winRate').innerText = (win+loss>0 ? (win/(win+loss)*100).toFixed(1) : 0) + '%';
             for(let i=2; i<=9; i++) document.getElementById('streak'+i).innerText = streaks[i];
+            document.getElementById('shoeHandsText').innerText = globalScore.length + " ตา";
+
+            let next = getAI(pure);
+            document.getElementById('nextBetResult').innerText = next ? next.b : '...';
+            document.getElementById('nextBetCard').className = next ? (next.b==='BANKER'?'bg-red-600 rounded-2xl shadow-xl p-6 text-white':'bg-blue-600 rounded-2xl shadow-xl p-6 text-white') : 'bg-slate-800 rounded-2xl shadow-lg p-6 text-white';
 
             renderRoads(globalScore); renderArchive(); updateDangerBar(globalScore.length);
         }
 
         function updateDangerBar(l) {
-            let pct = Math.min((l/70)*100, 100); document.getElementById('shoeProgressBar').style.width = pct + '%'; document.getElementById('shoeHandsText').innerText = l + " ตา";
+            let pct = Math.min((l/70)*100, 100); document.getElementById('shoeProgressBar').style.width = pct + '%';
             let t = document.getElementById('shoePhaseText'); if (l < 20) t.innerText = "Phase 1: รอข้อมูล"; else if (l <= 40) t.innerText = "Phase 2: Prime Time"; else t.innerText = "Phase 3: Danger Zone";
         }
 
@@ -178,41 +217,55 @@
             };
             draw('grid-br', pure, s => `<div class="br-cell br-${s}"></div>`);
             draw('grid-beb', r.beb, s => `<div class="beb-cell beb-${s}"></div>`);
+            draw('grid-sr', r.sr, s => `<div class="sr-cell sr-${s}"></div>`);
+            draw('grid-cp', r.cp, s => `<div class="cp-cell cp-${s}">/</div>`);
         }
 
         function saveShoeToArchive() { 
             if(!globalScore) return; 
-            let streaks = { 2: document.getElementById('streak2').innerText, 3: document.getElementById('streak3').innerText, 4: document.getElementById('streak4').innerText, 5: document.getElementById('streak5').innerText, 6: document.getElementById('streak6').innerText, 7: document.getElementById('streak7').innerText, 8: document.getElementById('streak8').innerText, 9: document.getElementById('streak9').innerText };
-            let entry = { id: Date.now(), shoe: document.getElementById('shoeNoInput').value || "?", date: new Date().toLocaleString('th-TH'), score: globalScore, win: document.getElementById('winCount').innerText, loss: document.getElementById('lossCount').innerText, s: streaks };
-            shoeArchive.unshift(entry); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("บันทึกสถิติสำเร็จ!"); 
+            // ดึงสถิติผิดติดกันมาเก็บ
+            let s9 = document.getElementById('streak9').innerText;
+            let summary = ""; for(let i=2; i<=8; i++) summary += `[${i}]:${document.getElementById('streak'+i).innerText} `;
+            summary += `[9+]:${s9}`;
+
+            let entry = { 
+                id: Date.now(), 
+                shoe: document.getElementById('shoeNoInput').value || "เก่า", 
+                date: new Date().toLocaleString('th-TH'), 
+                score: globalScore, 
+                memo: document.getElementById('memoInput').value || "-", 
+                win: document.getElementById('winCount').innerText, 
+                loss: document.getElementById('lossCount').innerText,
+                streakSummary: summary 
+            };
+            shoeArchive.unshift(entry); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("บันทึกสถิติครบถ้วน!"); 
         }
 
         function renderArchive() {
             let h=''; shoeArchive.forEach((s,idx)=>{
-                let st = s.s || { 2:0, 3:0, 4:0, 5:0, 6:0, 7:0, 8:0, 9:0 };
                 h+=`<tr class="border-b hover:bg-slate-50">
                     <td class="p-3">
-                        <div class="font-bold text-indigo-600">ขอน ${s.shoe}</div>
+                        <div class="font-bold text-indigo-600">ขอนที่ ${s.shoe}</div>
                         <div class="text-[8px] text-slate-400">${s.date}</div>
-                        <div class="font-bold text-green-600 mt-1">W:${s.win} L:${s.loss}</div>
+                        <div class="font-bold text-green-600">W:${s.win} L:${s.loss}</div>
                     </td>
                     <td class="p-3">
-                        <div class="grid grid-cols-4 gap-1 text-[8px] font-bold text-red-500">
-                            <span>[2]:${st[2]}</span><span>[3]:${st[3]}</span><span>[4]:${st[4]}</span><span>[5]:${st[5]}</span>
-                            <span>[6]:${st[6]}</span><span>[7]:${st[7]}</span><span>[8]:${st[8]}</span><span>[9+]:${st[9]}</span>
-                        </div>
+                        <div class="font-semibold text-slate-600 mb-1">${s.memo}</div>
+                        <div class="text-[9px] text-red-500 font-bold bg-red-50 p-1 rounded border border-red-100">${s.streakSummary || 'ไม่มีสถิติ'}</div>
                     </td>
-                    <td class="p-3 text-right">
-                        <button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold mr-1">เปิด</button>
-                        <button onclick="delShoe(${idx})" class="bg-red-500 text-white px-2 py-1 rounded font-bold">ลบ</button>
+                    <td class="p-3 text-center">
+                        <div class="flex flex-col gap-1">
+                            <button onclick="loadShoe(${idx})" class="bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold">เปิด</button>
+                            <button onclick="delShoe(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold">ลบ</button>
+                        </div>
                     </td>
                 </tr>`;
             });
             document.getElementById('archiveTable').innerHTML = h || '<tr><td colspan="3" class="p-5 text-center text-slate-300">ไม่มีข้อมูล</td></tr>';
         }
 
-        function loadShoe(idx) { let s=shoeArchive[idx]; globalScore=s.score; document.getElementById('shoeNoInput').value=s.shoe; analyze(); window.scrollTo({top:0, behavior:'smooth'}); }
-        function delShoe(idx) { if(confirm("ลบ?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
+        function loadShoe(idx) { let s=shoeArchive[idx]; globalScore=s.score; document.getElementById('shoeNoInput').value=s.shoe; document.getElementById('memoInput').value=s.memo; analyze(); window.scrollTo({top:0, behavior:'smooth'}); }
+        function delShoe(idx) { if(confirm("ลบขอนนี้?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
 
         setMode(currentMode);
     </script>
