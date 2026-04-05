@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Priority Pro AI (Classic Logic + BEB P1)</title>
+    <title>Baccarat Priority Pro AI (Full Restore + Paste Tool)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -30,11 +30,9 @@
     <div class="max-w-5xl mx-auto space-y-4">
 
         <div class="flex gap-2">
-            <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-white shadow-sm transition-all">สายถนนใหญ่</button>
-            <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm transition-all">สายตาไก่ (P1)</button>
+            <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-white shadow-sm">สายถนนใหญ่</button>
+            <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm">สายตาไก่ (แนะนำ)</button>
         </div>
-
-        <div id="aiRecommendationCard"></div>
 
         <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 border-t-4 border-indigo-500">
             <div id="scoreDisplay" class="bead-plate-container shadow-inner mb-6"></div>
@@ -52,7 +50,7 @@
             </div>
 
             <div class="mt-6 text-left border-t pt-4">
-                <div class="flex justify-between mb-2"><span class="text-sm font-bold text-slate-600 uppercase">📝 ประวัติตาต่อตา (<span id="modeDisplay">ตาไก่</span>)</span><span id="totalHands" class="text-xs text-slate-400">0 ตา</span></div>
+                <div class="flex justify-between mb-2"><span class="text-sm font-bold text-slate-600 uppercase">📝 ประวัติตาต่อตา</span><span id="totalHands" class="text-xs text-slate-400">0 ตา</span></div>
                 <div class="overflow-x-auto max-h-48 border rounded-lg">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50 sticky top-0"><tr><th class="p-2 border-b">ตา</th><th class="p-2 border-b">Priority</th><th class="p-2 border-b text-center">สั่งแทง</th><th class="p-2 border-b text-center">ผล</th><th class="p-2 border-b text-center">สถานะ</th></tr></thead>
@@ -62,14 +60,14 @@
             </div>
 
             <div class="mt-4 text-left border-t pt-4">
-                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">📋 วางสกอร์หน้ากระดานปัจจุบัน</label>
+                <label class="text-xs font-bold text-slate-500 uppercase mb-2 block">📋 วางสกอร์เพื่อให้ AI คำนวณวิเคราะห์</label>
                 <div class="flex gap-2">
-                    <input type="text" id="pasteInput" class="flex-1 p-2 border rounded-lg text-slate-700 uppercase font-mono text-sm" placeholder="BBPBPBT...">
-                    <button onclick="loadPastedScore()" class="bg-indigo-600 text-white font-bold py-1 px-4 rounded-lg text-xs">โหลด</button>
+                    <input type="text" id="pasteInput" class="flex-1 p-2 border rounded-lg text-slate-700 uppercase font-mono text-sm" placeholder="วางสกอร์ที่นี่ เช่น BBPBPBT...">
+                    <button onclick="loadPastedScore()" class="bg-indigo-600 text-white font-bold py-1 px-4 rounded-lg text-xs shadow-md active:bg-indigo-700">โหลดข้อมูล</button>
                 </div>
             </div>
 
-            <div class="mt-4 border-t pt-4">
+            <div class="mt-4 border-t pt-4 text-center">
                 <div class="grid grid-cols-3 gap-2 mb-3">
                     <div class="bg-green-50 p-2 rounded-lg text-center"><div class="text-[10px] text-green-600">ชนะ</div><div id="winCount" class="text-xl font-bold">0</div></div>
                     <div class="bg-red-50 p-2 rounded-lg text-center"><div class="text-[10px] text-red-600">แพ้</div><div id="lossCount" class="text-xl font-bold">0</div></div>
@@ -86,7 +84,7 @@
 
         <div id="nextBetCard" class="bg-slate-800 rounded-3xl shadow-xl p-8 text-center text-white transition-all">
             <div id="nextBetResult" class="text-5xl font-black mb-2 uppercase">รอสถิติ...</div>
-            <div id="nextBetReason" class="text-xs opacity-50">กรุณากดสกอร์...</div>
+            <div id="nextBetReason" class="text-xs opacity-50">กรุณากดหรือวางสกอร์...</div>
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -119,7 +117,6 @@
             currentMode = m; localStorage.setItem('baccaratMode', m);
             document.getElementById('btnOld').className = m === 'OLD' ? "flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm" : "flex-1 py-2 text-xs font-bold rounded-xl border bg-white text-slate-500";
             document.getElementById('btnNew').className = m === 'NEW' ? "flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm" : "flex-1 py-2 text-xs font-bold rounded-xl border bg-white text-slate-500";
-            document.getElementById('modeDisplay').innerText = m === 'NEW' ? "ตาไก่" : "ถนนใหญ่";
             analyze();
         }
 
@@ -127,7 +124,18 @@
         function undoScore() { globalScore = globalScore.slice(0, -1); localStorage.setItem('baccaratScore', globalScore); analyze(); }
         function clearScore() { if(confirm("ล้างกระดาน?")) { globalScore = ""; localStorage.removeItem('baccaratScore'); analyze(); } }
         function saveMemo() { localStorage.setItem('baccaratMemo', document.getElementById('memoInput').value); localStorage.setItem('baccaratShoeNo', document.getElementById('shoeNoInput').value); }
-        function loadPastedScore() { let f = document.getElementById('pasteInput').value.toUpperCase().replace(/[^BPT]/g, ''); if(f) { globalScore = f; localStorage.setItem('baccaratScore', globalScore); analyze(); } document.getElementById('pasteInput').value = ""; }
+        
+        // ฟังก์ชันโหลดสกอร์จากการก๊อปวาง
+        function loadPastedScore() { 
+            let f = document.getElementById('pasteInput').value.toUpperCase().replace(/[^BPT]/g, ''); 
+            if(f) { 
+                globalScore = f; 
+                localStorage.setItem('baccaratScore', globalScore); 
+                analyze(); 
+                alert("โหลดข้อมูลสำเร็จ: " + f.length + " ตา");
+            } 
+            document.getElementById('pasteInput').value = ""; 
+        }
 
         function calcRoads(pure) {
             let br = []; let cur = [];
@@ -145,27 +153,21 @@
             }; return { br, beb: getD(1), sr: getD(2), cp: getD(3) };
         }
 
-        // 🧠 Logic: ลำดับ Priority ตามที่คุณต้องการ (สลับตาไก่เป็นเบอร์ 1)
         function getAI(pure, mVal) {
             if (pure.length < 5) return null;
             let r = calcRoads(pure);
             let getS = (arr) => { if(!arr || !arr.length) return null; let l=arr[arr.length-1], n=0; for(let i=arr.length-1;i>=0;i--){if(arr[i]===l)n++; else break;} return {c:l,n:n}; };
-            
             let brS = { c: r.br[r.br.length-1][0], n: r.br[r.br.length-1].length };
             let bebS = getS(r.beb);
             let srS = getS(r.sr);
             let cpS = getS(r.cp);
-
-            // สูตรคุณ: เจอ 2 เม็ดแทงตาม (สลับ Priority ตาไก่ขึ้นเบอร์ 1 ในโหมด NEW)
             let pOrder = mVal === 'NEW' ? ['BEB','BR','SR','CP'] : ['BR','BEB','SR','CP'];
-
             let sel = null;
             for(let p of pOrder) { 
                 let curS = (p==='BR')?brS:(p==='BEB')?bebS:(p==='SR')?srS:cpS;
                 if(curS && curS.n >= 2) { sel = {name: p, c: curS.c, n: curS.n}; break; } 
             }
             if (!sel) return null;
-
             let test = (char) => {
                 let nR = calcRoads([...pure, char]);
                 if (sel.name === 'BR') return nR.br[nR.br.length-1].length > brS.n;
@@ -206,10 +208,10 @@
 
             let next = getAI(pure, currentMode);
             document.getElementById('nextBetResult').innerText = next ? (next.b==='B'?'BANKER':'PLAYER') : 'รอสถิติ...';
-            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กำลังหาจุดสแกน...";
-            document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl p-8 text-white shadow-xl':'bg-blue-600 rounded-3xl p-8 text-white shadow-xl') : 'bg-slate-800 rounded-3xl p-8 text-white';
+            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กำลังวิเคราะห์...";
+            document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl shadow-xl p-8 text-white':'bg-blue-600 rounded-3xl shadow-xl p-8 text-white') : 'bg-slate-800 rounded-3xl p-8 text-white';
 
-            renderRoads(globalScore); renderArchive(); updateAIRecommendation(pure.length);
+            renderRoads(globalScore); renderArchive();
         }
 
         function renderRoads(sc) {
@@ -226,12 +228,6 @@
                 }).join('')}</div>`).join('');
             };
             draw('grid-br', pure); draw('grid-beb', r.beb); draw('grid-sr', r.sr); draw('grid-cp', r.cp);
-        }
-
-        function updateAIRecommendation(l) {
-            let rec = document.getElementById('aiRecommendationCard');
-            if (l < 15) rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl text-xs">🧠 <b>AI:</b> Phase 1 รอเก็บข้อมูล...</div>`;
-            else rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl text-xs">✅ <b>AI:</b> ทางสะดวก ขอนนี้นิ่ง แนะนำใช้แผน A ครับ!</div>`;
         }
 
         function saveShoeToArchive() { if(!globalScore) return; shoeArchive.unshift({id:Date.now(), shoe:document.getElementById('shoeNoInput').value || "?", memo:document.getElementById('memoInput').value || "-", score:globalScore, date:new Date().toLocaleString('th-TH')}); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("บันทึกเรียบร้อย!"); }
