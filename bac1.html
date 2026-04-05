@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI (Priority Classic + 4-Road Radar)</title>
+    <title>Baccarat Pro AI (Priority Classic + Radar)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -265,6 +265,7 @@
             localStorage.setItem('baccaratScore', globalScore); inputField.value = ""; analyze();
         }
 
+        // --- Bulk Import ---
         function bulkImportScores() {
             let bulkText = document.getElementById('bulkPasteInput').value.toUpperCase();
             let lines = bulkText.split('\n');
@@ -379,7 +380,7 @@
             document.getElementById('archiveTable').innerHTML = html || '<tr><td colspan="4" class="p-6 text-center text-slate-400">ยังไม่มีประวัติขอนไพ่ที่บันทึกไว้</td></tr>';
         }
 
-        // --- Logic Engine (Priority แบบดั้งเดิม) ---
+        // --- Logic Engine (กลับมาใช้ Priority แบบดั้งเดิม) ---
         function getBetAdvice(pureHistArr) {
             let br = calculateBigRoadPure(pureHistArr); let beb = calculateDerivedRoad(br, 1); let sr = calculateDerivedRoad(br, 2); let cp = calculateDerivedRoad(br, 3);
             if (cp.length === 0) return { bet: null, reason: "รอแมลงสาบเกิด" };
@@ -440,55 +441,40 @@
             return { color: lastColor, len: count };
         }
 
-        // --- AI Caddie เรดาร์ 4 มิติ (สแกน 4 ตารางล่าสุด) ---
+        // --- AI Caddie อัปเกรดเรดาร์ 15 ตา (ยังเก็บไว้) ---
         function updateAIRecommendation(pureHistArr, totalLength) {
             let recDiv = document.getElementById('aiRecommendationCard');
             if (pureHistArr.length < 20) {
                 let remaining = 20 - pureHistArr.length;
                 recDiv.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
                     <h3 class="font-bold text-blue-700 flex items-center gap-2">🧠 AI Caddie: รอเก็บข้อมูล (Phase 1)</h3>
-                    <p class="text-sm text-blue-800 mt-1">เพิ่งเล่นไป ${pureHistArr.length}/20 ตา กรุณาจดสกอร์เพิ่มอีก ${remaining} ตา เพื่อให้เรดาร์สแกนทรงไพ่ 4 ตารางครับ</p>
+                    <p class="text-sm text-blue-800 mt-1">เพิ่งเล่นไป ${pureHistArr.length}/20 ตา กรุณาจดสกอร์เพิ่มอีก ${remaining} ตา เพื่อให้ AI สแกนวิเคราะห์ทรงไพ่ครับ</p>
                 </div>`;
                 return;
             }
 
-            // คำนวณตารางทั้งหมด
-            let br = calculateBigRoadPure(pureHistArr);
-            let beb = groupIntoColumns(calculateDerivedRoad(br, 1));
-            let sr = groupIntoColumns(calculateDerivedRoad(br, 2));
-            let cp = groupIntoColumns(calculateDerivedRoad(br, 3));
+            let recentHist = pureHistArr.slice(-15);
+            let r_br = calculateBigRoadPure(recentHist);
+            let r_maxBr = 0; r_br.forEach(c => { if(c.length > r_maxBr) r_maxBr = c.length; });
+            
+            let isRecentChoppy = (r_maxBr < 3);
 
-            // ฟังก์ชันเช็ค 6 คอลัมน์ล่าสุดของแต่ละตาราง ว่ามีความสวิง (ไม่มีเสาเกิน 2 เม็ด) หรือไม่
-            let checkRecentChoppy = (roadCols) => {
-                if(roadCols.length === 0) return true;
-                let recentCols = roadCols.slice(-6); // ดู 6 แถวหลังสุด
-                let maxInRecent = 0;
-                recentCols.forEach(c => { if(c.length > maxInRecent) maxInRecent = c.length; });
-                return maxInRecent < 3; // สวิง = เตี้ยกว่า 3 เม็ด
-            };
-
-            let isBrChoppy = checkRecentChoppy(br);
-            let isBebChoppy = checkRecentChoppy(beb);
-            let isSrChoppy = checkRecentChoppy(sr);
-            let isCpChoppy = checkRecentChoppy(cp);
-
-            // ถ้าสวิงกากหมดทั้ง 4 ตาราง = โครตอันตราย
-            let isAllChoppy = isBrChoppy && isBebChoppy && isSrChoppy && isCpChoppy;
+            let br = calculateBigRoadPure(pureHistArr); let maxBr = 0; br.forEach(c => { if(c.length > maxBr) maxBr = c.length; });
 
             if (totalLength > 40) {
                 recDiv.innerHTML = `<div class="bg-red-100 border-l-4 border-red-500 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
                     <h3 class="font-bold text-red-700 flex items-center gap-2">🚨 Danger Zone: ปลายขอนอันตราย!</h3>
                     <p class="text-sm text-red-800 mt-2"><strong>คำเตือน:</strong> ขอนนี้เล่นมา ${totalLength} ตาแล้ว สถิติเริ่มหมดอายุและไพ่พร้อมจะสวิงมั่วตลอดเวลา <strong>ห้ามเปิดรอบทำกำไรใหม่เด็ดขาด!</strong> (ถ้าติดลบอยู่ให้ทบจนจบชุดแล้วหนีทันที)</p>
                 </div>`;
-            } else if (isAllChoppy) {
+            } else if (isRecentChoppy || maxBr < 3) {
                 recDiv.innerHTML = `<div class="bg-orange-100 border-l-4 border-orange-500 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
-                    <h3 class="font-bold text-orange-700 flex items-center gap-2">⚠️ เรดาร์ตรวจพบความสวิง 4 ตาราง: ใช้ <span class="bg-orange-500 text-white px-2 py-0.5 rounded">แผน B (รอผิด 4)</span></h3>
-                    <p class="text-sm text-orange-800 mt-2"><strong>เหตุผล:</strong> เรดาร์สแกนพบว่าช่วงนี้ <strong>ทั้ง 4 ตาราง เตี้ยกุดทั้งหมด</strong> ไพ่ผันผวนหนักมาก ถ้ารีบบุก แผน A จะโดนลากกินลึก <strong>บังคับให้นั่งทับมือรอระบบสั่งผิด 4 ไม้ติดก่อน ค่อยเข้าทำกำไรครับ!</strong></p>
+                    <h3 class="font-bold text-orange-700 flex items-center gap-2">⚠️ เรดาร์ตรวจพบความสวิง: ใช้ <span class="bg-orange-500 text-white px-2 py-0.5 rounded">แผน B (รอผิด 4)</span></h3>
+                    <p class="text-sm text-orange-800 mt-2"><strong>เหตุผล:</strong> สแกน 15 ตาหลังสุด ไพ่ผันผวนหนักมาก (ทรง 2 ตัด/ปิงปอง) ถ้ารีบบุกจะโดนลากกินลึก <strong>บังคับให้นั่งทับมือรอระบบสั่งผิด 4 ไม้ติดก่อน ค่อยเข้าทำกำไรครับ!</strong></p>
                 </div>`;
             } else {
                 recDiv.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl shadow-sm text-left transition-all mb-4">
                     <h3 class="font-bold text-emerald-700 flex items-center gap-2">✅ ทางสะดวก: ใช้ <span class="bg-emerald-500 text-white px-2 py-0.5 rounded">แผน A (รอผิด 2)</span></h3>
-                    <p class="text-sm text-emerald-800 mt-2"><strong>เหตุผล:</strong> เรดาร์ตรวจพบว่ายังมีบางตารางที่ตั้งเสายาวให้เกาะได้ Моเมนตัมกำลังสวย <strong>สามารถใช้แผนรอผิดแค่ 2 ไม้ติด แล้วเริ่มเดินเงินบุกทำกำไรได้เลยครับ!</strong></p>
+                    <p class="text-sm text-emerald-800 mt-2"><strong>เหตุผล:</strong> ไพ่ 15 ตาหลังสุดยังมี "เค้าไพ่หลัก" ให้เกาะ โมเมนตัมกำลังสวย <strong>สามารถใช้แผนรอผิดแค่ 2 ไม้ติด แล้วเริ่มเดินเงินบุกทำ +3 หน่วยได้เลยครับ!</strong></p>
                 </div>`;
             }
         }
