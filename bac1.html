@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI V.5 (Ultimate Confluence)</title>
+    <title>Baccarat Pro AI (Priority Classic + Radar)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -237,7 +237,7 @@
                             if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
                             ls = 0;
                         } else { tStats.l++; ls++; }
-                    } else if (adv.isConflict) { /* ข้าม ไม่รีเซ็ตแพ้ติดกัน */ }
+                    }
                     if(c !== 'T') tempPure.push(c);
                 }
                 if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
@@ -286,7 +286,7 @@
                                 if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
                                 ls = 0;
                             } else { tStats.l++; ls++; }
-                        } else if (adv.isConflict) { /* ข้ามเมื่อขัดแย้ง */ }
+                        }
                         if(c !== 'T') tempPure.push(c);
                     }
                     if(ls===2) tStats.s2++; else if(ls===3) tStats.s3++; else if(ls===4) tStats.s4++; else if(ls===5) tStats.s5++; else if(ls===6) tStats.s6++; else if(ls===7) tStats.s7++; else if(ls===8) tStats.s8++; else if(ls>=9) tStats.s9++;
@@ -380,39 +380,33 @@
             document.getElementById('archiveTable').innerHTML = html || '<tr><td colspan="4" class="p-6 text-center text-slate-400">ยังไม่มีประวัติขอนไพ่ที่บันทึกไว้</td></tr>';
         }
 
-        // --- Logic Engine V.5 (Confluence Voting) ---
+        // --- Logic Engine (กลับมาใช้ Priority แบบดั้งเดิม) ---
         function getBetAdvice(pureHistArr) {
             let br = calculateBigRoadPure(pureHistArr); let beb = calculateDerivedRoad(br, 1); let sr = calculateDerivedRoad(br, 2); let cp = calculateDerivedRoad(br, 3);
             if (cp.length === 0) return { bet: null, reason: "รอแมลงสาบเกิด" };
-            
             let brStreak = { color: br[br.length-1][0], len: br[br.length-1].length };
             let bebStreak = getStreak(beb); let srStreak = getStreak(sr); let cpStreak = getStreak(cp);
             
-            // AI จำลองการแทง B และ P เพื่อดูว่าสีไหนทำให้ตารางไหนไหลต่อ
-            let simulate = (char) => {
-                let sbr = calculateBigRoadPure([...pureHistArr, char]);
-                let sroads = { beb: calculateDerivedRoad(sbr, 1), sr: calculateDerivedRoad(sbr, 2), cp: calculateDerivedRoad(sbr, 3) };
-                let votes = 0; let voters = [];
-                
-                if (brStreak.len >= 2 && sbr[sbr.length-1].length > brStreak.len && sbr[sbr.length-1][0] === brStreak.color) { votes++; voters.push("ถนนใหญ่"); }
-                if (bebStreak.len >= 2 && sroads.beb[sroads.beb.length-1] === bebStreak.color) { votes++; voters.push("ตาไก่"); }
-                if (srStreak.len >= 2 && sroads.sr[sroads.sr.length-1] === srStreak.color) { votes++; voters.push("ถนนเล็ก"); }
-                if (cpStreak.len >= 2 && sroads.cp[sroads.cp.length-1] === cpStreak.color) { votes++; voters.push("แมลงสาบ"); }
-                
-                return { votes, voters };
-            };
-
-            let bSim = simulate('B');
-            let pSim = simulate('P');
-
-            if (bSim.votes === 0 && pSim.votes === 0) return { bet: null, reason: "ไม่มีตารางไหนเข้าเกณฑ์" };
+            // Priority: ตารางไหนถึง 2 เม็ดก่อน ยึดตารางนั้นเป็นหลัก
+            let p1 = brStreak.len >= 2 ? { name: '1. ถนนใหญ่', color: brStreak.color } : null;
+            let p2 = bebStreak.len >= 2 ? { name: '2. ตาไก่', color: bebStreak.color } : null;
+            let p3 = srStreak.len >= 2 ? { name: '3. ถนนเล็ก', color: srStreak.color } : null;
+            let p4 = cpStreak.len >= 2 ? { name: '4. แมลงสาบ', color: cpStreak.color } : null;
             
-            // กรณีตารางขัดแย้งกัน (เช่น 1:1 หรือ 2:2)
-            if (bSim.votes === pSim.votes) return { bet: null, reason: `ตารางตีกัน! B(${bSim.votes}) vs P(${pSim.votes})`, isConflict: true, bVotes: bSim.votes, pVotes: pSim.votes };
-
-            // กรณีเสียงข้างมากชนะ
-            if (bSim.votes > pSim.votes) return { bet: 'B', votes: bSim.votes, voters: bSim.voters };
-            else return { bet: 'P', votes: pSim.votes, voters: pSim.voters };
+            let sel = p1 || p2 || p3 || p4;
+            if (!sel) return { bet: null, reason: "ยังไม่มีตารางไหนถึง 2 เม็ด" };
+            
+            let simulate = (h, char) => {
+                let sbr = calculateBigRoadPure([...h, char]);
+                let sroads = { beb: calculateDerivedRoad(sbr, 1), sr: calculateDerivedRoad(sbr, 2), cp: calculateDerivedRoad(sbr, 3) };
+                if (sel.name.includes('ถนนใหญ่')) return sbr[sbr.length-1].length > brStreak.len && sbr[sbr.length-1][0] === sel.color;
+                let key = sel.name.includes('ตาไก่') ? 'beb' : sel.name.includes('ถนนเล็ก') ? 'sr' : 'cp';
+                return sroads[key][sroads[key].length-1] === sel.color;
+            };
+            
+            if (simulate(pureHistArr, 'B')) return { bet: 'B', priority: sel.name, colorCode: sel.color };
+            if (simulate(pureHistArr, 'P')) return { bet: 'P', priority: sel.name, colorCode: sel.color };
+            return { bet: null, reason: "ตารางสวิง คำนวณไม่ได้" };
         }
 
         function calculateBigRoadPure(history) {
@@ -447,7 +441,7 @@
             return { color: lastColor, len: count };
         }
 
-        // --- AI Caddie อัปเกรดเรดาร์ 15 ตา ---
+        // --- AI Caddie อัปเกรดเรดาร์ 15 ตา (ยังเก็บไว้) ---
         function updateAIRecommendation(pureHistArr, totalLength) {
             let recDiv = document.getElementById('aiRecommendationCard');
             if (pureHistArr.length < 20) {
@@ -459,12 +453,10 @@
                 return;
             }
 
-            // คำนวณความสวิงของ 15 ตาหลังสุด
             let recentHist = pureHistArr.slice(-15);
             let r_br = calculateBigRoadPure(recentHist);
             let r_maxBr = 0; r_br.forEach(c => { if(c.length > r_maxBr) r_maxBr = c.length; });
             
-            // เช็คว่าสวิงจัดไหม (ไม่มีเสาเกิน 2 เม็ดเลยใน 15 ตาหลัง)
             let isRecentChoppy = (r_maxBr < 3);
 
             let br = calculateBigRoadPure(pureHistArr); let maxBr = 0; br.forEach(c => { if(c.length > maxBr) maxBr = c.length; });
@@ -497,17 +489,19 @@
                 let st = ''; let sc = ''; let priorityDisplay = '-';
                 
                 if (adv.bet) {
-                    priorityDisplay = `<span class="text-xs">โหวต ${adv.votes} เสียง</span>`;
-                    if (cur === 'T') { st = '⏸️ ข้าม (เสมอ)'; sc = 'text-slate-500'; }
+                    priorityDisplay = `${adv.priority} (${adv.colorCode==='RED'?'<span class="text-red-500 font-bold">แดง</span>':'<span class="text-blue-500 font-bold">น้ำเงิน</span>'})`;
+                    
+                    if (cur === 'T') { 
+                        st = '⏸️ ข้าม (เสมอ)'; sc = 'text-slate-500'; 
+                    }
                     else if (adv.bet === cur) { 
                         st = '🟢 ชนะ'; sc = 'text-green-600 font-bold'; currentStats.win++; 
                         if (currentLossStreak === 2) currentStats.s2++; else if (currentLossStreak === 3) currentStats.s3++; else if (currentLossStreak === 4) currentStats.s4++; else if (currentLossStreak === 5) currentStats.s5++; else if (currentLossStreak === 6) currentStats.s6++; else if (currentLossStreak === 7) currentStats.s7++; else if (currentLossStreak === 8) currentStats.s8++; else if (currentLossStreak >= 9) currentStats.s9++;
                         currentLossStreak = 0;
                     }
-                    else { st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; currentStats.loss++; currentLossStreak++; }
-                } else if (adv.isConflict) { 
-                    priorityDisplay = `<span class="text-[10px] text-orange-500">ขัดแย้ง B:${adv.bVotes}/P:${adv.pVotes}</span>`;
-                    st = '⚠️ ข้าม (ตีกัน)'; sc = 'text-orange-500 font-bold'; 
+                    else { 
+                        st = '🔴 แพ้'; sc = 'text-red-600 font-bold'; currentStats.loss++; currentLossStreak++; 
+                    }
                 } else { 
                     st = '⏸️ ข้าม'; sc = 'text-slate-400'; 
                 }
@@ -551,12 +545,8 @@
             let nextDiv = document.getElementById('nextBetResult'); let nextRea = document.getElementById('nextBetReason'); let card = document.getElementById('nextBetCard');
             if (nextAdv.bet) {
                 nextDiv.innerText = nextAdv.bet === 'B' ? 'BANKER (แดง)' : 'PLAYER (น้ำเงิน)';
-                nextRea.innerText = `คะแนนโหวต: ${nextAdv.votes} เสียง (${nextAdv.voters.join(',')})`;
+                nextRea.innerText = `ลาก: ${nextAdv.priority}`;
                 card.className = `bg-${nextAdv.bet==='B'?'red':'blue'}-600 rounded-2xl shadow-xl p-6 text-center text-white transform scale-[1.02] transition-all`;
-            } else if (nextAdv.isConflict) {
-                nextDiv.innerText = "SKIP (ข้าม)";
-                nextRea.innerText = nextAdv.reason;
-                card.className = "bg-orange-500 rounded-2xl shadow-lg p-6 text-center text-white transform scale-[1.02] transition-all";
             } else {
                 nextDiv.innerText = "รอจังหวะ..."; nextRea.innerText = nextAdv.reason;
                 card.className = "bg-slate-800 rounded-2xl shadow-lg p-6 text-center text-white";
