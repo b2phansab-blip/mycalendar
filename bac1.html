@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Priority Pro AI (Full Features + AI Radar)</title>
+    <title>Baccarat Priority Pro AI (Full Restore + History Table)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -31,7 +31,7 @@
 
         <div class="bg-white rounded-2xl shadow-sm p-4 text-center border-b-2 border-indigo-100">
             <div class="flex justify-between text-[10px] md:text-xs font-bold mb-1 uppercase tracking-wider">
-                <span id="shoePhaseText" class="text-blue-600">กำลังโหลดระบบ...</span>
+                <span id="shoePhaseText" class="text-blue-600">กำลังสแกนหาเค้าไพ่...</span>
                 <span id="shoeHandsText" class="text-slate-400">0 ตา</span>
             </div>
             <div class="w-full bg-slate-100 rounded-full h-2 mb-3">
@@ -54,10 +54,30 @@
                 <button onclick="addScore('B')" class="bg-red-500 text-white font-bold py-6 rounded-2xl shadow-lg active:translate-y-1 text-3xl">B</button>
             </div>
 
-            <div class="grid grid-cols-3 gap-2 mt-4">
+            <div class="grid grid-cols-3 gap-2 mt-4 border-b pb-4">
                 <button onclick="undoScore()" class="bg-slate-500 text-white py-3 rounded-xl shadow text-xs">⬅️ Back</button>
                 <button onclick="clearScore()" class="bg-slate-800 text-white py-3 rounded-xl shadow text-xs">🔄 Clear</button>
                 <button onclick="saveShoeToArchive()" class="bg-emerald-600 text-white py-3 rounded-xl shadow text-xs">💾 Save Shoe</button>
+            </div>
+
+            <div class="mt-4 text-left">
+                <div class="flex justify-between mb-2 items-center">
+                    <span class="text-xs font-bold text-slate-600 uppercase">📝 ประวัติตาต่อตา (Real-time)</span>
+                </div>
+                <div class="overflow-x-auto max-h-60 border rounded-xl shadow-inner">
+                    <table class="w-full text-left text-[10px] md:text-xs">
+                        <thead class="bg-slate-50 sticky top-0">
+                            <tr>
+                                <th class="p-2 border-b">ตา</th>
+                                <th class="p-2 border-b">Priority</th>
+                                <th class="p-2 border-b text-center">สั่งแทง</th>
+                                <th class="p-2 border-b text-center">ผล</th>
+                                <th class="p-2 border-b text-center">สถานะ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="mt-4 border-t pt-4">
@@ -75,20 +95,20 @@
             </div>
         </div>
 
-        <div id="nextBetCard" class="bg-slate-800 rounded-3xl shadow-xl p-8 text-center text-white">
+        <div id="nextBetCard" class="bg-slate-800 rounded-3xl shadow-xl p-8 text-center text-white transition-all">
             <div id="nextBetResult" class="text-5xl font-black mb-2 uppercase">รอสถิติ...</div>
-            <div id="nextBetReason" class="text-xs opacity-50">กรุณากดหรือสแกนสกอร์...</div>
+            <div id="nextBetReason" class="text-xs opacity-50">กรุณากดหรือวางสกอร์...</div>
         </div>
 
         <div class="bg-slate-800 rounded-2xl shadow-xl p-4 md:p-6 text-white border-b-4 border-indigo-500">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
                 <div class="text-left">
                     <h3 class="font-bold text-sm uppercase text-indigo-300">📊 ศูนย์วิเคราะห์สถิติรวมทุกขอน</h3>
-                    <p class="text-[10px] opacity-50 italic">ดึงข้อมูลจากคลังมาประมวลผลความแม่นยำรวม</p>
+                    <p class="text-[10px] opacity-50 italic">ดึงข้อมูลจากคลังมาประมวลผล</p>
                 </div>
                 <div class="flex gap-2 w-full md:w-auto">
-                    <button onclick="analyzeAllShoes()" class="flex-1 bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all">🚀 วิเคราะห์สะสม</button>
-                    <button onclick="copyScoresForAI()" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all">📋 Copy ข้อมูลให้ AI</button>
+                    <button onclick="analyzeAllShoes()" class="flex-1 bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all shadow-lg">🚀 วิเคราะห์สะสม</button>
+                    <button onclick="copyScoresForAI()" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all shadow-lg">📋 Copy ข้อมูลให้ AI</button>
                 </div>
             </div>
             <div id="globalResult" class="hidden space-y-4">
@@ -96,7 +116,7 @@
                     <div class="bg-white/10 p-3 rounded-xl text-center"><div class="text-[10px] opacity-60">สแกนทั้งหมด</div><div id="gTotal" class="text-xl font-bold">0</div></div>
                     <div class="bg-green-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-green-400">ชนะรวม</div><div id="gWin" class="text-xl font-bold">0</div></div>
                     <div class="bg-red-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-red-400">แพ้รวม</div><div id="gLoss" class="text-xl font-bold">0</div></div>
-                    <div class="bg-blue-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-blue-400">Win Rate</div><div id="gRate" class="text-xl font-bold">0%</div></div>
+                    <div class="bg-blue-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-blue-400">Win Rate รวม</div><div id="gRate" class="text-xl font-bold">0%</div></div>
                 </div>
                 <div id="gStreaks" class="grid grid-cols-4 md:grid-cols-8 gap-2 bg-black/20 p-3 rounded-xl"></div>
             </div>
@@ -123,8 +143,7 @@
     <script>
         let globalScore = localStorage.getItem('baccaratScore') || "";
         let currentMode = localStorage.getItem('baccaratMode') || "NEW"; 
-        let rawArch = localStorage.getItem('baccaratArchive') || localStorage.getItem('archive') || "[]";
-        let shoeArchive = JSON.parse(rawArch);
+        let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive') || "[]");
         document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
         document.getElementById('shoeNoInput').value = localStorage.getItem('baccaratShoeNo') || "1";
 
@@ -194,6 +213,20 @@
 
         function analyze() {
             let res = forceStats(globalScore, currentMode);
+            let tableH = ""; let pure = [];
+            
+            // Generate History Table
+            for (let i = 0; i < globalScore.length; i++) {
+                let c = globalScore[i], idx = i+1, adv = getAI(pure, currentMode), st="-", cls="text-slate-400";
+                if(adv && c!=='T'){
+                    if(adv.b === c){ st="ชนะ"; cls="text-green-600 font-bold"; } 
+                    else { st="แพ้"; cls="text-red-600 font-bold"; }
+                }
+                let badge = (char) => `<span class="bg-${char==='B'?'red':char==='P'?'blue':'green'}-500 text-white px-2 py-0.5 rounded text-[10px] font-bold inline-block w-6 text-center">${char}</span>`;
+                tableH = `<tr class="border-b"><td class="p-2 text-center text-slate-400">${idx}</td><td class="p-2 font-bold text-indigo-600">${adv?adv.r:'-'}</td><td class="p-2 text-center">${adv?badge(adv.b):'-'}</td><td class="p-2 text-center">${badge(c)}</td><td class="p-2 text-center ${cls}">${st}</td></tr>` + tableH;
+                if(c!=='T') pure.push(c);
+            }
+            document.getElementById('historyTable').innerHTML = tableH;
             document.getElementById('winCount').innerText = res.win; document.getElementById('lossCount').innerText = res.loss;
             document.getElementById('winRate').innerText = (res.win+res.loss>0 ? (res.win/(res.win+res.loss)*100).toFixed(1) : 0) + '%';
             document.getElementById('streakDashboard').innerHTML = Object.keys(res.streaks).map(i => `<div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold">ติด ${i}</div><div class="text-sm font-bold text-red-700">${res.streaks[i]}</div></div>`).join('');
@@ -206,19 +239,18 @@
             let t = document.getElementById('shoePhaseText'), rec = document.getElementById('aiRecommendationCard');
             if (l < 15) {
                 t.innerText = "Phase 1: รอเก็บข้อมูล"; t.className = "text-blue-600";
-                rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-xl text-xs">🧠 <b>AI Radar:</b> กำลังสแกนหาเค้าไพ่ แนะนำให้รอครบ 15 ตาก่อนครับ</div>`;
+                rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-xl text-xs">🧠 <b>AI Radar:</b> รอเก็บข้อมูลให้ครบ 15 ตาเพื่อความแม่นยำ</div>`;
             } else if (l <= 40) {
                 t.innerText = "Phase 2: Prime Time"; t.className = "text-emerald-600";
-                rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-3 rounded-xl text-xs">✅ <b>AI Recommendation:</b> ช่วงเวลาทำเงิน แนะนำใช้ <b>แผน A (รอผิด 2)</b> ครับ!</div>`;
+                rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-3 rounded-xl text-xs">✅ <b>AI Recommendation:</b> ช่วงนาทีทอง แนะนำใช้ <b>แผน A (รอผิด 2)</b></div>`;
             } else {
                 t.innerText = "Phase 3: Danger Zone"; t.className = "text-red-600";
-                rec.innerHTML = `<div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-xl text-xs">🚨 <b>Caution:</b> ปลายขอนมีความผันผวนสูง แนะนำใช้ <b>แผน B (รอผิด 4)</b> หรือเปลี่ยนขอนครับ</div>`;
+                rec.innerHTML = `<div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-xl text-xs">🚨 <b>Caution:</b> ปลายขอนมีความผันผวน แนะนำใช้ <b>แผน B (รอผิด 4)</b></div>`;
             }
 
-            let pure = globalScore.replace(/T/g, '').split('');
             let next = getAI(pure, currentMode);
             document.getElementById('nextBetResult').innerText = next ? (next.b==='B'?'BANKER':'PLAYER') : 'รอสถิติ...';
-            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กรุณากดหรือสแกนสกอร์...";
+            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กำลังวิเคราะห์...";
             document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl shadow-xl p-8 text-white transition-all scale-[1.02]':'bg-blue-600 rounded-3xl shadow-xl p-8 text-white transition-all scale-[1.02]') : 'bg-slate-800 rounded-3xl p-8 text-white';
 
             renderRoads(globalScore); renderArchive();
@@ -240,8 +272,8 @@
 
         function copyScoresForAI() {
             if(!shoeArchive.length) return alert("ไม่มีข้อมูลในคลังครับ");
-            let data = "=== ARCHIVE FOR AI ===\n" + shoeArchive.map(s => `No:${s.shoe} Memo:${s.memo} Score:${s.score}`).join('\n');
-            navigator.clipboard.writeText(data).then(() => alert("ก๊อปปี้เรียบร้อย! วางส่งให้ AI วิเคราะห์ได้เลยครับ"));
+            let data = "=== ARCHIVE DATA ===\n" + shoeArchive.map(s => `No:${s.shoe} Memo:${s.memo} Score:${s.score}`).join('\n');
+            navigator.clipboard.writeText(data).then(() => alert("ก๊อปปี้เรียบร้อย!"));
         }
 
         function renderRoads(sc) {
