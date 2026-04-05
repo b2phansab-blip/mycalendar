@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Priority Pro AI (AI Export Tool)</title>
+    <title>Baccarat Priority Pro AI (Full Features + AI Radar)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -29,9 +29,20 @@
 
     <div class="max-w-5xl mx-auto space-y-4">
 
+        <div class="bg-white rounded-2xl shadow-sm p-4 text-center border-b-2 border-indigo-100">
+            <div class="flex justify-between text-[10px] md:text-xs font-bold mb-1 uppercase tracking-wider">
+                <span id="shoePhaseText" class="text-blue-600">กำลังโหลดระบบ...</span>
+                <span id="shoeHandsText" class="text-slate-400">0 ตา</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-2 mb-3">
+                <div id="shoeProgressBar" class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: 0%"></div>
+            </div>
+            <div id="aiRecommendationCard"></div>
+        </div>
+
         <div class="flex gap-2">
-            <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-white shadow-sm transition-all">สายถนนใหญ่</button>
-            <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm transition-all">สายตาไก่ (แนะนำ)</button>
+            <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-white shadow-sm">สายถนนใหญ่</button>
+            <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm">สายตาไก่ (แนะนำ)</button>
         </div>
 
         <div class="bg-white rounded-2xl shadow-md p-4 md:p-6 border-t-4 border-indigo-500">
@@ -51,9 +62,9 @@
 
             <div class="mt-4 border-t pt-4">
                 <div class="grid grid-cols-3 gap-2 mb-3 text-center">
-                    <div class="bg-green-50 p-2 rounded-lg"><div class="text-[10px] text-green-600">ชนะ</div><div id="winCount" class="text-xl font-bold">0</div></div>
-                    <div class="bg-red-50 p-2 rounded-lg"><div class="text-[10px] text-red-600">แพ้</div><div id="lossCount" class="text-xl font-bold">0</div></div>
-                    <div class="bg-blue-50 p-2 rounded-lg"><div class="text-[10px] text-blue-600">Win Rate</div><div id="winRate" class="text-xl font-bold">0%</div></div>
+                    <div class="bg-green-50 p-2 rounded-lg"><div class="text-[10px] text-green-600 font-bold">ชนะ</div><div id="winCount" class="text-xl font-bold text-green-700">0</div></div>
+                    <div class="bg-red-50 p-2 rounded-lg"><div class="text-[10px] text-red-600 font-bold">แพ้</div><div id="lossCount" class="text-xl font-bold text-red-700">0</div></div>
+                    <div class="bg-blue-50 p-2 rounded-lg"><div class="text-[10px] text-blue-600 font-bold">Win Rate</div><div id="winRate" class="text-xl font-bold text-blue-700">0%</div></div>
                 </div>
                 <div id="streakDashboard" class="grid grid-cols-4 md:grid-cols-8 gap-1"></div>
             </div>
@@ -64,24 +75,28 @@
             </div>
         </div>
 
+        <div id="nextBetCard" class="bg-slate-800 rounded-3xl shadow-xl p-8 text-center text-white">
+            <div id="nextBetResult" class="text-5xl font-black mb-2 uppercase">รอสถิติ...</div>
+            <div id="nextBetReason" class="text-xs opacity-50">กรุณากดหรือสแกนสกอร์...</div>
+        </div>
+
         <div class="bg-slate-800 rounded-2xl shadow-xl p-4 md:p-6 text-white border-b-4 border-indigo-500">
             <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
                 <div class="text-left">
                     <h3 class="font-bold text-sm uppercase text-indigo-300">📊 ศูนย์วิเคราะห์สถิติรวมทุกขอน</h3>
-                    <p class="text-[10px] opacity-50">วิเคราะห์เพื่อดูผลประกอบการสะสมจากคลัง</p>
+                    <p class="text-[10px] opacity-50 italic">ดึงข้อมูลจากคลังมาประมวลผลความแม่นยำรวม</p>
                 </div>
                 <div class="flex gap-2 w-full md:w-auto">
-                    <button onclick="analyzeAllShoes()" class="flex-1 bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all">🚀 วิเคราะห์สะสม</button>
-                    <button onclick="copyScoresForAI()" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-lg active:scale-95 transition-all">📋 Copy All Scores for AI</button>
+                    <button onclick="analyzeAllShoes()" class="flex-1 bg-indigo-500 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all">🚀 วิเคราะห์สะสม</button>
+                    <button onclick="copyScoresForAI()" class="flex-1 bg-emerald-600 text-white px-4 py-2 rounded-xl text-xs font-bold active:scale-95 transition-all">📋 Copy ข้อมูลให้ AI</button>
                 </div>
             </div>
-            
             <div id="globalResult" class="hidden space-y-4">
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
                     <div class="bg-white/10 p-3 rounded-xl text-center"><div class="text-[10px] opacity-60">สแกนทั้งหมด</div><div id="gTotal" class="text-xl font-bold">0</div></div>
                     <div class="bg-green-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-green-400">ชนะรวม</div><div id="gWin" class="text-xl font-bold">0</div></div>
                     <div class="bg-red-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-red-400">แพ้รวม</div><div id="gLoss" class="text-xl font-bold">0</div></div>
-                    <div class="bg-blue-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-blue-400">Win Rate รวม</div><div id="gRate" class="text-xl font-bold">0%</div></div>
+                    <div class="bg-blue-500/20 p-3 rounded-xl text-center"><div class="text-[10px] text-blue-400">Win Rate</div><div id="gRate" class="text-xl font-bold">0%</div></div>
                 </div>
                 <div id="gStreaks" class="grid grid-cols-4 md:grid-cols-8 gap-2 bg-black/20 p-3 rounded-xl"></div>
             </div>
@@ -108,7 +123,10 @@
     <script>
         let globalScore = localStorage.getItem('baccaratScore') || "";
         let currentMode = localStorage.getItem('baccaratMode') || "NEW"; 
-        let shoeArchive = JSON.parse(localStorage.getItem('baccaratArchive') || localStorage.getItem('archive') || "[]");
+        let rawArch = localStorage.getItem('baccaratArchive') || localStorage.getItem('archive') || "[]";
+        let shoeArchive = JSON.parse(rawArch);
+        document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
+        document.getElementById('shoeNoInput').value = localStorage.getItem('baccaratShoeNo') || "1";
 
         function setMode(m) {
             currentMode = m; localStorage.setItem('baccaratMode', m);
@@ -131,7 +149,7 @@
                 for (let c = offset = off; c < br.length; c++) {
                     for (let r = 0; r < br[c].length; r++) {
                         if (c === offset && r === 0) continue;
-                        let col = (r === 0) ? (br[c-1].length === br[c-1-off].length ? 'RED' : 'BLUE') : (br[c-offset].length >= r + 1 ? 'RED' : br[c-offset].length === r ? 'BLUE' : 'RED');
+                        let col = (r === 0) ? (br[c-1].length === br[c-1-offset].length ? 'RED' : 'BLUE') : (br[c-offset].length >= r + 1 ? 'RED' : br[c-offset].length === r ? 'BLUE' : 'RED');
                         road.push(col);
                     }
                 } return road;
@@ -179,6 +197,30 @@
             document.getElementById('winCount').innerText = res.win; document.getElementById('lossCount').innerText = res.loss;
             document.getElementById('winRate').innerText = (res.win+res.loss>0 ? (res.win/(res.win+res.loss)*100).toFixed(1) : 0) + '%';
             document.getElementById('streakDashboard').innerHTML = Object.keys(res.streaks).map(i => `<div class="bg-red-50 p-1 border rounded text-center"><div class="text-[8px] text-red-400 font-bold">ติด ${i}</div><div class="text-sm font-bold text-red-700">${res.streaks[i]}</div></div>`).join('');
+            
+            // AI Radar Logic
+            let l = globalScore.length;
+            let p = Math.min((l/70)*100, 100);
+            document.getElementById('shoeProgressBar').style.width = p + '%';
+            document.getElementById('shoeHandsText').innerText = l + " ตา";
+            let t = document.getElementById('shoePhaseText'), rec = document.getElementById('aiRecommendationCard');
+            if (l < 15) {
+                t.innerText = "Phase 1: รอเก็บข้อมูล"; t.className = "text-blue-600";
+                rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded-xl text-xs">🧠 <b>AI Radar:</b> กำลังสแกนหาเค้าไพ่ แนะนำให้รอครบ 15 ตาก่อนครับ</div>`;
+            } else if (l <= 40) {
+                t.innerText = "Phase 2: Prime Time"; t.className = "text-emerald-600";
+                rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-3 rounded-xl text-xs">✅ <b>AI Recommendation:</b> ช่วงเวลาทำเงิน แนะนำใช้ <b>แผน A (รอผิด 2)</b> ครับ!</div>`;
+            } else {
+                t.innerText = "Phase 3: Danger Zone"; t.className = "text-red-600";
+                rec.innerHTML = `<div class="bg-red-50 border-l-4 border-red-500 p-3 rounded-xl text-xs">🚨 <b>Caution:</b> ปลายขอนมีความผันผวนสูง แนะนำใช้ <b>แผน B (รอผิด 4)</b> หรือเปลี่ยนขอนครับ</div>`;
+            }
+
+            let pure = globalScore.replace(/T/g, '').split('');
+            let next = getAI(pure, currentMode);
+            document.getElementById('nextBetResult').innerText = next ? (next.b==='B'?'BANKER':'PLAYER') : 'รอสถิติ...';
+            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กรุณากดหรือสแกนสกอร์...";
+            document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl shadow-xl p-8 text-white transition-all scale-[1.02]':'bg-blue-600 rounded-3xl shadow-xl p-8 text-white transition-all scale-[1.02]') : 'bg-slate-800 rounded-3xl p-8 text-white';
+
             renderRoads(globalScore); renderArchive();
         }
 
@@ -196,24 +238,10 @@
             document.getElementById('gStreaks').innerHTML = Object.keys(gS).map(i => `<div class="bg-white/10 p-2 rounded text-center"><div class="text-[9px] text-indigo-300">ติด ${i}</div><div class="text-lg font-bold">${gS[i]}</div></div>`).join('');
         }
 
-        // 📋 ฟังก์ชันก๊อปปี้ข้อมูลทั้งหมดให้ AI
         function copyScoresForAI() {
-            if(!shoeArchive.length) return alert("ไม่มีข้อมูลในคลังให้ก๊อปปี้ครับ");
-            let exportData = "=== BACCARAT ARCHIVE DATA FOR AI ANALYSIS ===\n";
-            exportData += "Total Shoes: " + shoeArchive.length + "\n";
-            exportData += "Current Mode: " + (currentMode === 'NEW' ? "Big Eye Boy Priority" : "Big Road Priority") + "\n\n";
-            
-            shoeArchive.forEach((s, idx) => {
-                exportData += "Shoe No: " + (s.shoe || idx+1) + "\n";
-                exportData += "Memo: " + (s.memo || "-") + "\n";
-                exportData += "Date: " + s.date + "\n";
-                exportData += "Raw Score: " + s.score + "\n";
-                exportData += "-------------------------------------------\n";
-            });
-
-            navigator.clipboard.writeText(exportData).then(() => {
-                alert("ก๊อปปี้สกอร์ทุกขอนลงคลิปบอร์ดแล้ว! คุณสามารถนำไปวางในแชทเพื่อให้ AI วิเคราะห์ได้เลยครับ");
-            });
+            if(!shoeArchive.length) return alert("ไม่มีข้อมูลในคลังครับ");
+            let data = "=== ARCHIVE FOR AI ===\n" + shoeArchive.map(s => `No:${s.shoe} Memo:${s.memo} Score:${s.score}`).join('\n');
+            navigator.clipboard.writeText(data).then(() => alert("ก๊อปปี้เรียบร้อย! วางส่งให้ AI วิเคราะห์ได้เลยครับ"));
         }
 
         function renderRoads(sc) {
