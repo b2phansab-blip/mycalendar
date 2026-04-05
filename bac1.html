@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI (Full Features Restored)</title>
+    <title>Baccarat Pro AI (Full Features + Full Archive Stats)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -100,7 +100,7 @@
             <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase">🗂️ คลังประวัติขอนไพ่</div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
-                    <thead><tr class="bg-slate-100 text-slate-500 font-bold uppercase"><th class="p-3 border-b">ขอน / เวลา</th><th class="p-3 border-b text-center">สถิติผิด (Loss Streak)</th><th class="p-3 border-b text-center">จัดการ</th></tr></thead>
+                    <thead><tr class="bg-slate-100 text-slate-500 font-bold uppercase"><th class="p-3 border-b">ขอน / เวลา</th><th class="p-3 border-b text-center">สถิติผิดสะสม (2-9+)</th><th class="p-3 border-b text-center">จัดการ</th></tr></thead>
                     <tbody id="archiveTable"></tbody>
                 </table>
             </div>
@@ -147,7 +147,7 @@
         function getAI(pure, mVal) {
             if (pure.length < 5) return null;
             let r = calcRoads(pure);
-            let getS = (arr) => { if(!arr.length) return null; let l=arr[arr.length-1], n=0; for(let i=arr.length-1;i>=0;i--){if(f=arr[i]===l)n++; else break;} return {c:l,n:n}; };
+            let getS = (arr) => { if(!arr || !arr.length) return null; let l=arr[arr.length-1], n=0; for(let i=arr.length-1;i>=0;i--){if(arr[i]===l)n++; else break;} return {c:l,n:n}; };
             let streaks = { BR: {c:r.br[r.br.length-1][0], n:r.br[r.br.length-1].length}, BEB: getS(r.beb), SR: getS(r.sr), CP: getS(r.cp) };
             let pOrder = mVal === 'NEW' ? ['BEB','BR','SR','CP'] : ['BR','BEB','SR','CP'];
             let sel = null;
@@ -194,7 +194,7 @@
             let next = getAI(pure, currentMode);
             document.getElementById('nextBetResult').innerText = next ? (next.b==='B'?'BANKER':'PLAYER') : 'รอสถิติ...';
             document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กรุณากดสกอร์...";
-            document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl p-8 text-white shadow-xl':'bg-blue-600 rounded-3xl p-8 text-white shadow-xl') : 'bg-slate-800 rounded-3xl p-8 text-white';
+            document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl shadow-xl p-8 text-white':'bg-blue-600 rounded-3xl shadow-xl p-8 text-white') : 'bg-slate-800 rounded-3xl p-8 text-white';
 
             renderRoads(globalScore); renderArchive(); updateAIRecommendation(pure.length);
         }
@@ -203,7 +203,7 @@
             let bp=''; for (let i = 0; i < 72; i++) bp += `<div class="bead-cell-wrap">${sc[i]?`<div class="bead-mark bead-${sc[i]}">${sc[i]}</div>`:''}</div>`;
             document.getElementById('scoreDisplay').innerHTML = bp;
             let pure = sc.replace(/T/g, '').split(''); let r = calcRoads(pure);
-            let draw=(id,data,cls)=>{
+            let draw=(id,data)=>{
                 let cArr=[];let uArr=[];for(let x of data){if(uArr.length===0||uArr[0]===x)uArr.push(x);else{cArr.push(uArr);uArr=[x]}}if(uArr.length>0)cArr.push(uArr);
                 document.getElementById(id).innerHTML=cArr.map(col=>`<div class="road-col">${col.map(s=>{
                     if(id==='grid-br') return `<div class="br-cell br-${s}"></div>`;
@@ -222,17 +222,25 @@
         }
 
         function saveShoeToArchive() { if(!globalScore) return; shoeArchive.unshift({id:Date.now(), shoe:document.getElementById('shoeNoInput').value, memo:document.getElementById('memoInput').value, score:globalScore, date:new Date().toLocaleString('th-TH')}); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("Saved!"); }
+        
         function renderArchive() {
             let h=''; shoeArchive.forEach((s,idx)=>{
                 let res = forceStats(s.score, currentMode); let st = res.streaks;
                 h+=`<tr class="border-b">
                     <td class="p-3"><div class="font-bold text-indigo-600 text-xs">ขอน:${s.shoe || idx+1}</div><div class="text-[9px] text-slate-400">${s.date}</div><div class="font-bold text-green-600">W:${res.win} L:${res.loss}</div></td>
-                    <td class="p-3"><div class="font-semibold text-[10px] truncate w-24">${s.memo}</div><div class="grid grid-cols-4 gap-1 text-[8px] font-bold text-red-500"><span>[2]:${st[2]}</span><span>[4]:${st[4]}</span><span>[6]:${st[6]}</span><span>[8]:${st[8]}</span></div></td>
-                    <td class="p-3 text-right"><div class="flex flex-col gap-1"><button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold text-[10px]">เปิด</button><button onclick="delShoe(${idx})" class="bg-red-500 text-white px-2 py-1 rounded font-bold text-[10px]">ลบ</button></div></td>
+                    <td class="p-3">
+                        <div class="font-semibold text-[10px] text-slate-600 mb-1 truncate w-32">${s.memo}</div>
+                        <div class="grid grid-cols-4 gap-1 text-[8px] font-bold text-red-500 bg-red-50 p-1 rounded border border-red-100">
+                            <span>[2]:${st[2]}</span><span>[3]:${st[3]}</span><span>[4]:${st[4]}</span><span>[5]:${st[5]}</span>
+                            <span>[6]:${st[6]}</span><span>[7]:${st[7]}</span><span>[8]:${st[8]}</span><span>[9+]:${st[9]}</span>
+                        </div>
+                    </td>
+                    <td class="p-3 text-right"><div class="flex flex-col gap-1"><button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold text-[10px]">เปิด</button><button onclick="delShoe(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold text-[10px]">ลบ</button></div></td>
                 </tr>`;
             });
             document.getElementById('archiveTable').innerHTML = h;
         }
+
         function loadShoe(idx) { let s=shoeArchive[idx]; globalScore=s.score; document.getElementById('shoeNoInput').value=s.shoe || ""; document.getElementById('memoInput').value=s.memo || ""; analyze(); window.scrollTo({top:0, behavior:'smooth'}); }
         function delShoe(idx) { if(confirm("Del?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
 
