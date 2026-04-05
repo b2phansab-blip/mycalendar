@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Baccarat Pro AI (Full Features + Full Archive Stats)</title>
+    <title>Baccarat Priority Pro AI (Classic Logic + BEB P1)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700&display=swap');
@@ -30,8 +30,8 @@
     <div class="max-w-5xl mx-auto space-y-4">
 
         <div class="flex gap-2">
-            <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-white shadow-sm">สายถนนใหญ่</button>
-            <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm">สายตาไก่ (แนะนำ)</button>
+            <button id="btnOld" onclick="setMode('OLD')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-white shadow-sm transition-all">สายถนนใหญ่</button>
+            <button id="btnNew" onclick="setMode('NEW')" class="flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm transition-all">สายตาไก่ (P1)</button>
         </div>
 
         <div id="aiRecommendationCard"></div>
@@ -52,7 +52,7 @@
             </div>
 
             <div class="mt-6 text-left border-t pt-4">
-                <div class="flex justify-between mb-2"><span class="text-sm font-bold text-slate-600 uppercase">📝 ประวัติตาต่อตา</span><span id="totalHands" class="text-xs text-slate-400">0 ตา</span></div>
+                <div class="flex justify-between mb-2"><span class="text-sm font-bold text-slate-600 uppercase">📝 ประวัติตาต่อตา (<span id="modeDisplay">ตาไก่</span>)</span><span id="totalHands" class="text-xs text-slate-400">0 ตา</span></div>
                 <div class="overflow-x-auto max-h-48 border rounded-lg">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50 sticky top-0"><tr><th class="p-2 border-b">ตา</th><th class="p-2 border-b">Priority</th><th class="p-2 border-b text-center">สั่งแทง</th><th class="p-2 border-b text-center">ผล</th><th class="p-2 border-b text-center">สถานะ</th></tr></thead>
@@ -84,7 +84,7 @@
             </div>
         </div>
 
-        <div id="nextBetCard" class="bg-slate-800 rounded-3xl shadow-xl p-8 text-center text-white">
+        <div id="nextBetCard" class="bg-slate-800 rounded-3xl shadow-xl p-8 text-center text-white transition-all">
             <div id="nextBetResult" class="text-5xl font-black mb-2 uppercase">รอสถิติ...</div>
             <div id="nextBetReason" class="text-xs opacity-50">กรุณากดสกอร์...</div>
         </div>
@@ -97,7 +97,7 @@
         </div>
 
         <div class="bg-white rounded-2xl shadow-sm overflow-hidden mb-10 border-t-4 border-slate-800">
-            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase">🗂️ คลังประวัติขอนไพ่</div>
+            <div class="p-3 bg-slate-800 text-white font-bold text-xs uppercase">🗂️ คลังประวัติขอนไพ่และสถิติสะสม</div>
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs">
                     <thead><tr class="bg-slate-100 text-slate-500 font-bold uppercase"><th class="p-3 border-b">ขอน / เวลา</th><th class="p-3 border-b text-center">สถิติผิดสะสม (2-9+)</th><th class="p-3 border-b text-center">จัดการ</th></tr></thead>
@@ -110,8 +110,8 @@
     <script>
         let globalScore = localStorage.getItem('baccaratScore') || "";
         let currentMode = localStorage.getItem('baccaratMode') || "NEW"; 
-        let raw = localStorage.getItem('baccaratArchive') || localStorage.getItem('archive') || "[]";
-        let shoeArchive = JSON.parse(raw);
+        let rawArch = localStorage.getItem('baccaratArchive') || localStorage.getItem('archive') || "[]";
+        let shoeArchive = JSON.parse(rawArch);
         document.getElementById('memoInput').value = localStorage.getItem('baccaratMemo') || "";
         document.getElementById('shoeNoInput').value = localStorage.getItem('baccaratShoeNo') || "1";
 
@@ -119,6 +119,7 @@
             currentMode = m; localStorage.setItem('baccaratMode', m);
             document.getElementById('btnOld').className = m === 'OLD' ? "flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm" : "flex-1 py-2 text-xs font-bold rounded-xl border bg-white text-slate-500";
             document.getElementById('btnNew').className = m === 'NEW' ? "flex-1 py-2 text-xs font-bold rounded-xl border bg-indigo-600 text-white shadow-sm" : "flex-1 py-2 text-xs font-bold rounded-xl border bg-white text-slate-500";
+            document.getElementById('modeDisplay').innerText = m === 'NEW' ? "ตาไก่" : "ถนนใหญ่";
             analyze();
         }
 
@@ -134,32 +135,44 @@
             if (cur.length > 0) br.push(cur);
             let getD = (off) => {
                 let road = [];
-                for (let c = off; c < br.length; c++) {
+                for (let c = offset = off; c < br.length; c++) {
                     for (let r = 0; r < br[c].length; r++) {
-                        if (c === off && r === 0) continue;
-                        let col = (r === 0) ? (br[c-1].length === br[c-1-off].length ? 'RED' : 'BLUE') : (br[c-off].length >= r + 1 ? 'RED' : br[c-off].length === r ? 'BLUE' : 'RED');
+                        if (c === offset && r === 0) continue;
+                        let col = (r === 0) ? (br[c-1].length === br[c-1-offset].length ? 'RED' : 'BLUE') : (br[c-offset].length >= r + 1 ? 'RED' : br[c-offset].length === r ? 'BLUE' : 'RED');
                         road.push(col);
                     }
                 } return road;
             }; return { br, beb: getD(1), sr: getD(2), cp: getD(3) };
         }
 
+        // 🧠 Logic: ลำดับ Priority ตามที่คุณต้องการ (สลับตาไก่เป็นเบอร์ 1)
         function getAI(pure, mVal) {
             if (pure.length < 5) return null;
             let r = calcRoads(pure);
             let getS = (arr) => { if(!arr || !arr.length) return null; let l=arr[arr.length-1], n=0; for(let i=arr.length-1;i>=0;i--){if(arr[i]===l)n++; else break;} return {c:l,n:n}; };
-            let streaks = { BR: {c:r.br[r.br.length-1][0], n:r.br[r.br.length-1].length}, BEB: getS(r.beb), SR: getS(r.sr), CP: getS(r.cp) };
+            
+            let brS = { c: r.br[r.br.length-1][0], n: r.br[r.br.length-1].length };
+            let bebS = getS(r.beb);
+            let srS = getS(r.sr);
+            let cpS = getS(r.cp);
+
+            // สูตรคุณ: เจอ 2 เม็ดแทงตาม (สลับ Priority ตาไก่ขึ้นเบอร์ 1 ในโหมด NEW)
             let pOrder = mVal === 'NEW' ? ['BEB','BR','SR','CP'] : ['BR','BEB','SR','CP'];
+
             let sel = null;
-            for(let p of pOrder) { if(streaks[p] && streaks[p].n >= 2) { sel = {name: p, c: streaks[p].c}; break; } }
+            for(let p of pOrder) { 
+                let curS = (p==='BR')?brS:(p==='BEB')?bebS:(p==='SR')?srS:cpS;
+                if(curS && curS.n >= 2) { sel = {name: p, c: curS.c, n: curS.n}; break; } 
+            }
             if (!sel) return null;
-            let test = (h, c) => {
-                let nR = calcRoads([...h, c]);
-                if (sel.name === 'BR') return nR.br[nR.br.length-1].length > streaks.BR.n;
+
+            let test = (char) => {
+                let nR = calcRoads([...pure, char]);
+                if (sel.name === 'BR') return nR.br[nR.br.length-1].length > brS.n;
                 let k = sel.name.toLowerCase(); return nR[k][nR[k].length-1] === sel.c;
             };
-            if(test(pure, 'B')) return {b:'B', r:sel.name};
-            if(test(pure, 'P')) return {b:'P', r:sel.name};
+            if(test('B')) return {b:'B', r:sel.name};
+            if(test('P')) return {b:'P', r:sel.name};
             return null;
         }
 
@@ -182,7 +195,7 @@
                 let c = globalScore[i], idx = i+1, adv = getAI(pure, currentMode), st="-", cls="text-slate-400";
                 if(adv && c!=='T'){ if(adv.b === c){ st="ชนะ"; cls="text-green-600 font-bold"; } else { st="แพ้"; cls="text-red-600 font-bold"; } }
                 let badge = (char) => `<span class="bg-${char==='B'?'red':char==='P'?'blue':'green'}-500 text-white px-2 py-0.5 rounded text-[10px] font-bold inline-block w-6 text-center">${char}</span>`;
-                tableH = `<tr class="border-b"><td class="p-2 text-center text-slate-400">${idx}</td><td class="p-2 font-bold">${adv?adv.r:'-'}</td><td class="p-2 text-center">${adv?badge(adv.b):'-'}</td><td class="p-2 text-center">${badge(c)}</td><td class="p-2 text-center ${cls}">${st}</td></tr>` + tableH;
+                tableH = `<tr class="border-b"><td class="p-2 text-center text-slate-400">${idx}</td><td class="p-2 font-bold text-indigo-600">${adv?adv.r:'-'}</td><td class="p-2 text-center">${adv?badge(adv.b):'-'}</td><td class="p-2 text-center">${badge(c)}</td><td class="p-2 text-center ${cls}">${st}</td></tr>` + tableH;
                 if(c!=='T') pure.push(c);
             }
             document.getElementById('historyTable').innerHTML = tableH;
@@ -193,8 +206,8 @@
 
             let next = getAI(pure, currentMode);
             document.getElementById('nextBetResult').innerText = next ? (next.b==='B'?'BANKER':'PLAYER') : 'รอสถิติ...';
-            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กรุณากดสกอร์...";
-            document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl shadow-xl p-8 text-white':'bg-blue-600 rounded-3xl shadow-xl p-8 text-white') : 'bg-slate-800 rounded-3xl p-8 text-white';
+            document.getElementById('nextBetReason').innerText = next ? "Priority: " + next.r : "กำลังหาจุดสแกน...";
+            document.getElementById('nextBetCard').className = next ? (next.b==='B'?'bg-red-600 rounded-3xl p-8 text-white shadow-xl':'bg-blue-600 rounded-3xl p-8 text-white shadow-xl') : 'bg-slate-800 rounded-3xl p-8 text-white';
 
             renderRoads(globalScore); renderArchive(); updateAIRecommendation(pure.length);
         }
@@ -218,16 +231,16 @@
         function updateAIRecommendation(l) {
             let rec = document.getElementById('aiRecommendationCard');
             if (l < 15) rec.innerHTML = `<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-xl text-xs">🧠 <b>AI:</b> Phase 1 รอเก็บข้อมูล...</div>`;
-            else rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl text-xs">✅ <b>AI:</b> ทางสะดวก แนะนำใช้แผน A (รอผิด 2) ครับ!</div>`;
+            else rec.innerHTML = `<div class="bg-emerald-100 border-l-4 border-emerald-500 p-4 rounded-xl text-xs">✅ <b>AI:</b> ทางสะดวก ขอนนี้นิ่ง แนะนำใช้แผน A ครับ!</div>`;
         }
 
-        function saveShoeToArchive() { if(!globalScore) return; shoeArchive.unshift({id:Date.now(), shoe:document.getElementById('shoeNoInput').value, memo:document.getElementById('memoInput').value, score:globalScore, date:new Date().toLocaleString('th-TH')}); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("Saved!"); }
+        function saveShoeToArchive() { if(!globalScore) return; shoeArchive.unshift({id:Date.now(), shoe:document.getElementById('shoeNoInput').value || "?", memo:document.getElementById('memoInput').value || "-", score:globalScore, date:new Date().toLocaleString('th-TH')}); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); renderArchive(); alert("บันทึกเรียบร้อย!"); }
         
         function renderArchive() {
             let h=''; shoeArchive.forEach((s,idx)=>{
                 let res = forceStats(s.score, currentMode); let st = res.streaks;
-                h+=`<tr class="border-b">
-                    <td class="p-3"><div class="font-bold text-indigo-600 text-xs">ขอน:${s.shoe || idx+1}</div><div class="text-[9px] text-slate-400">${s.date}</div><div class="font-bold text-green-600">W:${res.win} L:${res.loss}</div></td>
+                h+=`<tr class="border-b hover:bg-slate-50">
+                    <td class="p-3"><div class="font-bold text-indigo-600 text-xs">ขอน:${s.shoe}</div><div class="text-[9px] text-slate-400">${s.date}</div><div class="font-bold text-green-600">W:${res.win} L:${res.loss}</div></td>
                     <td class="p-3">
                         <div class="font-semibold text-[10px] text-slate-600 mb-1 truncate w-32">${s.memo}</div>
                         <div class="grid grid-cols-4 gap-1 text-[8px] font-bold text-red-500 bg-red-50 p-1 rounded border border-red-100">
@@ -238,11 +251,11 @@
                     <td class="p-3 text-right"><div class="flex flex-col gap-1"><button onclick="loadShoe(${idx})" class="bg-blue-500 text-white px-2 py-1 rounded font-bold text-[10px]">เปิด</button><button onclick="delShoe(${idx})" class="bg-red-100 text-red-700 px-2 py-1 rounded font-bold text-[10px]">ลบ</button></div></td>
                 </tr>`;
             });
-            document.getElementById('archiveTable').innerHTML = h;
+            document.getElementById('archiveTable').innerHTML = h || '<tr><td colspan="3" class="p-5 text-center text-slate-300">ไม่มีข้อมูล</td></tr>';
         }
 
-        function loadShoe(idx) { let s=shoeArchive[idx]; globalScore=s.score; document.getElementById('shoeNoInput').value=s.shoe || ""; document.getElementById('memoInput').value=s.memo || ""; analyze(); window.scrollTo({top:0, behavior:'smooth'}); }
-        function delShoe(idx) { if(confirm("Del?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
+        function loadShoe(idx) { let s=shoeArchive[idx]; globalScore=s.score; document.getElementById('shoeNoInput').value=s.shoe; document.getElementById('memoInput').value=s.memo; analyze(); window.scrollTo({top:0, behavior:'smooth'}); }
+        function delShoe(idx) { if(confirm("ลบขอนนี้?")) { shoeArchive.splice(idx,1); localStorage.setItem('baccaratArchive', JSON.stringify(shoeArchive)); analyze(); } }
 
         setMode(currentMode);
     </script>
