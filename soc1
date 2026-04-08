@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>เครื่องมือวิเคราะห์ราคาและผลต่าง OU v3</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; padding: 20px; }
+        .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h2, h3 { text-align: center; color: #2c3e50; }
+        
+        .input-group { margin-bottom: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .input-group label { display: block; font-weight: bold; margin-bottom: 5px; color: #475569; }
+        input[type="text"] { width: calc(100% - 130px); padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; box-sizing: border-box; }
+        button.btn-fetch { width: 120px; padding: 10px; background-color: #8e44ad; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-left: 5px; }
+        button.btn-fetch:hover { background-color: #9b59b6; }
+        
+        textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; box-sizing: border-box; font-family: monospace; margin-top: 10px; }
+        button.btn-process { display: block; width: 100%; padding: 12px; margin-top: 15px; background-color: #27ae60; color: white; border: none; border-radius: 4px; font-size: 16px; font-weight: bold; cursor: pointer; transition: background 0.3s; }
+        button.btn-process:hover { background-color: #2ecc71; }
+        
+        .section { margin-top: 30px; border-top: 2px solid #eee; padding-top: 20px; }
+        .table-responsive { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; white-space: nowrap; margin-bottom: 10px; }
+        th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+        th { background-color: #34495e; color: white; }
+        tr:nth-child(even) { background-color: #f9f9f9; }
+        .summary-box { display: flex; justify-content: space-around; margin-top: 15px; background-color: #e8f8f5; padding: 15px; border-radius: 8px; border: 1px solid #b2ebf2; }
+        .summary-item { font-size: 18px; font-weight: bold; }
+        .text-green { color: green; }
+        .text-red { color: red; }
+        .error { color: #c0392b; margin-top: 10px; font-weight: bold; text-align: center; }
+        .status { color: #2980b9; margin-top: 10px; font-weight: bold; text-align: center; }
+
+        details { background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 6px; margin-bottom: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        summary { background-color: #f8fafc; padding: 12px 15px; font-size: 16px; font-weight: bold; color: #334155; cursor: pointer; border-radius: 6px; list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; }
+        summary::-webkit-details-marker { display: none; }
+        summary:hover { background-color: #f1f5f9; }
+        summary::after { content: "▼ แสดงตาราง"; font-size: 14px; color: #3b82f6; }
+        details[open] summary { border-bottom-left-radius: 0; border-bottom-right-radius: 0; border-bottom: 1px solid #cbd5e1; }
+        details[open] summary::after { content: "▲ ซ่อนตาราง"; color: #ef4444; }
+        .details-content { padding: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>⚽ เครื่องมือวิเคราะห์ราคาและคำนวณผลต่าง OU v3</h2>
+    
+    <div class="input-group">
+        <label>1. วางลิงก์ดึงข้อมูลอัตโนมัติ (URL):</label>
+        <div style="display: flex;">
+            <input type="text" id="urlInput" placeholder="https://live5.nowgoal26.com/ajax/soccerajax?..." />
+            <button class="btn-fetch" onclick="fetchData()" id="fetchBtn">ดึงข้อมูล</button>
+        </div>
+        <div id="fetchStatus" class="status"></div>
+    </div>
+
+    <div class="input-group">
+        <label>2. หรือ วางข้อมูล JSON ด้วยตัวเอง (ถ้าระบบดึงลิงก์ไม่สำเร็จ):</label>
+        <textarea id="jsonInput" placeholder="วางข้อมูล JSON ของคุณที่นี่..."></textarea>
+        <button class="btn-process" onclick="processData()">ประมวลผลและคำนวณ</button>
+    </div>
+    
+    <div id="errorMessage" class="error"></div>
+
+    <div id="calcSection" class="section" style="display:none;">
+        <h3>📊 สรุปผลต่างราคา Over/Under (เฉพาะ Type 1 และ 2)</h3>
+        <div class="table-responsive">
+            <table id="calcTable">
+                <thead>
+                    <tr>
+                        <th rowspan="2">ราคา (Goals)</th>
+                        <th colspan="3" style="background-color: #2980b9;">ฝั่ง Over (u)</th>
+                        <th colspan="3" style="background-color: #c0392b;">ฝั่ง Under (d)</th>
+                    </tr>
+                    <tr>
+                        <th style="background-color: #3498db;">ค่าแรก</th>
+                        <th style="background-color: #3498db;">ล่าสุด</th>
+                        <th style="background-color: #3498db;">ส่วนต่าง</th>
+                        <th style="background-color: #e74c3c;">ค่าแรก</th>
+                        <th style="background-color: #e74c3c;">ล่าสุด</th>
+                        <th style="background-color: #e74c3c;">ส่วนต่าง</th>
+                    </tr>
+                </thead>
+                <tbody id="calcTableBody"></tbody>
+            </table>
+        </div>
+        <div class="summary-box">
+            <div class="summary-item text-green" id="sumOver">ผลรวมส่วนต่าง Over: 0.00</div>
+            <div class="summary-item text-red" id="sumUnder">ผลรวมส่วนต่าง Under: 0.00</div>
+        </div>
+    </div>
+
+    <div id="rawSection" class="section" style="display:none;">
+        <h3>📂 ข้อมูลดิบ (เฉพาะ Type 1 และ 2)</h3>
+        
+        <details open>
+            <summary>1. Over/Under (OU)</summary>
+            <div class="details-content table-responsive">
+                <table>
+                    <thead><tr><th>Type</th><th>HT</th><th>เวลา (Time)</th><th>Over (u)</th><th>Goals (g)</th><th>Under (d)</th></tr></thead>
+                    <tbody id="ouBody"></tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary>2. Asian Handicap (AH)</summary>
+            <div class="details-content table-responsive">
+                <table>
+                    <thead><tr><th>Type</th><th>HT</th><th>เวลา (Time)</th><th>Home (u)</th><th>HDP (g)</th><th>Away (d)</th></tr></thead>
+                    <tbody id="ahBody"></tbody>
+                </table>
+            </div>
+        </details>
+
+        <details>
+            <summary>3. 1x2 / Odds (OP)</summary>
+            <div class="details-content table-responsive">
+                <table>
+                    <thead><tr><th>Type</th><th>HT</th><th>เวลา (Time)</th><th>Home (u)</th><th>Draw (g)</th><th>Away (d)</th></tr></thead>
+                    <tbody id="opBody"></tbody>
+                </table>
+            </div>
+        </details>
+    </div>
+</div>
+
+<script>
+// ฟังก์ชันดึงข้อมูลจาก URL ผ่าน CORS Proxy
+async function fetchData() {
+    const url = document.getElementById('urlInput').value.trim();
+    const statusDiv = document.getElementById('fetchStatus');
+    const errorDiv = document.getElementById('errorMessage');
+    const jsonInput = document.getElementById('jsonInput');
+    const fetchBtn = document.getElementById('fetchBtn');
+
+    errorDiv.innerText = '';
+    
+    if (!url) {
+        statusDiv.innerHTML = '<span class="text-red">กรุณาใส่ลิงก์ URL ก่อนครับ</span>';
+        return;
+    }
+
+    // ใช้ allorigins.win เป็น Proxy เพื่อทะลุบล็อก CORS
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+    
+    try {
+        fetchBtn.disabled = true;
+        fetchBtn.innerText = "กำลังดึง...";
+        statusDiv.innerText = "กำลังดึงข้อมูลจากเซิร์ฟเวอร์ โปรดรอสักครู่...";
+
+        const response = await fetch(proxyUrl);
+        if (!response.ok) throw new Error("Network response was not ok");
+        
+        const data = await response.text();
+        
+        // เช็คว่าข้อมูลที่ได้มาเป็น JSON จริงไหม
+        JSON.parse(data); 
+
+        // เอาข้อมูลไปใส่ในกล่อง Textarea
+        jsonInput.value = data;
+        statusDiv.innerHTML = '<span class="text-green">ดึงข้อมูลสำเร็จ! กำลังประมวลผล...</span>';
+        
+        // สั่งให้ประมวลผลตารางอัตโนมัติ
+        processData();
+
+    } catch (error) {
+        console.error("Fetch error:", error);
+        statusDiv.innerHTML = '';
+        errorDiv.innerText = "ดึงข้อมูลไม่สำเร็จ: อาจติดระบบป้องกัน (CORS) ของเว็บไซต์ต้นทาง กรุณาก๊อปปี้ข้อมูลไปวางในกล่องข้อความแทนครับ";
+    } finally {
+        fetchBtn.disabled = false;
+        fetchBtn.innerText = "ดึงข้อมูล";
+    }
+}
+
+function formatTime(mt) {
+    if (!mt) return "-";
+    const timestamp = mt > 20000000000 ? mt : mt * 1000;
+    const date = new Date(timestamp);
+    const day = String(date.getDate()).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${day}/${month} ${hours}:${minutes}`;
+}
+
+function formatDiff(val) {
+    const formatted = (val >= 0 ? '+' : '') + val.toFixed(2);
+    const colorClass = val > 0 ? 'text-green' : (val < 0 ? 'text-red' : '');
+    return `<span class="${colorClass} font-weight-bold">${formatted}</span>`;
+}
+
+function processData() {
+    const input = document.getElementById('jsonInput').value;
+    const errorDiv = document.getElementById('errorMessage');
+    
+    document.getElementById('calcSection').style.display = 'none';
+    document.getElementById('rawSection').style.display = 'none';
+    errorDiv.innerText = "";
+
+    if (!input.trim()) {
+        errorDiv.innerText = "ไม่มีข้อมูล JSON สำหรับประมวลผล";
+        return;
+    }
+
+    try {
+        const jsonData = JSON.parse(input);
+        const data = jsonData.Data;
+        if (!data) throw new Error("ไม่พบโครงสร้าง 'Data' ใน JSON");
+
+        const ah = data.ah || [];
+        const op = data.op || [];
+        const ou = data.ou || [];
+
+        const filterType1and2 = (arr) => arr.filter(item => item.type === 1 || item.type === 2);
+        
+        const ahFiltered = filterType1and2(ah).sort((a, b) => b.mt - a.mt);
+        const opFiltered = filterType1and2(op).sort((a, b) => b.mt - a.mt);
+        const ouFiltered = filterType1and2(ou).sort((a, b) => b.mt - a.mt);
+
+        // 1. ส่วนคำนวณผลต่าง OU
+        const calcBody = document.getElementById('calcTableBody');
+        calcBody.innerHTML = "";
+        
+        const grouped = {};
+        ouFiltered.forEach(item => {
+            const g = item.odds.g;
+            if (!grouped[g]) grouped[g] = { u: [], d: [] };
+            grouped[g].u.push(parseFloat(item.odds.u || 0));
+            grouped[g].d.push(parseFloat(item.odds.d || 0));
+        });
+
+        let totalOverDiff = 0;
+        let totalUnderDiff = 0;
+
+        for (const g in grouped) {
+            const group = grouped[g];
+            if (group.u.length === 0) continue;
+
+            const newestOver = group.u[0];
+            const oldestOver = group.u[group.u.length - 1];
+            const diffOver = newestOver - oldestOver;
+            
+            const newestUnder = group.d[0];
+            const oldestUnder = group.d[group.d.length - 1];
+            const diffUnder = newestUnder - oldestUnder;
+
+            totalOverDiff += diffOver;
+            totalUnderDiff += diffUnder;
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>${g}</strong></td>
+                <td>${oldestOver.toFixed(2)}</td>
+                <td>${newestOver.toFixed(2)}</td>
+                <td><strong>${formatDiff(diffOver)}</strong></td>
+                <td>${oldestUnder.toFixed(2)}</td>
+                <td>${newestUnder.toFixed(2)}</td>
+                <td><strong>${formatDiff(diffUnder)}</strong></td>
+            `;
+            calcBody.appendChild(tr);
+        }
+
+        document.getElementById('sumOver').innerHTML = `ผลรวมส่วนต่าง Over: ${formatDiff(totalOverDiff)}`;
+        document.getElementById('sumUnder').innerHTML = `ผลรวมส่วนต่าง Under: ${formatDiff(totalUnderDiff)}`;
+
+        // 2. ส่วนแสดงข้อมูลดิบ
+        const renderRawTable = (dataArray, tbodyId, col1, col2, col3) => {
+            const tbody = document.getElementById(tbodyId);
+            tbody.innerHTML = "";
+            dataArray.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${item.type}</td>
+                    <td>${item.ht || '-'}</td>
+                    <td>${formatTime(item.mt)}</td>
+                    <td>${item.odds[col1] || 0}</td>
+                    <td>${item.odds[col2] || 0}</td>
+                    <td>${item.odds[col3] || 0}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        };
+
+        renderRawTable(ahFiltered, 'ahBody', 'u', 'g', 'd');
+        renderRawTable(opFiltered, 'opBody', 'u', 'g', 'd');
+        renderRawTable(ouFiltered, 'ouBody', 'u', 'g', 'd');
+
+        document.getElementById('calcSection').style.display = 'block';
+        document.getElementById('rawSection').style.display = 'block';
+
+    } catch (e) {
+        errorDiv.innerText = "เกิดข้อผิดพลาดในการอ่าน JSON กรุณาตรวจสอบข้อมูล";
+        console.error(e);
+    }
+}
+</script>
+
+</body>
+</html>
