@@ -9,7 +9,7 @@
     <script src="data.js"></script>
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .sidebar { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .dashboard-card { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; height: 100%; display: flex; flex-direction: column; justify-content: center;}
         .metric-value { font-size: 2rem; font-weight: bold; color: #0d6efd; margin-top: 5px;}
         .road-title { font-size: 0.85rem; font-weight: bold; margin-top: 10px; margin-bottom: 5px; color: #495057; border-bottom: 2px solid #dee2e6; padding-bottom: 3px; }
@@ -36,92 +36,113 @@
     <div class="row">
         <div class="col-md-3">
             <div class="sidebar">
-                <h5 class="text-secondary">📂 1. Data Hub</h5>
-                <div id="dataStatus" class="alert alert-info py-2 mb-2" style="font-size: 0.9rem;">กำลังโหลดข้อมูล...</div>
-                <input type="file" id="fileInput" class="form-control mb-4" accept=".txt,.csv" multiple>
+                <h5 class="text-secondary mb-3">📂 1. Data Hub</h5>
+                <div id="dataStatus" class="alert alert-info py-2 mb-2" style="font-size: 0.85rem;">กำลังโหลดข้อมูล...</div>
+                <input type="file" id="fileInput" class="form-control form-control-sm mb-4" accept=".txt,.csv" multiple>
 
-                <h5 class="text-secondary">⚙️ 2. Strategy Builder</h5>
+                <h5 class="text-secondary mb-3">⚙️ 2. Strategy Builder</h5>
                 
-                <div class="p-3 mb-3 bg-light border rounded border-primary">
-                    <label class="form-label fw-bold text-primary d-block">🎯 จังหวะเริ่มสแกน (Entry Trigger)</label>
-                    <select id="startTrigger" class="form-select mb-2" onchange="toggleStartHand()">
+                <div class="p-2 mb-3 bg-light border rounded border-primary">
+                    <label class="form-label fw-bold text-primary d-block" style="font-size: 0.9rem;">🎯 จังหวะเริ่มสแกน (Entry)</label>
+                    <select id="startTrigger" class="form-select form-select-sm mb-1" onchange="toggleStartHand()">
                         <option value="CR">รอไม้ขีดเกิด (CR) แล้วสแกนเลย</option>
                         <option value="HAND">ระบุตาที่เริ่มสแกน (Hand No.)</option>
                     </select>
                     <div id="handInputDiv" style="display: none;">
-                        <input type="number" id="startHandNum" class="form-control" value="20" min="5">
+                        <input type="number" id="startHandNum" class="form-control form-control-sm" value="20" min="5">
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold d-block">เงื่อนไข 1: ต้องมีเสายาว >=</label>
-                    <div class="input-group mb-2">
-                        <input type="number" id="minStreak" class="form-control" value="3" min="1">
-                        <span class="input-group-text">เม็ด</span>
+                <div class="mb-3 p-2 border rounded bg-white">
+                    <label class="form-label fw-bold d-block text-primary" style="font-size: 0.9rem;">เงื่อนไข 1: ต้องมีเสา (ระบุแยก)</label>
+                    <div class="row g-1 text-center fw-bold text-muted mb-1" style="font-size: 0.75rem;">
+                        <div class="col-4">เลือกตาราง</div>
+                        <div class="col-4">ยาว >= (เม็ด)</div>
+                        <div class="col-4">มี >= (ต้น)</div>
                     </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="BR" checked> <label>BR</label></div>
-                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="BEB" checked> <label>BEB</label></div>
-                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="SR"> <label>SR</label></div>
-                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="CR"> <label>CR</label></div>
+                    <div class="row g-1 align-items-center mb-1">
+                        <div class="col-4"><div class="form-check mb-0"><input class="form-check-input min-road" type="checkbox" value="BR" id="min_BR" checked><label class="form-check-label" for="min_BR" style="font-size: 0.8rem;">BR</label></div></div>
+                        <div class="col-4"><input type="number" id="minStr_BR" class="form-control form-control-sm text-center" value="3" min="1"></div>
+                        <div class="col-4"><input type="number" id="minCnt_BR" class="form-control form-control-sm text-center" value="1" min="1"></div>
+                    </div>
+                    <div class="row g-1 align-items-center mb-1">
+                        <div class="col-4"><div class="form-check mb-0"><input class="form-check-input min-road" type="checkbox" value="BEB" id="min_BEB" checked><label class="form-check-label" for="min_BEB" style="font-size: 0.8rem;">BEB</label></div></div>
+                        <div class="col-4"><input type="number" id="minStr_BEB" class="form-control form-control-sm text-center" value="3" min="1"></div>
+                        <div class="col-4"><input type="number" id="minCnt_BEB" class="form-control form-control-sm text-center" value="1" min="1"></div>
+                    </div>
+                    <div class="row g-1 align-items-center mb-1">
+                        <div class="col-4"><div class="form-check mb-0"><input class="form-check-input min-road" type="checkbox" value="SR" id="min_SR"><label class="form-check-label" for="min_SR" style="font-size: 0.8rem;">SR</label></div></div>
+                        <div class="col-4"><input type="number" id="minStr_SR" class="form-control form-control-sm text-center" value="3" min="1"></div>
+                        <div class="col-4"><input type="number" id="minCnt_SR" class="form-control form-control-sm text-center" value="1" min="1"></div>
+                    </div>
+                    <div class="row g-1 align-items-center mb-2">
+                        <div class="col-4"><div class="form-check mb-0"><input class="form-check-input min-road" type="checkbox" value="CR" id="min_CR"><label class="form-check-label" for="min_CR" style="font-size: 0.8rem;">CR</label></div></div>
+                        <div class="col-4"><input type="number" id="minStr_CR" class="form-control form-control-sm text-center" value="3" min="1"></div>
+                        <div class="col-4"><input type="number" id="minCnt_CR" class="form-control form-control-sm text-center" value="1" min="1"></div>
+                    </div>
+                    <select id="minConditionType" class="form-select form-select-sm text-primary fw-bold">
+                        <option value="OR">✅ ผ่านแค่ 1 ตารางที่ติ๊ก (OR)</option>
+                        <option value="AND">🔥 ต้องผ่านทุกตารางที่ติ๊ก (AND)</option>
+                    </select>
+                </div>
+
+                <div class="mb-3 p-2 border rounded bg-white">
+                    <label class="form-label fw-bold d-block text-danger" style="font-size: 0.9rem;">เงื่อนไข 2: ห้ามเสายาวเกิน</label>
+                    <div class="row g-1 text-center fw-bold text-muted mb-1" style="font-size: 0.75rem;">
+                        <div class="col-6">เลือกตาราง</div>
+                        <div class="col-6">ห้ามยาวเกิน > (เม็ด)</div>
+                    </div>
+                    <div class="row g-1 align-items-center mb-1">
+                        <div class="col-6"><div class="form-check mb-0"><input class="form-check-input max-road" type="checkbox" value="BR" id="max_BR"><label class="form-check-label" for="max_BR" style="font-size: 0.8rem;">BR</label></div></div>
+                        <div class="col-6"><input type="number" id="maxStr_BR" class="form-control form-control-sm text-center" value="10" min="1"></div>
+                    </div>
+                    <div class="row g-1 align-items-center mb-1">
+                        <div class="col-6"><div class="form-check mb-0"><input class="form-check-input max-road" type="checkbox" value="BEB" id="max_BEB"><label class="form-check-label" for="max_BEB" style="font-size: 0.8rem;">BEB</label></div></div>
+                        <div class="col-6"><input type="number" id="maxStr_BEB" class="form-control form-control-sm text-center" value="10" min="1"></div>
+                    </div>
+                    <div class="row g-1 align-items-center mb-1">
+                        <div class="col-6"><div class="form-check mb-0"><input class="form-check-input max-road" type="checkbox" value="SR" id="max_SR"><label class="form-check-label" for="max_SR" style="font-size: 0.8rem;">SR</label></div></div>
+                        <div class="col-6"><input type="number" id="maxStr_SR" class="form-control form-control-sm text-center" value="10" min="1"></div>
+                    </div>
+                    <div class="row g-1 align-items-center mb-1">
+                        <div class="col-6"><div class="form-check mb-0"><input class="form-check-input max-road" type="checkbox" value="CR" id="max_CR"><label class="form-check-label" for="max_CR" style="font-size: 0.8rem;">CR</label></div></div>
+                        <div class="col-6"><input type="number" id="maxStr_CR" class="form-control form-control-sm text-center" value="10" min="1"></div>
                     </div>
                 </div>
 
-                <div class="mb-3 border-top pt-3">
-                    <label class="form-label fw-bold d-block text-danger">เงื่อนไข 2: ห้ามมีเสายาวเกิน ></label>
-                    <div class="input-group mb-2">
-                        <input type="number" id="maxStreak" class="form-control" value="10" min="1">
-                        <span class="input-group-text">เม็ด</span>
-                    </div>
-                    <div class="d-flex flex-wrap gap-2">
-                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="BR"> <label>BR</label></div>
-                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="BEB"> <label>BEB</label></div>
-                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="SR"> <label>SR</label></div>
-                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="CR"> <label>CR</label></div>
-                    </div>
-                </div>
-
-                <div class="p-3 mb-3 bg-light border rounded border-danger">
-                    <label class="form-label fw-bold text-danger d-block">🛑 จังหวะหยุดเล่น (Exit Trigger)</label>
-                    <div class="mb-2">
-                        <label class="form-label mb-0" style="font-size: 0.8rem;">เล่นจำนวนกี่ชุด (Max Cycles):</label>
-                        <input type="number" id="maxCycles" class="form-control form-control-sm" value="5" min="1">
+                <div class="p-2 mb-3 bg-light border rounded border-danger">
+                    <label class="form-label fw-bold text-danger d-block" style="font-size: 0.9rem;">🛑 จังหวะหยุดเล่น (Exit Trigger)</label>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6"><label class="form-label mb-0" style="font-size: 0.75rem;">เล่นกี่ชุด (Cycles):</label><input type="number" id="maxCycles" class="form-control form-control-sm" value="5" min="1"></div>
+                        <div class="col-6"><label class="form-label mb-0" style="font-size: 0.75rem;">กำไรครบ (TP):</label><input type="number" id="takeProfit" class="form-control form-control-sm" value="5" min="1"></div>
                     </div>
                     <div class="mb-2">
-                        <label class="form-label mb-0" style="font-size: 0.8rem;">ได้กำไรครบ (Take Profit):</label>
-                        <input type="number" id="takeProfit" class="form-control form-control-sm" value="5" min="1">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label mb-0" style="font-size: 0.8rem;">ไพ่เกินตาที่ (Stop Hand):</label>
+                        <label class="form-label mb-0" style="font-size: 0.75rem;">ไพ่เกินตาที่ (Stop Hand):</label>
                         <input type="number" id="stopHandNum" class="form-control form-control-sm" value="70" min="10">
                     </div>
-                    <div class="form-check mt-2 pt-2 border-top">
+                    <div class="form-check mt-1">
                         <input class="form-check-input" type="checkbox" id="stopOnBust" checked>
-                        <label class="form-check-label fw-bold text-danger" style="font-size: 0.8rem;">พอร์ตแตกปุ๊บ หยุดทันที (เปลี่ยนขอน)</label>
+                        <label class="form-check-label fw-bold text-danger" style="font-size: 0.75rem;">พอร์ตแตกปุ๊บ หยุดทันที (เปลี่ยนขอน)</label>
                     </div>
                 </div>
 
-                <div class="mb-4 border-top pt-3">
-                    <label class="form-label fw-bold d-block text-success">💰 ระบบเดิมพัน</label>
-                    <div class="mb-2">
-                        <label class="form-label">ประเภทการเดินเงิน:</label>
-                        <select id="moneySystem" class="form-select">
-                            <option value="loss">เมื่อผิดแล้วทบ (Martingale)</option>
-                            <option value="win">เมื่อถูกแล้วเพิ่ม (Winning Streak)</option>
-                        </select>
+                <div class="p-2 mb-4 bg-light border rounded border-success">
+                    <label class="form-label fw-bold d-block text-success" style="font-size: 0.9rem;">💰 ระบบเดิมพัน</label>
+                    <select id="moneySystem" class="form-select form-select-sm mb-2">
+                        <option value="loss">เมื่อผิดแล้วทบ (Martingale)</option>
+                        <option value="win">เมื่อถูกแล้วเพิ่ม (Winning Streak)</option>
+                    </select>
+                    <div class="row g-2 mb-2">
+                        <div class="col-4"><label style="font-size: 0.75rem;">รอทิพย์ (VL):</label><input type="number" id="vlLimit" class="form-control form-control-sm" value="0" min="0"></div>
+                        <div class="col-8"><label style="font-size: 0.75rem;">รูปแบบเดินเงิน (1,3,7):</label><input type="text" id="martingaleStr" class="form-control form-control-sm" value="1,3,7"></div>
                     </div>
-                    <div class="mb-2"><label class="form-label">รอผิดทิพย์ (VL):</label><input type="number" id="vlLimit" class="form-control" value="0" min="0"></div>
-                    <div class="mb-2"><label class="form-label">รูปแบบเดินเงิน:</label><input type="text" id="martingaleStr" class="form-control" value="1,3,7"></div>
-                    <div class="mb-2">
-                        <label class="form-label">รูปแบบการแทง:</label>
-                        <select id="betMode" class="form-select">
-                            <option value="Follow">Follow (แทงตาม)</option>
-                            <option value="Reverse">Reverse (แทงสวน)</option>
-                        </select>
-                    </div>
+                    <select id="betMode" class="form-select form-select-sm mb-1">
+                        <option value="Follow">แทงตาม (Follow)</option>
+                        <option value="Reverse">แทงสวน (Reverse)</option>
+                    </select>
                 </div>
 
-                <button id="runBtn" class="btn btn-primary w-100 fw-bold py-3 fs-5">🚀 RUN BACKTEST</button>
+                <button id="runBtn" class="btn btn-primary w-100 fw-bold py-2 fs-5 shadow-sm">🚀 RUN BACKTEST</button>
             </div>
         </div>
 
@@ -175,7 +196,6 @@
 </div>
 
 <script>
-// --- ฟังก์ชันพื้นฐาน ---
 function parseShoeLine(line) {
     let str = line.trim().replace(/\r/g, '');
     if (!str) return null;
@@ -226,8 +246,8 @@ function getRoads(history) {
     return { BR: br, BEB: drv(1), SR: drv(2), CR: drv(3) };
 }
 
-// --- ฟังก์ชันดึงสัญญาณ (ปรับปรุงลอจิก Priority โฟกัส BR เสมอ) ---
-function getSignal(flatHistory, minStreak) {
+// ระบบดึงสัญญาณที่ดึงค่าความยาวขั้นต่ำตามที่ระบุแต่ละตารางมาใช้งานจริง
+function getSignal(flatHistory, strSettings) {
     let roads = getRoads(flatHistory);
     let streaks = [
         roads.BR.length > 0 ? {road: 'BR', c: roads.BR[roads.BR.length-1][0], l: roads.BR[roads.BR.length-1].length} : {road: 'BR', l:0},
@@ -237,15 +257,18 @@ function getSignal(flatHistory, minStreak) {
     ];
 
     for (let p = 0; p < streaks.length; p++) {
-        if (streaks[p].l >= minStreak) {
+        let rName = streaks[p].road;
+        let reqLen = strSettings[rName]; // ดึงความยาวที่ต้องใช้สำหรับตารางนี้
+        
+        if (streaks[p].l >= reqLen) {
             let cMatch = streaks[p].c;
             for (let test of ['B', 'P']) {
                 let tHist = [...flatHistory.filter(x => x==='B'||x==='P'), test];
                 let tR = getRoads(tHist);
-                if (p === 0 && test === cMatch) return {signal: test, p: p, road: streaks[p].road};
-                if (p === 1 && tR.BEB.length > 0 && tR.BEB[tR.BEB.length-1][0] === cMatch) return {signal: test, p: p, road: streaks[p].road};
-                if (p === 2 && tR.SR.length > 0 && tR.SR[tR.SR.length-1][0] === cMatch) return {signal: test, p: p, road: streaks[p].road};
-                if (p === 3 && tR.CR.length > 0 && tR.CR[tR.CR.length-1][0] === cMatch) return {signal: test, p: p, road: streaks[p].road};
+                if (p === 0 && test === cMatch) return {signal: test, p: p, road: rName};
+                if (p === 1 && tR.BEB.length > 0 && tR.BEB[tR.BEB.length-1][0] === cMatch) return {signal: test, p: p, road: rName};
+                if (p === 2 && tR.SR.length > 0 && tR.SR[tR.SR.length-1][0] === cMatch) return {signal: test, p: p, road: rName};
+                if (p === 3 && tR.CR.length > 0 && tR.CR[tR.CR.length-1][0] === cMatch) return {signal: test, p: p, road: rName};
             }
         }
     }
@@ -263,7 +286,7 @@ function loadMasterData() {
             if (sStr) { rawShoesList.push(sStr); globalShoes.push(sStr.replace(/T/g, '').split('')); }
         });
         document.getElementById('dataStatus').innerText = `✅ โหลดฐานข้อมูลหลักแล้ว ${globalShoes.length} ขอน`;
-        document.getElementById('dataStatus').className = "alert alert-success py-2 mb-2";
+        document.getElementById('dataStatus').className = "alert alert-success py-2 mb-2 text-center fw-bold";
     }
 }
 window.onload = loadMasterData;
@@ -284,22 +307,32 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     });
 });
 
-// --- CORE BACKTEST LOOP ---
 document.getElementById('runBtn').addEventListener('click', function() {
-    if (globalShoes.length === 0) return alert("ไม่มีข้อมูล!");
+    if (globalShoes.length === 0) return alert("ไม่มีข้อมูลให้รันครับ!");
 
+    // --- ดึงค่าการตั้งค่าต่างๆ ---
     let startTrigger = document.getElementById('startTrigger').value;
     let startHandNum = parseInt(document.getElementById('startHandNum').value) || 20;
     
+    let minRoads = Array.from(document.querySelectorAll('.min-road:checked')).map(e => e.value);
+    let minCondType = document.getElementById('minConditionType').value;
+    let getMinSets = (r) => { return { s: parseInt(document.getElementById('minStr_'+r).value)||2, c: parseInt(document.getElementById('minCnt_'+r).value)||1 }; };
+    
+    let maxRoads = Array.from(document.querySelectorAll('.max-road:checked')).map(e => e.value);
+    let getMaxStr = (r) => parseInt(document.getElementById('maxStr_'+r).value) || 10;
+    
+    // ตั้งค่าความยาวเสาแยกตามถนน สำหรับส่งให้ Priority สลับตาราง
+    let signalSettings = {
+        BR: parseInt(document.getElementById('minStr_BR').value) || 2,
+        BEB: parseInt(document.getElementById('minStr_BEB').value) || 2,
+        SR: parseInt(document.getElementById('minStr_SR').value) || 2,
+        CR: parseInt(document.getElementById('minStr_CR').value) || 2
+    };
+
     let maxCycles = parseInt(document.getElementById('maxCycles').value) || 5;
     let takeProfit = parseInt(document.getElementById('takeProfit').value) || 5;
     let stopHandNum = parseInt(document.getElementById('stopHandNum').value) || 70;
     let stopOnBust = document.getElementById('stopOnBust').checked;
-    
-    let minStreak = parseInt(document.getElementById('minStreak').value);
-    let minRoads = Array.from(document.querySelectorAll('.min-road:checked')).map(e => e.value);
-    let maxStreak = parseInt(document.getElementById('maxStreak').value);
-    let maxRoads = Array.from(document.querySelectorAll('.max-road:checked')).map(e => e.value);
     
     let moneySystem = document.getElementById('moneySystem').value;
     let vlLimit = parseInt(document.getElementById('vlLimit').value);
@@ -315,40 +348,60 @@ document.getElementById('runBtn').addEventListener('click', function() {
     globalShoes.forEach((shoe, idx) => {
         let flat = [], isReady = false, qualified = false;
         let consStep = 0, vlCount = 0, netThisShoe = 0;
-        let cyclesPlayed = 0;
-        let isShoeTerminated = false;
-        let currentLossStreak = 0; 
+        let cyclesPlayed = 0, isShoeTerminated = false, currentLossStreak = 0; 
         
         let inRealPlay = (vlLimit === 0);
 
         for (let i = 0; i < shoe.length; i++) {
             if (isShoeTerminated) break; 
             
-            // เช็คหยุดขอน (Exit Triggers) โดยต้องเช็คตอนไม่ได้อยู่ในระหว่างทบไม้ (consStep === 0)
-            if (consStep === 0) {
-                if (cyclesPlayed >= maxCycles || netThisShoe >= takeProfit || flat.length >= stopHandNum) {
-                    break; 
-                }
+            if (consStep === 0) { // เช็คออกขอน เมื่อไม่ได้ทบไม้
+                if (cyclesPlayed >= maxCycles || netThisShoe >= takeProfit || flat.length >= stopHandNum) break; 
             }
 
             let actual = shoe[i];
             let roads = getRoads(flat);
             
-            // เช็คสแกนพร้อมเข้าทำ
+            // เช็คว่าขอนนี้ผ่านเกณฑ์ เงื่อนไข 1 และ 2 ไหม
             if (!isReady) {
                 if (startTrigger === 'CR' && roads.CR.length > 0) isReady = true;
                 else if (startTrigger === 'HAND' && flat.length >= startHandNum) isReady = true;
 
                 if (isReady) {
-                    let passMin = minRoads.length === 0 || minRoads.some(r => roads[r] && roads[r].some(col => col.length >= minStreak));
-                    let passMax = maxRoads.length === 0 || maxRoads.every(r => roads[r] && roads[r].every(col => col.length <= maxStreak));
+                    let passMin = true;
+                    if (minRoads.length > 0) {
+                        if (minCondType === 'OR') {
+                            passMin = minRoads.some(r => {
+                                if (!roads[r]) return false;
+                                let sets = getMinSets(r);
+                                return roads[r].filter(col => col.length >= sets.s).length >= sets.c;
+                            });
+                        } else { // AND
+                            passMin = minRoads.every(r => {
+                                if (!roads[r]) return false;
+                                let sets = getMinSets(r);
+                                return roads[r].filter(col => col.length >= sets.s).length >= sets.c;
+                            });
+                        }
+                    }
+                    
+                    let passMax = true;
+                    if (maxRoads.length > 0) {
+                        passMax = maxRoads.every(r => {
+                            if (!roads[r]) return true;
+                            let maxLimit = getMaxStr(r);
+                            return roads[r].every(col => col.length <= maxLimit);
+                        });
+                    }
+                    
                     qualified = passMin && passMax;
-                    if (!qualified) break; // ถ้าขอนไม่ผ่านเกณฑ์ ให้ข้ามขอนนี้ไปเลย
+                    if (!qualified) break; // ไม่ผ่านเกณฑ์ ทิ้งขอนนี้เลย
                 }
             }
 
             if (qualified && isReady) {
-                let sigData = getSignal(flat, minStreak);
+                let sigData = getSignal(flat, signalSettings); // ดึงสัญญาณอัจฉริยะ (สลับตารางอัตโนมัติ)
+                
                 if (sigData.signal && (actual === 'B' || actual === 'P')) {
                     let target = (betMode === "Reverse") ? (sigData.signal === 'B' ? 'P' : 'B') : sigData.signal;
                     let isWin = (actual === target);
@@ -356,56 +409,40 @@ document.getElementById('runBtn').addEventListener('click', function() {
                     if (!inRealPlay) {
                         if (!isWin) {
                             vlCount++;
-                            if (vlCount >= vlLimit) { 
-                                inRealPlay = true; consStep = 0; vlCount = 0; 
-                            }
-                        } else { 
-                            vlCount = 0; 
-                        }
+                            if (vlCount >= vlLimit) { inRealPlay = true; consStep = 0; vlCount = 0; }
+                        } else { vlCount = 0; }
                     } 
                     else {
                         let currentBet = mSteps[consStep];
                         
-                        if (moneySystem === 'loss') { 
+                        if (moneySystem === 'loss') { // เดินเงิน Martingale
                             if (isWin) { 
-                                netThisShoe += currentBet; // ✅ บวกกำไรเต็มเม็ดเต็มหน่วย
+                                netThisShoe += currentBet; 
                                 winCountChart[consStep]++; 
-                                
-                                if (currentLossStreak > 0) {
-                                    lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
-                                }
+                                if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
                                 currentLossStreak = 0; 
                                 
-                                inRealPlay = (vlLimit === 0); 
-                                consStep = 0; 
-                                cyclesPlayed++; 
+                                inRealPlay = (vlLimit === 0); consStep = 0; cyclesPlayed++; 
                             } else { 
-                                netThisShoe -= currentBet; // ✅ หักทุน
-                                consStep++; 
+                                netThisShoe -= currentBet; consStep++; 
                                 currentLossStreak++; 
                                 if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
                                 
                                 if (consStep >= mSteps.length) { 
                                     cyclesPlayed++; 
-                                    if (stopOnBust) { isShoeTerminated = true; } 
+                                    if (stopOnBust) isShoeTerminated = true; 
                                     else { inRealPlay = (vlLimit === 0); consStep = 0; }
                                 } 
                             }
-                        } else { 
+                        } else { // เดินเงิน Winning Streak
                             if (isWin) { 
                                 netThisShoe += currentBet; 
-                                winCountChart[consStep]++; 
-                                consStep++; 
-                                
-                                if (currentLossStreak > 0) {
-                                    lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
-                                }
+                                winCountChart[consStep]++; consStep++; 
+                                if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
                                 currentLossStreak = 0;
 
                                 if (consStep >= mSteps.length) { 
-                                    inRealPlay = (vlLimit === 0); 
-                                    consStep = 0; 
-                                    cyclesPlayed++; 
+                                    inRealPlay = (vlLimit === 0); consStep = 0; cyclesPlayed++; 
                                 } 
                             } else { 
                                 netThisShoe -= currentBet; 
@@ -413,7 +450,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                                 if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
                                 
                                 cyclesPlayed++; 
-                                if (stopOnBust) { isShoeTerminated = true; } 
+                                if (stopOnBust) isShoeTerminated = true; 
                                 else { inRealPlay = (vlLimit === 0); consStep = 0; }
                             }
                         }
@@ -424,20 +461,17 @@ document.getElementById('runBtn').addEventListener('click', function() {
         }
 
         if (qualified) {
-            if (currentLossStreak > 0) {
-                lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
-            }
-            
+            if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
             qCount++; netTotal += netThisShoe;
             
-            if (netThisShoe < takeProfit) bustCount++; 
-            else wonCount++;
+            if (netThisShoe < takeProfit) bustCount++; else wonCount++;
             
             let statusText = (netThisShoe >= takeProfit) ? "✅ สำเร็จ" : (netThisShoe > 0 ? "⚠️ จบก่อนเป้า" : "🚨 แตก/ขาดทุน");
             shoeLogs.push({ id: idx, status: statusText, net: netThisShoe });
         }
     });
 
+    // แสดงผล
     document.getElementById('resQualified').innerText = qCount;
     document.getElementById('resWon').innerText = wonCount;
     document.getElementById('resBusted').innerText = bustCount;
@@ -450,8 +484,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
         data: { labels: Array.from({length: mSteps.length}, (_, i) => `ไม้ ${i+1}`), datasets: [{ label: 'จำนวนครั้งที่ชนะในไม้นี้', data: winCountChart, backgroundColor: '#0d6efd' }] }
     });
 
-    let lossLabels = [];
-    let lossData = [];
+    let lossLabels = [], lossData = [];
     for (let i = 1; i <= globalMaxLossStreak; i++) {
         lossLabels.push(`ผิด ${i} ตา`);
         lossData.push(lossStreakFreq[i] || 0);
@@ -472,7 +505,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
     });
 });
 
-// --- วาดตารางเค้าไพ่ ---
+// วาดตารางเค้าไพ่ 5 ถนน
 document.getElementById('shoeSelector').addEventListener('change', function(e) {
     let id = e.target.value;
     if (id === "") return;
