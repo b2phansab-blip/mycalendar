@@ -128,8 +128,8 @@
         <div class="col-md-9">
             <div class="row row-cols-1 row-cols-md-5 g-3">
                 <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value text-primary">0</div></div></div>
-                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">กำไรสำเร็จ</div><div id="resWon" class="metric-value text-success">0</div></div></div>
-                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">พอร์ตแตก/ไม่ถึงเป้า</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
+                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">ถึงเป้าสำเร็จ</div><div id="resWon" class="metric-value text-success">0</div></div></div>
+                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">แตก/ไม่ถึงเป้า</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
                 <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold text-warning" style="font-size: 0.9rem;">ผิดติดกันสูงสุด</div><div id="resMaxLoss" class="metric-value text-warning">0</div></div></div>
                 <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold" style="font-size: 0.9rem;">กำไรสุทธิรวม</div><div id="resNet" class="metric-value text-dark">0</div></div></div>
             </div>
@@ -251,8 +251,7 @@ function getSignal(flatHistory) {
 }
 
 let globalShoes = [], rawShoesList = [];
-let myChart = null;
-let lossChartObj = null;
+let myChart = null, lossChartObj = null;
 
 function loadMasterData() {
     if (typeof masterDataCSV !== 'undefined' && masterDataCSV.trim().length > 0) {
@@ -312,17 +311,23 @@ document.getElementById('runBtn').addEventListener('click', function() {
 
     globalShoes.forEach((shoe, idx) => {
         let flat = [], isReady = false, qualified = false;
-        let wins = 0, consStep = 0, vlCount = 0, inRealPlay = false, netThisShoe = 0;
+        let consStep = 0, vlCount = 0, netThisShoe = 0;
         let cyclesPlayed = 0;
         let isShoeTerminated = false;
         let currentLossStreak = 0; 
+        
+        // ----------------------------------------------------
+        // FIX BUG จุดสำคัญ: เซ็ตค่าเริ่มต้นให้แทงได้เลยถ้าไม่รอ VL
+        // ----------------------------------------------------
+        let inRealPlay = (vlLimit === 0);
 
         for (let i = 0; i < shoe.length; i++) {
             if (isShoeTerminated) break; 
             
-            if (!inRealPlay) {
-                if (cyclesPlayed >= maxCycles || wins >= takeProfit || flat.length >= stopHandNum) {
-                    break;
+            // ตรวจสอบ Exit Trigger: เราจะหยุดขอนได้ก็ต่อเมื่อ "ไม่ได้อยู่ในช่วงทบไม้" (consStep === 0)
+            if (consStep === 0) {
+                if (cyclesPlayed >= maxCycles || netThisShoe >= takeProfit || flat.length >= stopHandNum) {
+                    break; 
                 }
             }
 
@@ -347,54 +352,71 @@ document.getElementById('runBtn').addEventListener('click', function() {
                     let target = (betMode === "Reverse") ? (sigData.signal === 'B' ? 'P' : 'B') : sigData.signal;
                     let isWin = (actual === target);
 
+                    // จังหวะรอผิดทิพย์
                     if (!inRealPlay) {
                         if (!isWin) {
                             vlCount++;
                             if (vlCount >= vlLimit) { 
                                 inRealPlay = true; consStep = 0; vlCount = 0; 
                             }
-                        } else { vlCount = 0; }
-                    } else {
+                        } else { 
+                            vlCount = 0; 
+                        }
+                    } 
+                    // จังหวะลงเงินจริง
+                    else {
                         let currentBet = mSteps[consStep];
                         
-                        if (moneySystem === 'loss') { // FIX BUG HERE: += currentBet
+                        if (moneySystem === 'loss') { // เดินเงินเมื่อแพ้แล้วทบ
                             if (isWin) { 
-                                wins++; netThisShoe += currentBet; winCountChart[consStep]++; 
+                                netThisShoe += currentBet; // บวกกำไรด้วยจำนวนเงินที่ลง
+                                winCountChart[consStep]++; 
+                                
                                 if (currentLossStreak > 0) {
                                     lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
                                 }
                                 currentLossStreak = 0; 
-                                inRealPlay = false; consStep = 0; 
+                                
+                                inRealPlay = (vlLimit === 0); // กลับไปเริ่มใหม่ (ถ้า VL=0 ก็แทงต่อเลย)
+                                consStep = 0; 
                                 cyclesPlayed++; 
                             } else { 
-                                netThisShoe -= currentBet; consStep++; 
+                                netThisShoe -= currentBet; // หักทุนที่ลงเสียไป
+                                consStep++; 
                                 currentLossStreak++; 
                                 if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
                                 
                                 if (consStep >= mSteps.length) { 
+                                    // พอร์ตแตกในชุดนี้
                                     cyclesPlayed++; 
                                     if (stopOnBust) { isShoeTerminated = true; } 
-                                    else { inRealPlay = false; consStep = 0; }
+                                    else { inRealPlay = (vlLimit === 0); consStep = 0; }
                                 } 
                             }
-                        } else { // ทบเมื่อชนะ
+                        } else { // เดินเงินเมื่อชนะแล้วทบ
                             if (isWin) { 
-                                netThisShoe += currentBet; winCountChart[consStep]++; consStep++; 
+                                netThisShoe += currentBet; 
+                                winCountChart[consStep]++; 
+                                consStep++; 
+                                
                                 if (currentLossStreak > 0) {
                                     lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
                                 }
                                 currentLossStreak = 0;
+
                                 if (consStep >= mSteps.length) { 
-                                    wins++; inRealPlay = false; consStep = 0; 
+                                    inRealPlay = (vlLimit === 0); 
+                                    consStep = 0; 
                                     cyclesPlayed++; 
                                 } 
                             } else { 
                                 netThisShoe -= currentBet; 
                                 currentLossStreak++;
                                 if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
+                                
                                 cyclesPlayed++; 
                                 if (stopOnBust) { isShoeTerminated = true; } 
-                                else { inRealPlay = false; consStep = 0; }
+                                else { inRealPlay = (vlLimit === 0); consStep = 0; }
                             }
                         }
                     }
@@ -409,11 +431,17 @@ document.getElementById('runBtn').addEventListener('click', function() {
             }
             
             qCount++; netTotal += netThisShoe;
-            if (netThisShoe <= 0) bustCount++; else wonCount++;
-            shoeLogs.push({ id: idx, status: (netThisShoe > 0) ? "✅ WON" : "🚨 LOST", net: netThisShoe });
+            
+            // ตัดสินว่าขอนนี้รอด หรือ ร่วง (โดยวัดจาก Take Profit)
+            if (netThisShoe < takeProfit) bustCount++; 
+            else wonCount++;
+            
+            let statusText = (netThisShoe >= takeProfit) ? "✅ สำเร็จ" : (netThisShoe > 0 ? "⚠️ จบก่อนเป้า" : "🚨 แตก/ขาดทุน");
+            shoeLogs.push({ id: idx, status: statusText, net: netThisShoe });
         }
     });
 
+    // อัปเดตหน้าปัด
     document.getElementById('resQualified').innerText = qCount;
     document.getElementById('resWon').innerText = wonCount;
     document.getElementById('resBusted').innerText = bustCount;
@@ -436,14 +464,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
     if(lossChartObj) lossChartObj.destroy();
     lossChartObj = new Chart(document.getElementById('lossChart').getContext('2d'), {
         type: 'bar',
-        data: { 
-            labels: lossLabels, 
-            datasets: [{ 
-                label: 'จำนวนครั้งที่เกิดขึ้น', 
-                data: lossData, 
-                backgroundColor: '#dc3545' 
-            }] 
-        }
+        data: { labels: lossLabels, datasets: [{ label: 'ความถี่ที่เกิดขึ้น (ครั้ง)', data: lossData, backgroundColor: '#dc3545' }] }
     });
 
     let sel = document.getElementById('shoeSelector');
