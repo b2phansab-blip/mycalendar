@@ -307,7 +307,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let qCount = 0, wonCount = 0, bustCount = 0, netTotal = 0;
     let globalMaxLossStreak = 0; 
     let winCountChart = new Array(mSteps.length).fill(0);
-    let lossStreakFreq = {}; // เก็บความถี่ของการแพ้ติดกัน
+    let lossStreakFreq = {}; 
     let shoeLogs = [];
 
     globalShoes.forEach((shoe, idx) => {
@@ -357,10 +357,9 @@ document.getElementById('runBtn').addEventListener('click', function() {
                     } else {
                         let currentBet = mSteps[consStep];
                         
-                        if (moneySystem === 'loss') { 
+                        if (moneySystem === 'loss') { // FIX BUG HERE: += currentBet
                             if (isWin) { 
-                                wins++; netThisShoe += 1; winCountChart[consStep]++; 
-                                // บันทึกสถิติการแพ้รวดที่เพิ่งจบไป
+                                wins++; netThisShoe += currentBet; winCountChart[consStep]++; 
                                 if (currentLossStreak > 0) {
                                     lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
                                 }
@@ -378,7 +377,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                                     else { inRealPlay = false; consStep = 0; }
                                 } 
                             }
-                        } else { 
+                        } else { // ทบเมื่อชนะ
                             if (isWin) { 
                                 netThisShoe += currentBet; winCountChart[consStep]++; consStep++; 
                                 if (currentLossStreak > 0) {
@@ -405,7 +404,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
         }
 
         if (qualified) {
-            // กรณีขอนจบลงโดยยังติดการแพ้ค้างอยู่ ให้บันทึกด้วย
             if (currentLossStreak > 0) {
                 lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
             }
@@ -422,14 +420,12 @@ document.getElementById('runBtn').addEventListener('click', function() {
     document.getElementById('resMaxLoss').innerText = globalMaxLossStreak; 
     document.getElementById('resNet').innerText = netTotal;
 
-    // วาดกราฟ: Win Distribution
     if(myChart) myChart.destroy();
     myChart = new Chart(document.getElementById('winChart').getContext('2d'), {
         type: 'bar',
         data: { labels: Array.from({length: mSteps.length}, (_, i) => `ไม้ ${i+1}`), datasets: [{ label: 'จำนวนครั้งที่ชนะในไม้นี้', data: winCountChart, backgroundColor: '#0d6efd' }] }
     });
 
-    // วาดกราฟ: Loss Streak Distribution
     let lossLabels = [];
     let lossData = [];
     for (let i = 1; i <= globalMaxLossStreak; i++) {
@@ -450,7 +446,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
         }
     });
 
-    // อัปเดต Dropdown เลือกขอน
     let sel = document.getElementById('shoeSelector');
     sel.innerHTML = '<option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>';
     shoeLogs.forEach(log => {
