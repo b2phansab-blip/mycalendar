@@ -6,19 +6,26 @@
     <title>AEGIS PRO Backtest Studio</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
     <script src="data.js"></script>
-
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .sidebar { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
         .dashboard-card { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
         .metric-value { font-size: 2rem; font-weight: bold; color: #0d6efd; }
+        .road-title { font-size: 0.85rem; font-weight: bold; margin-top: 10px; margin-bottom: 5px; color: #495057; border-bottom: 2px solid #dee2e6; padding-bottom: 3px; }
         .bead-grid { display: grid; grid-template-rows: repeat(6, 30px); grid-auto-flow: column; gap: 2px; overflow-x: auto; padding-bottom: 10px; }
         .bead { width: 30px; height: 30px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
         .bead-b { background-color: #dc3545; }
         .bead-p { background-color: #0d6efd; }
         .bead-t { background-color: #198754; }
+        .road-grid { display: flex; gap: 3px; overflow-x: auto; padding-bottom: 10px; min-height: 40px; }
+        .road-col { display: flex; flex-direction: column; gap: 3px; }
+        .br-bead { width: 20px; height: 20px; border-radius: 50%; border: 3px solid; display: inline-block; }
+        .br-B { border-color: #dc3545; }
+        .br-P { border-color: #0d6efd; }
+        .drv-bead { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .drv-R { background-color: #dc3545; }
+        .drv-B { background-color: #0d6efd; }
     </style>
 </head>
 <body>
@@ -29,20 +36,17 @@
     <div class="row">
         <div class="col-md-3">
             <div class="sidebar">
-                <h5 class="text-secondary">📂 1. Data Hub (Auto-Run)</h5>
-                <div id="dataStatus" class="alert alert-info py-2 mb-2" style="font-size: 0.9rem;">
-                    กำลังโหลดข้อมูล...
-                </div>
-                <label class="form-label" style="font-size: 0.85rem;">อัปโหลดไฟล์สกอร์เปล่าๆ ได้เลย ไม่ต้องใส่ลำดับ</label>
+                <h5 class="text-secondary">📂 1. Data Hub</h5>
+                <div id="dataStatus" class="alert alert-info py-2 mb-2" style="font-size: 0.9rem;">กำลังโหลดข้อมูล...</div>
                 <input type="file" id="fileInput" class="form-control mb-4" accept=".txt,.csv" multiple>
 
                 <h5 class="text-secondary">⚙️ 2. Strategy Builder</h5>
                 
-                <div class="p-3 mb-3 bg-light border rounded">
-                    <label class="form-label fw-bold text-dark d-block">🎯 จังหวะเริ่มสแกน (Start Trigger)</label>
+                <div class="p-3 mb-3 bg-light border rounded border-primary">
+                    <label class="form-label fw-bold text-primary d-block">🎯 จังหวะเริ่มสแกน (Start Trigger)</label>
                     <select id="startTrigger" class="form-select mb-2" onchange="toggleStartHand()">
-                        <option value="CR">รอให้ตารางแมลงสาบเกิด (CR Starts)</option>
-                        <option value="HAND">ระบุตาที่ต้องการให้เริ่มสแกน</option>
+                        <option value="CR">รอไม้ขีดเกิด (CR) แล้วแทงเลย</option>
+                        <option value="HAND">ระบุตาที่เริ่มสแกน (Hand No.)</option>
                     </select>
                     <div id="handInputDiv" style="display: none;">
                         <input type="number" id="startHandNum" class="form-control" value="20" min="5">
@@ -55,36 +59,45 @@
                         <input type="number" id="minStreak" class="form-control" value="3" min="1">
                         <span class="input-group-text">เม็ด</span>
                     </div>
-                    <div>
-                        <div class="form-check form-check-inline"><input class="form-check-input min-road" type="checkbox" value="BR" checked> <label>BR</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input min-road" type="checkbox" value="BEB" checked> <label>BEB</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input min-road" type="checkbox" value="SR"> <label>SR</label></div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="BR" checked> <label>BR</label></div>
+                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="BEB" checked> <label>BEB</label></div>
+                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="SR"> <label>SR</label></div>
+                        <div class="form-check"><input class="form-check-input min-road" type="checkbox" value="CR"> <label>CR</label></div>
                     </div>
                 </div>
 
                 <div class="mb-4 border-top pt-3">
-                    <label class="form-label fw-bold d-block">เงื่อนไข 2: ห้ามมีเสายาวเกิน ></label>
+                    <label class="form-label fw-bold d-block text-danger">เงื่อนไข 2: ห้ามมีเสายาวเกิน ></label>
                     <div class="input-group mb-2">
                         <input type="number" id="maxStreak" class="form-control" value="10" min="1">
                         <span class="input-group-text">เม็ด</span>
                     </div>
-                    <div>
-                        <div class="form-check form-check-inline"><input class="form-check-input max-road" type="checkbox" value="BR"> <label>BR</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input max-road" type="checkbox" value="BEB"> <label>BEB</label></div>
-                        <div class="form-check form-check-inline"><input class="form-check-input max-road" type="checkbox" value="SR"> <label>SR</label></div>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="BR"> <label>BR</label></div>
+                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="BEB"> <label>BEB</label></div>
+                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="SR"> <label>SR</label></div>
+                        <div class="form-check"><input class="form-check-input max-road" type="checkbox" value="CR"> <label>CR</label></div>
                     </div>
                 </div>
 
+                <div class="p-3 mb-3 bg-light border rounded border-danger">
+                    <label class="form-label fw-bold text-danger d-block">🛑 จังหวะหยุดเล่น (Exit Trigger)</label>
+                    <label class="form-label" style="font-size: 0.8rem;">เล่นไม่เกินตาที่:</label>
+                    <input type="number" id="stopHandNum" class="form-control" value="70" min="10">
+                </div>
+
                 <div class="mb-4 border-top pt-3">
-                    <label class="form-label fw-bold d-block text-primary">💰 ระบบเดิมพัน</label>
+                    <label class="form-label fw-bold d-block text-success">💰 ระบบเดิมพัน</label>
                     <div class="mb-2">
-                        <label class="form-label">รอผิดทิพย์ (VL):</label>
-                        <input type="number" id="vlLimit" class="form-control" value="0" min="0">
+                        <label class="form-label">ประเภทการเดินเงิน:</label>
+                        <select id="moneySystem" class="form-select">
+                            <option value="loss">เมื่อผิดแล้วทบ (Martingale)</option>
+                            <option value="win">เมื่อถูกแล้วเพิ่ม (Winning Streak)</option>
+                        </select>
                     </div>
-                    <div class="mb-2">
-                        <label class="form-label">รูปแบบเดินเงิน:</label>
-                        <input type="text" id="martingaleStr" class="form-control" value="1,3,7">
-                    </div>
+                    <div class="mb-2"><label class="form-label">รอผิดทิพย์ (VL):</label><input type="number" id="vlLimit" class="form-control" value="0" min="0"></div>
+                    <div class="mb-2"><label class="form-label">รูปแบบเดินเงิน:</label><input type="text" id="martingaleStr" class="form-control" value="1,3,7"></div>
                     <div class="mb-2">
                         <label class="form-label">รูปแบบการแทง:</label>
                         <select id="betMode" class="form-select">
@@ -92,10 +105,7 @@
                             <option value="Reverse">Reverse (แทงสวน)</option>
                         </select>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label">Take Profit (ต่อขอน):</label>
-                        <input type="number" id="takeProfit" class="form-control" value="5" min="1">
-                    </div>
+                    <div class="mb-3"><label class="form-label">เป้ากำไร/ขอน:</label><input type="number" id="takeProfit" class="form-control" value="5" min="1"></div>
                 </div>
 
                 <button id="runBtn" class="btn btn-primary w-100 fw-bold py-3 fs-5">🚀 RUN BACKTEST</button>
@@ -105,18 +115,25 @@
         <div class="col-md-9">
             <div class="row">
                 <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value">0</div></div></div>
-                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">ทำกำไรสำเร็จ</div><div id="resWon" class="metric-value text-success">0</div></div></div>
-                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">พอร์ตแตก</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
-                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">กำไรสุทธิรวม (Units)</div><div id="resNet" class="metric-value">0</div></div></div>
+                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">กำไรสำเร็จ</div><div id="resWon" class="metric-value text-success">0</div></div></div>
+                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">พอร์ตแตก/ไม่ถึงเป้า</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
+                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">กำไรสุทธิรวม</div><div id="resNet" class="metric-value">0</div></div></div>
             </div>
 
             <div class="row mt-3">
-                <div class="col-md-6"><div class="dashboard-card"><h5 class="mb-3">📈 Win Distribution (ไม้ที่ชนะ)</h5><canvas id="winChart"></canvas></div></div>
-                <div class="col-md-6">
-                    <div class="dashboard-card" style="text-align: left;">
-                        <h5 class="mb-3">👁️‍🗨️ Shoe Visualizer (Bead Plate)</h5>
+                <div class="col-md-5"><div class="dashboard-card"><h5 class="mb-3">📈 Win Distribution</h5><canvas id="winChart"></canvas></div></div>
+                <div class="col-md-7">
+                    <div class="dashboard-card text-start">
+                        <h5 class="mb-3">👁️‍🗨️ Shoe Visualizer</h5>
                         <select id="shoeSelector" class="form-select mb-3"><option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option></select>
-                        <div id="beadPlate" class="bead-grid border p-2 bg-light"></div>
+                        <div class="border p-3 bg-light rounded" style="overflow-y: auto; max-height: 500px;">
+                            <div class="road-title">Bead Plate</div><div id="beadPlate" class="bead-grid"></div>
+                            <div class="road-title">Big Road</div><div id="bigRoad" class="road-grid"></div>
+                            <div class="road-title">3 เกลอ (Derived Roads)</div>
+                            <div id="bigEyeBoy" class="road-grid"></div>
+                            <div id="smallRoad" class="road-grid"></div>
+                            <div id="cockroach" class="road-grid"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -125,9 +142,6 @@
 </div>
 
 <script>
-// ==========================================
-// ลอจิกการทำงานเบื้องหลัง
-// ==========================================
 function parseShoeLine(line) {
     let str = line.trim().replace(/\r/g, '');
     if (!str) return null;
@@ -203,141 +217,110 @@ function getSignal(flatHistory) {
     return {signal: null, p: -1};
 }
 
-let globalShoes = [];
-let rawShoesList = [];
-let myChart = null;
+let globalShoes = [], rawShoesList = [], myChart = null;
 
 function loadMasterData() {
     if (typeof masterDataCSV !== 'undefined' && masterDataCSV.trim().length > 0) {
         let lines = masterDataCSV.trim().split('\n');
         lines.forEach(line => {
             let sStr = parseShoeLine(line);
-            if (sStr) {
-                rawShoesList.push(sStr);
-                globalShoes.push(sStr.replace(/T/g, '').split(''));
-            }
+            if (sStr) { rawShoesList.push(sStr); globalShoes.push(sStr.replace(/T/g, '').split('')); }
         });
         document.getElementById('dataStatus').innerText = `✅ โหลดฐานข้อมูลหลักแล้ว ${globalShoes.length} ขอน`;
         document.getElementById('dataStatus').className = "alert alert-success py-2 mb-2";
-    } else {
-        document.getElementById('dataStatus').innerText = `⚠️ ยังไม่มีข้อมูลหลัก กรุณาอัปโหลดไฟล์`;
-        document.getElementById('dataStatus').className = "alert alert-warning py-2 mb-2";
     }
 }
 window.onload = loadMasterData;
 
 document.getElementById('fileInput').addEventListener('change', function(e) {
     let files = e.target.files;
-    if (files.length === 0) return;
-    
-    let addedCount = 0;
     Array.from(files).forEach(file => {
         let reader = new FileReader();
         reader.onload = function(evt) {
             let content = evt.target.result.trim().split('\n');
             content.forEach(line => {
                 let sStr = parseShoeLine(line);
-                if (sStr) {
-                    rawShoesList.push(sStr);
-                    globalShoes.push(sStr.replace(/T/g, '').split(''));
-                    addedCount++;
-                }
+                if (sStr) { rawShoesList.push(sStr); globalShoes.push(sStr.replace(/T/g, '').split('')); }
             });
-            document.getElementById('dataStatus').innerText = `✅ ฐานข้อมูลปัจจุบัน: ${globalShoes.length} ขอน (เพิ่มมาใหม่ ${addedCount})`;
-            document.getElementById('dataStatus').className = "alert alert-success py-2 mb-2";
+            document.getElementById('dataStatus').innerText = `✅ ฐานข้อมูลปัจจุบัน: ${globalShoes.length} ขอน`;
         };
         reader.readAsText(file);
     });
 });
 
 document.getElementById('runBtn').addEventListener('click', function() {
-    if (globalShoes.length === 0) return alert("ไม่มีข้อมูลให้ประมวลผลครับ!");
+    if (globalShoes.length === 0) return alert("ไม่มีข้อมูล!");
 
     let startTrigger = document.getElementById('startTrigger').value;
     let startHandNum = parseInt(document.getElementById('startHandNum').value) || 20;
+    let stopHandNum = parseInt(document.getElementById('stopHandNum').value) || 70;
     let minStreak = parseInt(document.getElementById('minStreak').value);
     let minRoads = Array.from(document.querySelectorAll('.min-road:checked')).map(e => e.value);
     let maxStreak = parseInt(document.getElementById('maxStreak').value);
     let maxRoads = Array.from(document.querySelectorAll('.max-road:checked')).map(e => e.value);
+    
+    let moneySystem = document.getElementById('moneySystem').value;
     let vlLimit = parseInt(document.getElementById('vlLimit').value);
     let mSteps = document.getElementById('martingaleStr').value.split(',').map(Number);
-    let maxM = mSteps.length;
-    let betMode = document.getElementById('betMode').value;
     let takeProfit = parseInt(document.getElementById('takeProfit').value);
+    let betMode = document.getElementById('betMode').value;
 
     let qCount = 0, wonCount = 0, bustCount = 0, netTotal = 0;
-    let lossDist = new Array(maxM).fill(0);
+    let winCountChart = new Array(mSteps.length).fill(0);
     let shoeLogs = [];
 
     globalShoes.forEach((shoe, idx) => {
-        let flat = [];
-        let isReadyToScan = false;
-        let qualified = false;
-        
-        let wins = 0, consL = 0, vlCount = 0;
-        let inMart = false, busted = false;
-        let netThisShoe = 0;
+        let flat = [], isReady = false, qualified = false;
+        let wins = 0, consStep = 0, vlCount = 0, inRealPlay = false, busted = false, netThisShoe = 0;
 
         for (let i = 0; i < shoe.length; i++) {
             if (busted || wins >= takeProfit) break;
-            
+            if (flat.length >= stopHandNum) break;
+
             let actual = shoe[i];
             let roads = getRoads(flat);
             
-            if (!isReadyToScan) {
-                if (startTrigger === 'CR' && roads.CR.length > 0) isReadyToScan = true;
-                else if (startTrigger === 'HAND' && flat.filter(x => x==='B'||x==='P').length >= startHandNum) isReadyToScan = true;
+            if (!isReady) {
+                if (startTrigger === 'CR' && roads.CR.length > 0) isReady = true;
+                else if (startTrigger === 'HAND' && flat.length >= startHandNum) isReady = true;
 
-                if (isReadyToScan) {
-                    let passMin = true;
-                    if (minRoads.length > 0) {
-                        passMin = false;
-                        for (let r of minRoads) {
-                            if (roads[r] && roads[r].some(col => col.length >= minStreak)) passMin = true;
-                        }
-                    }
-                    let passMax = true;
-                    if (maxRoads.length > 0) {
-                        for (let r of maxRoads) {
-                            if (roads[r] && roads[r].some(col => col.length > maxStreak)) passMax = false;
-                        }
-                    }
+                if (isReady) {
+                    let passMin = minRoads.length === 0 || minRoads.some(r => roads[r] && roads[r].some(col => col.length >= minStreak));
+                    let passMax = maxRoads.length === 0 || maxRoads.every(r => roads[r] && roads[r].every(col => col.length <= maxStreak));
                     qualified = passMin && passMax;
                     if (!qualified) break;
                 }
             }
 
-            if (qualified && isReadyToScan) {
+            if (qualified && isReady) {
                 let sigData = getSignal(flat);
-                if (sigData.signal && (actual === 'B' || actual === 'P')) {
-                    let betTarget = sigData.signal;
-                    if (betMode === "Reverse") betTarget = (betTarget === 'B') ? 'P' : 'B';
-                    let isWin = (actual === betTarget);
+                if (sigData.signal) {
+                    let target = (betMode === "Reverse") ? (sigData.signal === 'B' ? 'P' : 'B') : sigData.signal;
+                    let isWin = (actual === target);
 
-                    if (!inMart) {
+                    if (!inRealPlay) {
                         if (!isWin) {
                             vlCount++;
-                            if (vlCount >= vlLimit) { inMart = true; consL = 0; vlCount = 0; }
+                            if (vlCount >= vlLimit) { inRealPlay = true; consStep = 0; vlCount = 0; }
                         } else { vlCount = 0; }
                     } else {
-                        let bAmt = mSteps[consL];
-                        if (isWin) {
-                            wins++; netThisShoe += 1; lossDist[consL]++;
-                            inMart = false; consL = 0;
+                        let currentBet = mSteps[consStep];
+                        if (moneySystem === 'loss') {
+                            if (isWin) { wins++; netThisShoe += 1; winCountChart[consStep]++; inRealPlay = false; consStep = 0; }
+                            else { netThisShoe -= currentBet; consStep++; if (consStep >= mSteps.length) { busted = true; inRealPlay = false; } }
                         } else {
-                            netThisShoe -= bAmt; consL++;
-                            if (consL >= maxM) { busted = true; inMart = false; }
+                            if (isWin) { netThisShoe += currentBet; winCountChart[consStep]++; consStep++; if (consStep >= mSteps.length) { wins++; inRealPlay = false; consStep = 0; } }
+                            else { netThisShoe -= currentBet; busted = true; inRealPlay = false; consStep = 0; }
                         }
                     }
                 }
             }
             flat.push(actual);
         }
-
         if (qualified) {
             qCount++; netTotal += netThisShoe;
-            if (busted) bustCount++; else wonCount++;
-            shoeLogs.push({ id: idx, status: busted ? "🚨 BUSTED" : "✅ WON", net: netThisShoe });
+            if (busted || (wins < takeProfit && flat.length >= stopHandNum)) bustCount++; else wonCount++;
+            shoeLogs.push({ id: idx, status: (netThisShoe > 0) ? "✅ WON" : "🚨 LOST", net: netThisShoe });
         }
     });
 
@@ -346,38 +329,48 @@ document.getElementById('runBtn').addEventListener('click', function() {
     document.getElementById('resBusted').innerText = bustCount;
     document.getElementById('resNet').innerText = netTotal;
 
-    let ctx = document.getElementById('winChart').getContext('2d');
     if(myChart) myChart.destroy();
-    myChart = new Chart(ctx, {
+    myChart = new Chart(document.getElementById('winChart').getContext('2d'), {
         type: 'bar',
-        data: {
-            labels: Array.from({length: maxM}, (_, i) => `ไม้ ${i+1}`),
-            datasets: [{ label: 'จำนวนที่ชนะ', data: lossDist, backgroundColor: '#0d6efd' }]
-        }
+        data: { labels: Array.from({length: mSteps.length}, (_, i) => `ไม้ ${i+1}`), datasets: [{ label: 'ครั้งที่ชนะ', data: winCountChart, backgroundColor: '#0d6efd' }] }
     });
 
     let sel = document.getElementById('shoeSelector');
     sel.innerHTML = '<option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>';
     shoeLogs.forEach(log => {
         let opt = document.createElement('option');
-        opt.value = log.id;
-        opt.innerText = `ลำดับขอนที่ ${log.id + 1} | ${log.status} | Net: ${log.net}`;
+        opt.value = log.id; opt.innerText = `ขอนที่ ${log.id + 1} | ${log.status} | Net: ${log.net}`;
         sel.appendChild(opt);
     });
 });
 
 document.getElementById('shoeSelector').addEventListener('change', function(e) {
     let id = e.target.value;
-    let bCont = document.getElementById('beadPlate');
-    bCont.innerHTML = '';
     if (id === "") return;
-    
+    let bCont = document.getElementById('beadPlate'); bCont.innerHTML = '';
     for (let c of rawShoesList[id]) {
         let d = document.createElement('div');
         d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
-        d.innerText = c;
-        bCont.appendChild(d);
+        d.innerText = c; bCont.appendChild(d);
     }
+    let rData = getRoads(globalShoes[id]);
+    function drawR(contId, rCols, isBR=false) {
+        let c = document.getElementById(contId); c.innerHTML = '';
+        rCols.forEach(col => {
+            let div = document.createElement('div'); div.className = 'road-col';
+            col.forEach(val => {
+                let d = document.createElement('div');
+                if(isBR) d.className = 'br-bead br-' + val;
+                else d.className = 'drv-bead drv-' + val;
+                div.appendChild(d);
+            });
+            c.appendChild(div);
+        });
+    }
+    drawR('bigRoad', rData.BR, true);
+    drawR('bigEyeBoy', rData.BEB);
+    drawR('smallRoad', rData.SR);
+    drawR('cockroach', rData.CR);
 });
 </script>
 </body>
