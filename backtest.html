@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AEGIS PRO Backtest Studio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="data.js"></script>
+
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .sidebar { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .dashboard-card { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
+        .metric-value { font-size: 2rem; font-weight: bold; color: #0d6efd; }
+        .bead-grid { display: grid; grid-template-rows: repeat(6, 30px); grid-auto-flow: column; gap: 2px; overflow-x: auto; padding-bottom: 10px; }
+        .bead { width: 30px; height: 30px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+        .bead-b { background-color: #dc3545; }
+        .bead-p { background-color: #0d6efd; }
+        .bead-t { background-color: #198754; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid py-4">
+    <h2 class="mb-4 text-primary">🛡️ AEGIS PRO Backtest Studio</h2>
+    
+    <div class="row">
+        <div class="col-md-3">
+            <div class="sidebar">
+                <h5 class="text-secondary">📂 1. Data Hub (Auto-Run)</h5>
+                <div id="dataStatus" class="alert alert-info py-2 mb-2" style="font-size: 0.9rem;">
+                    กำลังโหลดข้อมูล...
+                </div>
+                <label class="form-label" style="font-size: 0.85rem;">อัปโหลดไฟล์สกอร์เปล่าๆ ได้เลย ไม่ต้องใส่ลำดับ</label>
+                <input type="file" id="fileInput" class="form-control mb-4" accept=".txt,.csv" multiple>
+
+                <h5 class="text-secondary">⚙️ 2. Strategy Builder</h5>
+                
+                <div class="p-3 mb-3 bg-light border rounded">
+                    <label class="form-label fw-bold text-dark d-block">🎯 จังหวะเริ่มสแกน (Start Trigger)</label>
+                    <select id="startTrigger" class="form-select mb-2" onchange="toggleStartHand()">
+                        <option value="CR">รอให้ตารางแมลงสาบเกิด (CR Starts)</option>
+                        <option value="HAND">ระบุตาที่ต้องการให้เริ่มสแกน</option>
+                    </select>
+                    <div id="handInputDiv" style="display: none;">
+                        <input type="number" id="startHandNum" class="form-control" value="20" min="5">
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold d-block">เงื่อนไข 1: ต้องมีเสายาว >=</label>
+                    <div class="input-group mb-2">
+                        <input type="number" id="minStreak" class="form-control" value="3" min="1">
+                        <span class="input-group-text">เม็ด</span>
+                    </div>
+                    <div>
+                        <div class="form-check form-check-inline"><input class="form-check-input min-road" type="checkbox" value="BR" checked> <label>BR</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input min-road" type="checkbox" value="BEB" checked> <label>BEB</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input min-road" type="checkbox" value="SR"> <label>SR</label></div>
+                    </div>
+                </div>
+
+                <div class="mb-4 border-top pt-3">
+                    <label class="form-label fw-bold d-block">เงื่อนไข 2: ห้ามมีเสายาวเกิน ></label>
+                    <div class="input-group mb-2">
+                        <input type="number" id="maxStreak" class="form-control" value="10" min="1">
+                        <span class="input-group-text">เม็ด</span>
+                    </div>
+                    <div>
+                        <div class="form-check form-check-inline"><input class="form-check-input max-road" type="checkbox" value="BR"> <label>BR</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input max-road" type="checkbox" value="BEB"> <label>BEB</label></div>
+                        <div class="form-check form-check-inline"><input class="form-check-input max-road" type="checkbox" value="SR"> <label>SR</label></div>
+                    </div>
+                </div>
+
+                <div class="mb-4 border-top pt-3">
+                    <label class="form-label fw-bold d-block text-primary">💰 ระบบเดิมพัน</label>
+                    <div class="mb-2">
+                        <label class="form-label">รอผิดทิพย์ (VL):</label>
+                        <input type="number" id="vlLimit" class="form-control" value="0" min="0">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">รูปแบบเดินเงิน:</label>
+                        <input type="text" id="martingaleStr" class="form-control" value="1,3,7">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">รูปแบบการแทง:</label>
+                        <select id="betMode" class="form-select">
+                            <option value="Follow">Follow (แทงตาม)</option>
+                            <option value="Reverse">Reverse (แทงสวน)</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Take Profit (ต่อขอน):</label>
+                        <input type="number" id="takeProfit" class="form-control" value="5" min="1">
+                    </div>
+                </div>
+
+                <button id="runBtn" class="btn btn-primary w-100 fw-bold py-3 fs-5">🚀 RUN BACKTEST</button>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <div class="row">
+                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value">0</div></div></div>
+                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">ทำกำไรสำเร็จ</div><div id="resWon" class="metric-value text-success">0</div></div></div>
+                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">พอร์ตแตก</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
+                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">กำไรสุทธิรวม (Units)</div><div id="resNet" class="metric-value">0</div></div></div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-6"><div class="dashboard-card"><h5 class="mb-3">📈 Win Distribution (ไม้ที่ชนะ)</h5><canvas id="winChart"></canvas></div></div>
+                <div class="col-md-6">
+                    <div class="dashboard-card" style="text-align: left;">
+                        <h5 class="mb-3">👁️‍🗨️ Shoe Visualizer (Bead Plate)</h5>
+                        <select id="shoeSelector" class="form-select mb-3"><option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option></select>
+                        <div id="beadPlate" class="bead-grid border p-2 bg-light"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// ลอจิกการทำงานเบื้องหลัง
+// ==========================================
+function parseShoeLine(line) {
+    let str = line.trim().replace(/\r/g, '');
+    if (!str) return null;
+    if (str.includes(',')) {
+        let parts = str.split(',');
+        str = parts[parts.length - 1].trim();
+    }
+    if (/^[BPT]+$/.test(str)) return str;
+    return null;
+}
+
+function toggleStartHand() {
+    document.getElementById('handInputDiv').style.display = (document.getElementById('startTrigger').value === 'HAND') ? 'block' : 'none';
+}
+
+function getRoads(history) {
+    let br = [], cur = [];
+    for (let c of history) {
+        if (c === 'B' || c === 'P') {
+            if (cur.length === 0 || cur[0] === c) cur.push(c);
+            else { br.push(cur); cur = [c]; }
+        }
+    }
+    if (cur.length > 0) br.push(cur);
+
+    function drv(offset) {
+        let road = [];
+        for (let c = offset; c < br.length; c++) {
+            for (let r = 0; r < br[c].length; r++) {
+                if (c === offset && r === 0) continue;
+                let color;
+                if (r === 0) color = (br[c-1].length === br[c-1-offset].length) ? 'R' : 'B';
+                else {
+                    let ref = br[c-offset].length;
+                    color = (ref >= r+1 || ref === r) ? 'R' : 'B';
+                }
+                road.push(color);
+            }
+        }
+        let cols = [], curC = [];
+        for (let c of road) {
+            if (curC.length === 0 || curC[0] === c) curC.push(c);
+            else { cols.push(curC); curC = [c]; }
+        }
+        if (curC.length > 0) cols.push(curC);
+        return cols;
+    }
+    return { BR: br, BEB: drv(1), SR: drv(2), CR: drv(3) };
+}
+
+function getSignal(flatHistory) {
+    let roads = getRoads(flatHistory);
+    let streaks = [
+        roads.BR.length > 0 ? {c: roads.BR[roads.BR.length-1][0], l: roads.BR[roads.BR.length-1].length} : {l:0},
+        roads.BEB.length > 0 ? {c: roads.BEB[roads.BEB.length-1][0], l: roads.BEB[roads.BEB.length-1].length} : {l:0},
+        roads.SR.length > 0 ? {c: roads.SR[roads.SR.length-1][0], l: roads.SR[roads.SR.length-1].length} : {l:0},
+        roads.CR.length > 0 ? {c: roads.CR[roads.CR.length-1][0], l: roads.CR[roads.CR.length-1].length} : {l:0}
+    ];
+
+    for (let p = 0; p < streaks.length; p++) {
+        if (streaks[p].l >= 2) {
+            let cMatch = streaks[p].c;
+            for (let test of ['B', 'P']) {
+                let tHist = [...flatHistory.filter(x => x==='B'||x==='P'), test];
+                let tR = getRoads(tHist);
+                if (p === 0 && test === cMatch) return {signal: test, p: p};
+                if (p === 1 && tR.BEB.length > 0 && tR.BEB[tR.BEB.length-1][0] === cMatch) return {signal: test, p: p};
+                if (p === 2 && tR.SR.length > 0 && tR.SR[tR.SR.length-1][0] === cMatch) return {signal: test, p: p};
+                if (p === 3 && tR.CR.length > 0 && tR.CR[tR.CR.length-1][0] === cMatch) return {signal: test, p: p};
+            }
+        }
+    }
+    return {signal: null, p: -1};
+}
+
+let globalShoes = [];
+let rawShoesList = [];
+let myChart = null;
+
+function loadMasterData() {
+    if (typeof masterDataCSV !== 'undefined' && masterDataCSV.trim().length > 0) {
+        let lines = masterDataCSV.trim().split('\n');
+        lines.forEach(line => {
+            let sStr = parseShoeLine(line);
+            if (sStr) {
+                rawShoesList.push(sStr);
+                globalShoes.push(sStr.replace(/T/g, '').split(''));
+            }
+        });
+        document.getElementById('dataStatus').innerText = `✅ โหลดฐานข้อมูลหลักแล้ว ${globalShoes.length} ขอน`;
+        document.getElementById('dataStatus').className = "alert alert-success py-2 mb-2";
+    } else {
+        document.getElementById('dataStatus').innerText = `⚠️ ยังไม่มีข้อมูลหลัก กรุณาอัปโหลดไฟล์`;
+        document.getElementById('dataStatus').className = "alert alert-warning py-2 mb-2";
+    }
+}
+window.onload = loadMasterData;
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    let files = e.target.files;
+    if (files.length === 0) return;
+    
+    let addedCount = 0;
+    Array.from(files).forEach(file => {
+        let reader = new FileReader();
+        reader.onload = function(evt) {
+            let content = evt.target.result.trim().split('\n');
+            content.forEach(line => {
+                let sStr = parseShoeLine(line);
+                if (sStr) {
+                    rawShoesList.push(sStr);
+                    globalShoes.push(sStr.replace(/T/g, '').split(''));
+                    addedCount++;
+                }
+            });
+            document.getElementById('dataStatus').innerText = `✅ ฐานข้อมูลปัจจุบัน: ${globalShoes.length} ขอน (เพิ่มมาใหม่ ${addedCount})`;
+            document.getElementById('dataStatus').className = "alert alert-success py-2 mb-2";
+        };
+        reader.readAsText(file);
+    });
+});
+
+document.getElementById('runBtn').addEventListener('click', function() {
+    if (globalShoes.length === 0) return alert("ไม่มีข้อมูลให้ประมวลผลครับ!");
+
+    let startTrigger = document.getElementById('startTrigger').value;
+    let startHandNum = parseInt(document.getElementById('startHandNum').value) || 20;
+    let minStreak = parseInt(document.getElementById('minStreak').value);
+    let minRoads = Array.from(document.querySelectorAll('.min-road:checked')).map(e => e.value);
+    let maxStreak = parseInt(document.getElementById('maxStreak').value);
+    let maxRoads = Array.from(document.querySelectorAll('.max-road:checked')).map(e => e.value);
+    let vlLimit = parseInt(document.getElementById('vlLimit').value);
+    let mSteps = document.getElementById('martingaleStr').value.split(',').map(Number);
+    let maxM = mSteps.length;
+    let betMode = document.getElementById('betMode').value;
+    let takeProfit = parseInt(document.getElementById('takeProfit').value);
+
+    let qCount = 0, wonCount = 0, bustCount = 0, netTotal = 0;
+    let lossDist = new Array(maxM).fill(0);
+    let shoeLogs = [];
+
+    globalShoes.forEach((shoe, idx) => {
+        let flat = [];
+        let isReadyToScan = false;
+        let qualified = false;
+        
+        let wins = 0, consL = 0, vlCount = 0;
+        let inMart = false, busted = false;
+        let netThisShoe = 0;
+
+        for (let i = 0; i < shoe.length; i++) {
+            if (busted || wins >= takeProfit) break;
+            
+            let actual = shoe[i];
+            let roads = getRoads(flat);
+            
+            if (!isReadyToScan) {
+                if (startTrigger === 'CR' && roads.CR.length > 0) isReadyToScan = true;
+                else if (startTrigger === 'HAND' && flat.filter(x => x==='B'||x==='P').length >= startHandNum) isReadyToScan = true;
+
+                if (isReadyToScan) {
+                    let passMin = true;
+                    if (minRoads.length > 0) {
+                        passMin = false;
+                        for (let r of minRoads) {
+                            if (roads[r] && roads[r].some(col => col.length >= minStreak)) passMin = true;
+                        }
+                    }
+                    let passMax = true;
+                    if (maxRoads.length > 0) {
+                        for (let r of maxRoads) {
+                            if (roads[r] && roads[r].some(col => col.length > maxStreak)) passMax = false;
+                        }
+                    }
+                    qualified = passMin && passMax;
+                    if (!qualified) break;
+                }
+            }
+
+            if (qualified && isReadyToScan) {
+                let sigData = getSignal(flat);
+                if (sigData.signal && (actual === 'B' || actual === 'P')) {
+                    let betTarget = sigData.signal;
+                    if (betMode === "Reverse") betTarget = (betTarget === 'B') ? 'P' : 'B';
+                    let isWin = (actual === betTarget);
+
+                    if (!inMart) {
+                        if (!isWin) {
+                            vlCount++;
+                            if (vlCount >= vlLimit) { inMart = true; consL = 0; vlCount = 0; }
+                        } else { vlCount = 0; }
+                    } else {
+                        let bAmt = mSteps[consL];
+                        if (isWin) {
+                            wins++; netThisShoe += 1; lossDist[consL]++;
+                            inMart = false; consL = 0;
+                        } else {
+                            netThisShoe -= bAmt; consL++;
+                            if (consL >= maxM) { busted = true; inMart = false; }
+                        }
+                    }
+                }
+            }
+            flat.push(actual);
+        }
+
+        if (qualified) {
+            qCount++; netTotal += netThisShoe;
+            if (busted) bustCount++; else wonCount++;
+            shoeLogs.push({ id: idx, status: busted ? "🚨 BUSTED" : "✅ WON", net: netThisShoe });
+        }
+    });
+
+    document.getElementById('resQualified').innerText = qCount;
+    document.getElementById('resWon').innerText = wonCount;
+    document.getElementById('resBusted').innerText = bustCount;
+    document.getElementById('resNet').innerText = netTotal;
+
+    let ctx = document.getElementById('winChart').getContext('2d');
+    if(myChart) myChart.destroy();
+    myChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: Array.from({length: maxM}, (_, i) => `ไม้ ${i+1}`),
+            datasets: [{ label: 'จำนวนที่ชนะ', data: lossDist, backgroundColor: '#0d6efd' }]
+        }
+    });
+
+    let sel = document.getElementById('shoeSelector');
+    sel.innerHTML = '<option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>';
+    shoeLogs.forEach(log => {
+        let opt = document.createElement('option');
+        opt.value = log.id;
+        opt.innerText = `ลำดับขอนที่ ${log.id + 1} | ${log.status} | Net: ${log.net}`;
+        sel.appendChild(opt);
+    });
+});
+
+document.getElementById('shoeSelector').addEventListener('change', function(e) {
+    let id = e.target.value;
+    let bCont = document.getElementById('beadPlate');
+    bCont.innerHTML = '';
+    if (id === "") return;
+    
+    for (let c of rawShoesList[id]) {
+        let d = document.createElement('div');
+        d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
+        d.innerText = c;
+        bCont.appendChild(d);
+    }
+});
+</script>
+</body>
+</html>
