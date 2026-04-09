@@ -10,8 +10,8 @@
     <style>
         body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .sidebar { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
-        .dashboard-card { background-color: #ffffff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; }
-        .metric-value { font-size: 2rem; font-weight: bold; color: #0d6efd; }
+        .dashboard-card { background-color: #ffffff; padding: 15px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); text-align: center; margin-bottom: 20px; height: 100%; display: flex; flex-direction: column; justify-content: center;}
+        .metric-value { font-size: 2rem; font-weight: bold; color: #0d6efd; margin-top: 5px;}
         .road-title { font-size: 0.85rem; font-weight: bold; margin-top: 10px; margin-bottom: 5px; color: #495057; border-bottom: 2px solid #dee2e6; padding-bottom: 3px; }
         .bead-grid { display: grid; grid-template-rows: repeat(6, 30px); grid-auto-flow: column; gap: 2px; overflow-x: auto; padding-bottom: 10px; }
         .bead { width: 30px; height: 30px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
@@ -67,7 +67,7 @@
                     </div>
                 </div>
 
-                <div class="mb-4 border-top pt-3">
+                <div class="mb-3 border-top pt-3">
                     <label class="form-label fw-bold d-block text-danger">เงื่อนไข 2: ห้ามมีเสายาวเกิน ></label>
                     <div class="input-group mb-2">
                         <input type="number" id="maxStreak" class="form-control" value="10" min="1">
@@ -84,18 +84,21 @@
                 <div class="p-3 mb-3 bg-light border rounded border-danger">
                     <label class="form-label fw-bold text-danger d-block">🛑 จังหวะหยุดเล่น (Exit Trigger)</label>
                     <div class="mb-2">
-                        <label class="form-label mb-0" style="font-size: 0.8rem;">จำนวนรอบที่เข้าเล่น (Max Cycles):</label>
+                        <label class="form-label mb-0" style="font-size: 0.8rem;">เล่นจำนวนกี่ชุด (Max Cycles):</label>
                         <input type="number" id="maxCycles" class="form-control form-control-sm" value="5" min="1">
                     </div>
                     <div class="mb-2">
                         <label class="form-label mb-0" style="font-size: 0.8rem;">ได้กำไรครบ (Take Profit):</label>
                         <input type="number" id="takeProfit" class="form-control form-control-sm" value="5" min="1">
                     </div>
-                    <div class="mb-0">
+                    <div class="mb-2">
                         <label class="form-label mb-0" style="font-size: 0.8rem;">ไพ่เกินตาที่ (Stop Hand):</label>
                         <input type="number" id="stopHandNum" class="form-control form-control-sm" value="70" min="10">
                     </div>
-                    <small class="text-muted d-block mt-2" style="font-size: 0.75rem;">*ถ้าถึงเป้าแล้วยังค้างทบไม้อยู่ จะสู้ต่อให้จบไม้</small>
+                    <div class="form-check mt-2 pt-2 border-top">
+                        <input class="form-check-input" type="checkbox" id="stopOnBust" checked>
+                        <label class="form-check-label fw-bold text-danger" style="font-size: 0.8rem;">พอร์ตแตกปุ๊บ หยุดทันที (เปลี่ยนขอน)</label>
+                    </div>
                 </div>
 
                 <div class="mb-4 border-top pt-3">
@@ -123,20 +126,41 @@
         </div>
 
         <div class="col-md-9">
-            <div class="row">
-                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value">0</div></div></div>
-                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">กำไรสำเร็จ</div><div id="resWon" class="metric-value text-success">0</div></div></div>
-                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">พอร์ตแตก/จบก่อนเป้า</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
-                <div class="col-md-3"><div class="dashboard-card"><div class="text-muted">กำไรสุทธิรวม</div><div id="resNet" class="metric-value">0</div></div></div>
+            <div class="row row-cols-1 row-cols-md-5 g-3">
+                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value text-primary">0</div></div></div>
+                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">กำไรสำเร็จ</div><div id="resWon" class="metric-value text-success">0</div></div></div>
+                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">พอร์ตแตก/ไม่ถึงเป้า</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
+                <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold text-warning" style="font-size: 0.9rem;">ผิดติดกันสูงสุด</div><div id="resMaxLoss" class="metric-value text-warning">0</div></div></div>
+                <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold" style="font-size: 0.9rem;">กำไรสุทธิรวม</div><div id="resNet" class="metric-value text-dark">0</div></div></div>
             </div>
 
             <div class="row mt-3">
-                <div class="col-md-5"><div class="dashboard-card"><h5 class="mb-3">📈 Win Distribution</h5><canvas id="winChart"></canvas></div></div>
-                <div class="col-md-7">
+                <div class="col-md-6">
+                    <div class="dashboard-card justify-content-start">
+                        <h5 class="mb-3 text-start">📈 การกระจายตัวของไม้ที่ชนะ</h5>
+                        <canvas id="winChart"></canvas>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="dashboard-card justify-content-start">
+                        <h5 class="mb-3 text-start text-danger">📉 สถิติการผิดติดต่อกัน (Loss Streak)</h5>
+                        <canvas id="lossChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
                     <div class="dashboard-card text-start">
                         <h5 class="mb-3">👁️‍🗨️ Shoe Visualizer (ตารางเค้าไพ่ 5 ถนน)</h5>
-                        <select id="shoeSelector" class="form-select mb-3"><option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option></select>
-                        <div class="border p-3 bg-light rounded" style="overflow-y: auto; max-height: 500px;">
+                        <div class="d-flex align-items-center mb-3">
+                            <label class="me-2 fw-bold">เลือกดูขอน:</label>
+                            <select id="shoeSelector" class="form-select" style="max-width: 400px;">
+                                <option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>
+                            </select>
+                        </div>
+                        
+                        <div class="border p-3 bg-light rounded" style="overflow-x: auto; max-height: 600px;">
                             <div class="road-title">ลูกปัด (Bead Plate)</div><div id="beadPlate" class="bead-grid"></div>
                             <div class="road-title">ถนนใหญ่ (Big Road)</div><div id="bigRoad" class="road-grid"></div>
                             <div class="road-title">ตาไข่ปลา (Big Eye Boy)</div><div id="bigEyeBoy" class="road-grid"></div>
@@ -158,7 +182,6 @@ function parseShoeLine(line) {
         let parts = str.split(',');
         str = parts[parts.length - 1].trim();
     }
-    // ตัวกรองขอนขยะ: ถ้าไพ่มีน้อยกว่า 10 ตา จะไม่ถูกเอามาคิดเพื่อป้องกัน Error
     if (/^[BPT]+$/.test(str) && str.length >= 10) return str;
     return null;
 }
@@ -167,9 +190,6 @@ function toggleStartHand() {
     document.getElementById('handInputDiv').style.display = (document.getElementById('startTrigger').value === 'HAND') ? 'block' : 'none';
 }
 
-// ---------------------------------------------
-// CORE LOGIC: Baccarat Road Generator
-// ---------------------------------------------
 function getRoads(history) {
     let br = [], cur = [];
     for (let c of history) {
@@ -191,7 +211,7 @@ function getRoads(history) {
                     let ref = br[c-offset].length;
                     color = (ref >= r+1 || ref === r) ? 'R' : 'B';
                 }
-                road.push(color); // <--- แก้บั๊กจากรอบที่แล้ว (เปลี่ยน append เป็น push)
+                road.push(color);
             }
         }
         let cols = [], curC = [];
@@ -230,7 +250,9 @@ function getSignal(flatHistory) {
     return {signal: null, p: -1};
 }
 
-let globalShoes = [], rawShoesList = [], myChart = null;
+let globalShoes = [], rawShoesList = [];
+let myChart = null;
+let lossChartObj = null;
 
 function loadMasterData() {
     if (typeof masterDataCSV !== 'undefined' && masterDataCSV.trim().length > 0) {
@@ -264,14 +286,13 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
 document.getElementById('runBtn').addEventListener('click', function() {
     if (globalShoes.length === 0) return alert("ไม่มีข้อมูล!");
 
-    // ดึงค่า Setting จาก UI
     let startTrigger = document.getElementById('startTrigger').value;
     let startHandNum = parseInt(document.getElementById('startHandNum').value) || 20;
     
-    // Stop Conditions
     let maxCycles = parseInt(document.getElementById('maxCycles').value) || 5;
     let takeProfit = parseInt(document.getElementById('takeProfit').value) || 5;
     let stopHandNum = parseInt(document.getElementById('stopHandNum').value) || 70;
+    let stopOnBust = document.getElementById('stopOnBust').checked;
     
     let minStreak = parseInt(document.getElementById('minStreak').value);
     let minRoads = Array.from(document.querySelectorAll('.min-road:checked')).map(e => e.value);
@@ -284,20 +305,21 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let betMode = document.getElementById('betMode').value;
 
     let qCount = 0, wonCount = 0, bustCount = 0, netTotal = 0;
+    let globalMaxLossStreak = 0; 
     let winCountChart = new Array(mSteps.length).fill(0);
+    let lossStreakFreq = {}; // เก็บความถี่ของการแพ้ติดกัน
     let shoeLogs = [];
 
     globalShoes.forEach((shoe, idx) => {
         let flat = [], isReady = false, qualified = false;
-        let wins = 0, consStep = 0, vlCount = 0, inRealPlay = false, busted = false, netThisShoe = 0;
-        let cyclesPlayed = 0; // ตัวนับรอบที่เข้าเล่น
+        let wins = 0, consStep = 0, vlCount = 0, inRealPlay = false, netThisShoe = 0;
+        let cyclesPlayed = 0;
+        let isShoeTerminated = false;
+        let currentLossStreak = 0; 
 
         for (let i = 0; i < shoe.length; i++) {
-            // 1. ถ้าพอร์ตแตก จบขอนทันที
-            if (busted) break; 
+            if (isShoeTerminated) break; 
             
-            // 2. ตรวจสอบเงื่อนไขการหยุดเล่น (Exit Trigger)
-            // *สำคัญ: จะตัดจบได้ก็ต่อเมื่อ ไม่ได้อยู่ในช่วงทบเงิน (inRealPlay = false)
             if (!inRealPlay) {
                 if (cyclesPlayed >= maxCycles || wins >= takeProfit || flat.length >= stopHandNum) {
                     break;
@@ -307,7 +329,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
             let actual = shoe[i];
             let roads = getRoads(flat);
             
-            // เช็คจังหวะเริ่มสแกน
             if (!isReady) {
                 if (startTrigger === 'CR' && roads.CR.length > 0) isReady = true;
                 else if (startTrigger === 'HAND' && flat.length >= startHandNum) isReady = true;
@@ -320,44 +341,61 @@ document.getElementById('runBtn').addEventListener('click', function() {
                 }
             }
 
-            // ถ้าพร้อมและผ่านเงื่อนไข ให้เริ่มอ่านสัญญาณสูตร
             if (qualified && isReady) {
                 let sigData = getSignal(flat);
-                if (sigData.signal) {
+                if (sigData.signal && (actual === 'B' || actual === 'P')) {
                     let target = (betMode === "Reverse") ? (sigData.signal === 'B' ? 'P' : 'B') : sigData.signal;
                     let isWin = (actual === target);
 
-                    // จังหวะรอดักผิด (Virtual Loss)
                     if (!inRealPlay) {
                         if (!isWin) {
                             vlCount++;
                             if (vlCount >= vlLimit) { 
                                 inRealPlay = true; consStep = 0; vlCount = 0; 
-                                cyclesPlayed++; // เริ่มนับรอบการเล่น
                             }
                         } else { vlCount = 0; }
-                    } 
-                    // จังหวะลงเงินจริง
-                    else {
+                    } else {
                         let currentBet = mSteps[consStep];
-                        if (moneySystem === 'loss') {
-                            // เดินเงินแบบทบเมื่อผิด
+                        
+                        if (moneySystem === 'loss') { 
                             if (isWin) { 
                                 wins++; netThisShoe += 1; winCountChart[consStep]++; 
+                                // บันทึกสถิติการแพ้รวดที่เพิ่งจบไป
+                                if (currentLossStreak > 0) {
+                                    lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
+                                }
+                                currentLossStreak = 0; 
                                 inRealPlay = false; consStep = 0; 
-                            }
-                            else { 
+                                cyclesPlayed++; 
+                            } else { 
                                 netThisShoe -= currentBet; consStep++; 
-                                if (consStep >= mSteps.length) { busted = true; inRealPlay = false; } 
+                                currentLossStreak++; 
+                                if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
+                                
+                                if (consStep >= mSteps.length) { 
+                                    cyclesPlayed++; 
+                                    if (stopOnBust) { isShoeTerminated = true; } 
+                                    else { inRealPlay = false; consStep = 0; }
+                                } 
                             }
-                        } else {
-                            // เดินเงินแบบทบเมื่อถูก (Winning Streak)
+                        } else { 
                             if (isWin) { 
                                 netThisShoe += currentBet; winCountChart[consStep]++; consStep++; 
-                                if (consStep >= mSteps.length) { wins++; inRealPlay = false; consStep = 0; } 
-                            }
-                            else { 
-                                netThisShoe -= currentBet; busted = true; inRealPlay = false; consStep = 0; 
+                                if (currentLossStreak > 0) {
+                                    lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
+                                }
+                                currentLossStreak = 0;
+                                if (consStep >= mSteps.length) { 
+                                    wins++; inRealPlay = false; consStep = 0; 
+                                    cyclesPlayed++; 
+                                } 
+                            } else { 
+                                netThisShoe -= currentBet; 
+                                currentLossStreak++;
+                                if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
+                                cyclesPlayed++; 
+                                if (stopOnBust) { isShoeTerminated = true; } 
+                                else { inRealPlay = false; consStep = 0; }
                             }
                         }
                     }
@@ -366,12 +404,14 @@ document.getElementById('runBtn').addEventListener('click', function() {
             flat.push(actual);
         }
 
-        // สรุปผลของขอนนี้
         if (qualified) {
-            qCount++; netTotal += netThisShoe;
-            if (busted || netThisShoe <= 0) bustCount++; 
-            else wonCount++;
+            // กรณีขอนจบลงโดยยังติดการแพ้ค้างอยู่ ให้บันทึกด้วย
+            if (currentLossStreak > 0) {
+                lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
+            }
             
+            qCount++; netTotal += netThisShoe;
+            if (netThisShoe <= 0) bustCount++; else wonCount++;
             shoeLogs.push({ id: idx, status: (netThisShoe > 0) ? "✅ WON" : "🚨 LOST", net: netThisShoe });
         }
     });
@@ -379,14 +419,38 @@ document.getElementById('runBtn').addEventListener('click', function() {
     document.getElementById('resQualified').innerText = qCount;
     document.getElementById('resWon').innerText = wonCount;
     document.getElementById('resBusted').innerText = bustCount;
+    document.getElementById('resMaxLoss').innerText = globalMaxLossStreak; 
     document.getElementById('resNet').innerText = netTotal;
 
+    // วาดกราฟ: Win Distribution
     if(myChart) myChart.destroy();
     myChart = new Chart(document.getElementById('winChart').getContext('2d'), {
         type: 'bar',
         data: { labels: Array.from({length: mSteps.length}, (_, i) => `ไม้ ${i+1}`), datasets: [{ label: 'จำนวนครั้งที่ชนะในไม้นี้', data: winCountChart, backgroundColor: '#0d6efd' }] }
     });
 
+    // วาดกราฟ: Loss Streak Distribution
+    let lossLabels = [];
+    let lossData = [];
+    for (let i = 1; i <= globalMaxLossStreak; i++) {
+        lossLabels.push(`ผิด ${i} ตา`);
+        lossData.push(lossStreakFreq[i] || 0);
+    }
+    
+    if(lossChartObj) lossChartObj.destroy();
+    lossChartObj = new Chart(document.getElementById('lossChart').getContext('2d'), {
+        type: 'bar',
+        data: { 
+            labels: lossLabels, 
+            datasets: [{ 
+                label: 'จำนวนครั้งที่เกิดขึ้น', 
+                data: lossData, 
+                backgroundColor: '#dc3545' 
+            }] 
+        }
+    });
+
+    // อัปเดต Dropdown เลือกขอน
     let sel = document.getElementById('shoeSelector');
     sel.innerHTML = '<option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>';
     shoeLogs.forEach(log => {
@@ -396,12 +460,10 @@ document.getElementById('runBtn').addEventListener('click', function() {
     });
 });
 
-// ฟังก์ชันวาดตารางเค้าไพ่ทั้ง 5
 document.getElementById('shoeSelector').addEventListener('change', function(e) {
     let id = e.target.value;
     if (id === "") return;
     
-    // วาดลูกปัด
     let bCont = document.getElementById('beadPlate'); bCont.innerHTML = '';
     for (let c of rawShoesList[id]) {
         let d = document.createElement('div');
@@ -409,7 +471,6 @@ document.getElementById('shoeSelector').addEventListener('change', function(e) {
         d.innerText = c; bCont.appendChild(d);
     }
     
-    // คำนวณและวาดถนนอีก 4 เส้น
     let rData = getRoads(globalShoes[id]);
     function drawR(contId, rCols, isBR=false) {
         let c = document.getElementById(contId); c.innerHTML = '';
