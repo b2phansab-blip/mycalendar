@@ -334,7 +334,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let maxRoads = Array.from(document.querySelectorAll('.max-road:checked')).map(e => e.value);
     let getMaxSets = (r) => { return { s: getNum('maxStr_'+r, 4), c: getNum('maxCnt_'+r, 0) }; };
     
-    // Exit Triggers (ดึงค่าจริง รองรับ 0 = ไม่จำกัด)
     let maxCycles = getNum('maxCycles', 0);
     let takeProfit = getNum('takeProfit', 0); 
     let stopHandNum = getNum('stopHandNum', 70);
@@ -357,17 +356,17 @@ document.getElementById('runBtn').addEventListener('click', function() {
         let cyclesPlayed = 0, isShoeTerminated = false, currentLossStreak = 0; 
         
         let inRealPlay = false; 
+        // 🚨 แก้บั๊กตรงนี้: ประกาศตัวแปร actualBusted เพื่อป้องกันไม่ให้เบราว์เซอร์ Error 
+        let actualBusted = false; 
 
         for (let i = 0; i < shoe.length; i++) {
             if (isShoeTerminated) break; 
 
-            // ตรวจสอบ Exit Triggers เมื่อไม่ได้อยู่ในช่วงทบไม้
             if (consStep === 0) {
                 if (maxCycles > 0 && cyclesPlayed >= maxCycles) break; 
                 if (takeProfit > 0 && netThisShoe >= takeProfit) break; 
                 if (stopHandNum > 0 && flat.length >= stopHandNum) break; 
                 
-                // ถ้าระบุ 0 จะไม่ตัดขอนทิ้ง (ข้ามบรรทัดนี้ไปเลย)
                 if (maxEntryHand > 0 && cyclesPlayed === 0 && !inRealPlay && vlCount === 0 && flat.length >= maxEntryHand) {
                     break;
                 }
@@ -488,7 +487,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
             } else if (maxCycles > 0 && cyclesPlayed >= maxCycles && netThisShoe > 0) {
                 wonCount++; statusText = "✅ ครบชุด/มีกำไร";
             } else if (netThisShoe > 0) {
-                wonCount++; statusText = "✅ จบขอน/มีกำไร"; // เปลี่ยนเป็นติ๊กถูกสีเขียว
+                wonCount++; statusText = "✅ จบขอน/มีกำไร"; 
             } else if (netThisShoe === 0) {
                 statusText = "➖ เสมอ/ไม่ได้เล่น";
             } else {
