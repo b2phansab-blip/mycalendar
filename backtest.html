@@ -175,6 +175,7 @@
 </div>
 
 <script>
+// --- ฟังก์ชันพื้นฐาน ---
 function parseShoeLine(line) {
     let str = line.trim().replace(/\r/g, '');
     if (!str) return null;
@@ -225,29 +226,30 @@ function getRoads(history) {
     return { BR: br, BEB: drv(1), SR: drv(2), CR: drv(3) };
 }
 
-function getSignal(flatHistory) {
+// --- ฟังก์ชันดึงสัญญาณ (ปรับปรุงลอจิก Priority โฟกัส BR เสมอ) ---
+function getSignal(flatHistory, minStreak) {
     let roads = getRoads(flatHistory);
     let streaks = [
-        roads.BR.length > 0 ? {c: roads.BR[roads.BR.length-1][0], l: roads.BR[roads.BR.length-1].length} : {l:0},
-        roads.BEB.length > 0 ? {c: roads.BEB[roads.BEB.length-1][0], l: roads.BEB[roads.BEB.length-1].length} : {l:0},
-        roads.SR.length > 0 ? {c: roads.SR[roads.SR.length-1][0], l: roads.SR[roads.SR.length-1].length} : {l:0},
-        roads.CR.length > 0 ? {c: roads.CR[roads.CR.length-1][0], l: roads.CR[roads.CR.length-1].length} : {l:0}
+        roads.BR.length > 0 ? {road: 'BR', c: roads.BR[roads.BR.length-1][0], l: roads.BR[roads.BR.length-1].length} : {road: 'BR', l:0},
+        roads.BEB.length > 0 ? {road: 'BEB', c: roads.BEB[roads.BEB.length-1][0], l: roads.BEB[roads.BEB.length-1].length} : {road: 'BEB', l:0},
+        roads.SR.length > 0 ? {road: 'SR', c: roads.SR[roads.SR.length-1][0], l: roads.SR[roads.SR.length-1].length} : {road: 'SR', l:0},
+        roads.CR.length > 0 ? {road: 'CR', c: roads.CR[roads.CR.length-1][0], l: roads.CR[roads.CR.length-1].length} : {road: 'CR', l:0}
     ];
 
     for (let p = 0; p < streaks.length; p++) {
-        if (streaks[p].l >= 2) {
+        if (streaks[p].l >= minStreak) {
             let cMatch = streaks[p].c;
             for (let test of ['B', 'P']) {
                 let tHist = [...flatHistory.filter(x => x==='B'||x==='P'), test];
                 let tR = getRoads(tHist);
-                if (p === 0 && test === cMatch) return {signal: test, p: p};
-                if (p === 1 && tR.BEB.length > 0 && tR.BEB[tR.BEB.length-1][0] === cMatch) return {signal: test, p: p};
-                if (p === 2 && tR.SR.length > 0 && tR.SR[tR.SR.length-1][0] === cMatch) return {signal: test, p: p};
-                if (p === 3 && tR.CR.length > 0 && tR.CR[tR.CR.length-1][0] === cMatch) return {signal: test, p: p};
+                if (p === 0 && test === cMatch) return {signal: test, p: p, road: streaks[p].road};
+                if (p === 1 && tR.BEB.length > 0 && tR.BEB[tR.BEB.length-1][0] === cMatch) return {signal: test, p: p, road: streaks[p].road};
+                if (p === 2 && tR.SR.length > 0 && tR.SR[tR.SR.length-1][0] === cMatch) return {signal: test, p: p, road: streaks[p].road};
+                if (p === 3 && tR.CR.length > 0 && tR.CR[tR.CR.length-1][0] === cMatch) return {signal: test, p: p, road: streaks[p].road};
             }
         }
     }
-    return {signal: null, p: -1};
+    return {signal: null, p: -1, road: null};
 }
 
 let globalShoes = [], rawShoesList = [];
@@ -282,6 +284,7 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     });
 });
 
+// --- CORE BACKTEST LOOP ---
 document.getElementById('runBtn').addEventListener('click', function() {
     if (globalShoes.length === 0) return alert("ไม่มีข้อมูล!");
 
@@ -316,15 +319,12 @@ document.getElementById('runBtn').addEventListener('click', function() {
         let isShoeTerminated = false;
         let currentLossStreak = 0; 
         
-        // ----------------------------------------------------
-        // FIX BUG จุดสำคัญ: เซ็ตค่าเริ่มต้นให้แทงได้เลยถ้าไม่รอ VL
-        // ----------------------------------------------------
         let inRealPlay = (vlLimit === 0);
 
         for (let i = 0; i < shoe.length; i++) {
             if (isShoeTerminated) break; 
             
-            // ตรวจสอบ Exit Trigger: เราจะหยุดขอนได้ก็ต่อเมื่อ "ไม่ได้อยู่ในช่วงทบไม้" (consStep === 0)
+            // เช็คหยุดขอน (Exit Triggers) โดยต้องเช็คตอนไม่ได้อยู่ในระหว่างทบไม้ (consStep === 0)
             if (consStep === 0) {
                 if (cyclesPlayed >= maxCycles || netThisShoe >= takeProfit || flat.length >= stopHandNum) {
                     break; 
@@ -334,6 +334,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
             let actual = shoe[i];
             let roads = getRoads(flat);
             
+            // เช็คสแกนพร้อมเข้าทำ
             if (!isReady) {
                 if (startTrigger === 'CR' && roads.CR.length > 0) isReady = true;
                 else if (startTrigger === 'HAND' && flat.length >= startHandNum) isReady = true;
@@ -342,17 +343,16 @@ document.getElementById('runBtn').addEventListener('click', function() {
                     let passMin = minRoads.length === 0 || minRoads.some(r => roads[r] && roads[r].some(col => col.length >= minStreak));
                     let passMax = maxRoads.length === 0 || maxRoads.every(r => roads[r] && roads[r].every(col => col.length <= maxStreak));
                     qualified = passMin && passMax;
-                    if (!qualified) break;
+                    if (!qualified) break; // ถ้าขอนไม่ผ่านเกณฑ์ ให้ข้ามขอนนี้ไปเลย
                 }
             }
 
             if (qualified && isReady) {
-                let sigData = getSignal(flat);
+                let sigData = getSignal(flat, minStreak);
                 if (sigData.signal && (actual === 'B' || actual === 'P')) {
                     let target = (betMode === "Reverse") ? (sigData.signal === 'B' ? 'P' : 'B') : sigData.signal;
                     let isWin = (actual === target);
 
-                    // จังหวะรอผิดทิพย์
                     if (!inRealPlay) {
                         if (!isWin) {
                             vlCount++;
@@ -363,13 +363,12 @@ document.getElementById('runBtn').addEventListener('click', function() {
                             vlCount = 0; 
                         }
                     } 
-                    // จังหวะลงเงินจริง
                     else {
                         let currentBet = mSteps[consStep];
                         
-                        if (moneySystem === 'loss') { // เดินเงินเมื่อแพ้แล้วทบ
+                        if (moneySystem === 'loss') { 
                             if (isWin) { 
-                                netThisShoe += currentBet; // บวกกำไรด้วยจำนวนเงินที่ลง
+                                netThisShoe += currentBet; // ✅ บวกกำไรเต็มเม็ดเต็มหน่วย
                                 winCountChart[consStep]++; 
                                 
                                 if (currentLossStreak > 0) {
@@ -377,23 +376,22 @@ document.getElementById('runBtn').addEventListener('click', function() {
                                 }
                                 currentLossStreak = 0; 
                                 
-                                inRealPlay = (vlLimit === 0); // กลับไปเริ่มใหม่ (ถ้า VL=0 ก็แทงต่อเลย)
+                                inRealPlay = (vlLimit === 0); 
                                 consStep = 0; 
                                 cyclesPlayed++; 
                             } else { 
-                                netThisShoe -= currentBet; // หักทุนที่ลงเสียไป
+                                netThisShoe -= currentBet; // ✅ หักทุน
                                 consStep++; 
                                 currentLossStreak++; 
                                 if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
                                 
                                 if (consStep >= mSteps.length) { 
-                                    // พอร์ตแตกในชุดนี้
                                     cyclesPlayed++; 
                                     if (stopOnBust) { isShoeTerminated = true; } 
                                     else { inRealPlay = (vlLimit === 0); consStep = 0; }
                                 } 
                             }
-                        } else { // เดินเงินเมื่อชนะแล้วทบ
+                        } else { 
                             if (isWin) { 
                                 netThisShoe += currentBet; 
                                 winCountChart[consStep]++; 
@@ -432,7 +430,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
             
             qCount++; netTotal += netThisShoe;
             
-            // ตัดสินว่าขอนนี้รอด หรือ ร่วง (โดยวัดจาก Take Profit)
             if (netThisShoe < takeProfit) bustCount++; 
             else wonCount++;
             
@@ -441,7 +438,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
         }
     });
 
-    // อัปเดตหน้าปัด
     document.getElementById('resQualified').innerText = qCount;
     document.getElementById('resWon').innerText = wonCount;
     document.getElementById('resBusted').innerText = bustCount;
@@ -476,6 +472,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
     });
 });
 
+// --- วาดตารางเค้าไพ่ ---
 document.getElementById('shoeSelector').addEventListener('change', function(e) {
     let id = e.target.value;
     if (id === "") return;
