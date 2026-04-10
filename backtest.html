@@ -26,6 +26,8 @@
         .drv-bead { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
         .drv-R { background-color: #dc3545; }
         .drv-B { background-color: #0d6efd; }
+        .table-custom th { font-size: 0.85rem; }
+        .table-custom td { vertical-align: middle; font-size: 0.9rem; }
     </style>
 </head>
 <body>
@@ -205,11 +207,39 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row mt-3">
+                <div class="col-md-12">
+                    <div class="dashboard-card text-start">
+                        <h5 class="mb-3 text-primary">📝 ประวัติการแทง (Bet History)</h5>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-hover table-bordered text-center table-custom">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th>ตาที่ (Hand)</th>
+                                        <th>บอทสั่งแทง</th>
+                                        <th>ไพ่ออก</th>
+                                        <th>ไม้ที่ทบ (Step)</th>
+                                        <th>จำนวนเงิน</th>
+                                        <th>ผลลัพธ์</th>
+                                        <th>กำไรสะสมขอนนี้ (Net)</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="betHistoryBody">
+                                    <tr><td colspan="7" class="text-muted py-4">โปรดเลือกรัน Backtest และเลือกขอนไพ่เพื่อดูประวัติ</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>
 
 <script>
+// --- ฟังก์ชันช่วยเหลือ ---
 function getNum(id, defaultVal) {
     let val = document.getElementById(id).value.trim();
     if (val === "") return defaultVal;
@@ -289,6 +319,7 @@ function getSignal(flatHistory, triggerLen) {
 
 let globalShoes = [], rawShoesList = [];
 let myChart = null, lossChartObj = null;
+let globalShoeLogs = []; // ตัวแปรเก็บประวัติล็อกของทุกขอน
 
 function loadMasterData() {
     if (typeof masterDataCSV !== 'undefined' && masterDataCSV.trim().length > 0) {
@@ -354,10 +385,10 @@ document.getElementById('runBtn').addEventListener('click', function() {
         let flat = [], isReady = false, qualified = false;
         let consStep = 0, vlCount = 0, netThisShoe = 0;
         let cyclesPlayed = 0, isShoeTerminated = false, currentLossStreak = 0; 
-        
         let inRealPlay = false; 
-        // 🚨 แก้บั๊กตรงนี้: ประกาศตัวแปร actualBusted เพื่อป้องกันไม่ให้เบราว์เซอร์ Error 
         let actualBusted = false; 
+        
+        let betHistory = []; // ตัวแปรเก็บประวัติการแทงของขอนนี้
 
         for (let i = 0; i < shoe.length; i++) {
             if (isShoeTerminated) break; 
@@ -428,6 +459,15 @@ document.getElementById('runBtn').addEventListener('click', function() {
                         inRealPlay = true; 
                         let currentBet = mSteps[consStep];
                         
+                        // บันทึกการลงเงินจริง
+                        let betRecord = {
+                            hand: flat.length + 1,
+                            target: target,
+                            actual: actual,
+                            betAmount: currentBet,
+                            step: consStep + 1
+                        };
+                        
                         if (moneySystem === 'loss') { 
                             if (isWin) { 
                                 netThisShoe += currentBet; 
@@ -435,12 +475,20 @@ document.getElementById('runBtn').addEventListener('click', function() {
                                 if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
                                 currentLossStreak = 0; 
                                 
+                                betRecord.result = 'WIN';
+                                betRecord.net = netThisShoe;
+                                betHistory.push(betRecord);
+
                                 inRealPlay = false; consStep = 0; vlCount = 0; cyclesPlayed++; 
                             } else { 
                                 netThisShoe -= currentBet; consStep++; 
                                 currentLossStreak++; 
                                 if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
                                 
+                                betRecord.result = 'LOSS';
+                                betRecord.net = netThisShoe;
+                                betHistory.push(betRecord);
+
                                 if (consStep >= mSteps.length) { 
                                     actualBusted = true;
                                     cyclesPlayed++; 
@@ -455,6 +503,10 @@ document.getElementById('runBtn').addEventListener('click', function() {
                                 if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
                                 currentLossStreak = 0;
 
+                                betRecord.result = 'WIN';
+                                betRecord.net = netThisShoe;
+                                betHistory.push(betRecord);
+
                                 if (consStep >= mSteps.length) { 
                                     inRealPlay = false; consStep = 0; vlCount = 0; cyclesPlayed++; 
                                 } 
@@ -463,6 +515,10 @@ document.getElementById('runBtn').addEventListener('click', function() {
                                 currentLossStreak++;
                                 if (currentLossStreak > globalMaxLossStreak) globalMaxLossStreak = currentLossStreak;
                                 
+                                betRecord.result = 'LOSS';
+                                betRecord.net = netThisShoe;
+                                betHistory.push(betRecord);
+
                                 actualBusted = true;
                                 cyclesPlayed++; 
                                 if (stopOnBust) isShoeTerminated = true; 
@@ -494,9 +550,12 @@ document.getElementById('runBtn').addEventListener('click', function() {
                 bustCount++; statusText = "📉 ขาดทุน";
             }
             
-            shoeLogs.push({ id: idx, status: statusText, net: netThisShoe });
+            // นำประวัติการแทงทั้งหมดแนบไปกับ log ของขอนนี้
+            shoeLogs.push({ id: idx, status: statusText, net: netThisShoe, history: betHistory });
         }
     });
+
+    globalShoeLogs = shoeLogs; // เก็บลงตัวแปร Global เพื่อใช้ตอนกดดูตาราง
 
     document.getElementById('resQualified').innerText = qCount;
     document.getElementById('resWon').innerText = wonCount;
@@ -535,6 +594,7 @@ document.getElementById('shoeSelector').addEventListener('change', function(e) {
     let id = e.target.value;
     if (id === "") return;
     
+    // วาดตารางเค้าไพ่
     let bCont = document.getElementById('beadPlate'); bCont.innerHTML = '';
     for (let c of rawShoesList[id]) {
         let d = document.createElement('div');
@@ -560,6 +620,34 @@ document.getElementById('shoeSelector').addEventListener('change', function(e) {
     drawR('bigEyeBoy', rData.BEB);
     drawR('smallRoad', rData.SR);
     drawR('cockroach', rData.CR);
+
+    // ดึงประวัติการแทงมาแสดงในตารางด้านล่าง
+    let logRecord = globalShoeLogs.find(x => x.id == id);
+    let tbody = document.getElementById('betHistoryBody');
+    tbody.innerHTML = '';
+    
+    if (logRecord && logRecord.history && logRecord.history.length > 0) {
+        logRecord.history.forEach(b => {
+            let row = document.createElement('tr');
+            
+            let resClass = b.result === 'WIN' ? 'text-success fw-bold' : 'text-danger fw-bold';
+            let targetHtml = b.target === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
+            let actualHtml = b.actual === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
+            
+            row.innerHTML = `
+                <td>ตาที่ ${b.hand}</td>
+                <td>${targetHtml}</td>
+                <td>${actualHtml}</td>
+                <td>ไม้ที่ ${b.step}</td>
+                <td>${b.betAmount} หน่วย</td>
+                <td class="${resClass}">${b.result === 'WIN' ? '✅ ชนะ' : '❌ แพ้'}</td>
+                <td class="fw-bold">${b.net > 0 ? '+'+b.net : b.net}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    } else {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-muted py-4">ไม่มีประวัติการลงเงินจริงในขอนนี้ (อาจจะไพ่หมดก่อน หรือรอดักทิพย์ไม่สำเร็จ)</td></tr>`;
+    }
 });
 </script>
 </body>
