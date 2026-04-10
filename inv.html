@@ -229,7 +229,10 @@
 
         document.getElementById('amount').addEventListener('input', (e) => {
             if(document.getElementById('actionType').value !== 'settlement') {
-                document.getElementById('previewCredit').innerText = `Credit Limit: ${(e.target.value*6.67).toLocaleString(undefined,{maximumFractionDigits:2})} THB`;
+                const amount = parseFloat(e.target.value) || 0;
+                // แก้ไขสูตรเป็นหารด้วย 0.15 ตรงนี้
+                const credit = amount / 0.15; 
+                document.getElementById('previewCredit').innerText = `Credit Limit: ${credit.toLocaleString(undefined,{maximumFractionDigits:2})} THB`;
             }
         });
 
@@ -264,7 +267,7 @@
             try {
                 await fetch(API_URL, { method: 'POST', body: JSON.stringify({ actionType: 'mark_paid', rowIndex: rowIndex }) });
                 await loadReport();
-            } catch (e) { alert("Error updating status"); if(btn) { btn.innerText = "Mark as Paid"; btn.disabled = false; } }
+            } catch (e) { alert("Error updating status"); if(btn) { btn.innerText = "Mark Paid"; btn.disabled = false; } }
         }
 
         function renderReportTable() {
