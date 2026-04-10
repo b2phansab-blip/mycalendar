@@ -42,7 +42,14 @@
                 <div id="dataStatus" class="alert alert-info py-2 mb-2" style="font-size: 0.85rem;">กำลังโหลดข้อมูล...</div>
                 <input type="file" id="fileInput" class="form-control form-control-sm mb-4" accept=".txt,.csv" multiple>
 
-                <h5 class="text-secondary mb-3">⚙️ 2. Strategy Builder</h5>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="text-secondary mb-0">⚙️ 2. Strategy</h5>
+                    <div>
+                        <button class="btn btn-sm btn-success fw-bold py-1 px-2" onclick="exportSettings()">💾 Save</button>
+                        <button class="btn btn-sm btn-primary fw-bold py-1 px-2" onclick="document.getElementById('importSettingFile').click()">📂 Load</button>
+                        <input type="file" id="importSettingFile" style="display:none;" accept=".json" onchange="importSettings(event)">
+                    </div>
+                </div>
                 
                 <div class="p-2 mb-3 bg-light border rounded border-primary">
                     <label class="form-label fw-bold text-primary d-block" style="font-size: 0.9rem;">🎯 จังหวะเริ่มสแกน (Entry & Trigger)</label>
@@ -177,12 +184,13 @@
         </div>
 
         <div class="col-md-9">
-            <div class="row row-cols-1 row-cols-md-5 g-3">
-                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value text-primary">0</div></div></div>
-                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">ถึงเป้า / มีกำไร</div><div id="resWon" class="metric-value text-success">0</div></div></div>
-                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">แตก / ชน SL</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
-                <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold text-warning" style="font-size: 0.9rem;">ผิดติดกันสูงสุด</div><div id="resMaxLoss" class="metric-value text-warning">0</div></div></div>
-                <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold" style="font-size: 0.9rem;">กำไรสุทธิรวม</div><div id="resNet" class="metric-value text-dark">0</div></div></div>
+            <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2">
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value text-primary fs-3">0</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">เล่นทั้งหมด (ตา)</div><div id="resTotalBets" class="metric-value text-info fs-3">0</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">ถึงเป้า / มีกำไร</div><div id="resWon" class="metric-value text-success fs-3">0</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">แตก / ชน SL</div><div id="resBusted" class="metric-value text-danger fs-3">0</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted fw-bold text-warning" style="font-size: 0.8rem;">ผิดติดกันสูงสุด</div><div id="resMaxLoss" class="metric-value text-warning fs-3">0</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted fw-bold" style="font-size: 0.8rem;">กำไรสุทธิรวม</div><div id="resNet" class="metric-value text-dark fs-3">0</div></div></div>
             </div>
 
             <div class="row mt-3">
@@ -253,6 +261,88 @@
 </div>
 
 <script>
+// --- ระบบ Export / Import Settings ---
+const settingValueIds = [
+    'startTrigger', 'startHandNum', 'maxEntryHand', 'triggerLen',
+    'minStr_BR', 'minCnt_BR', 'minStr_BEB', 'minCnt_BEB', 'minStr_SR', 'minCnt_SR', 'minStr_CR', 'minCnt_CR', 'minConditionType',
+    'maxStr_BR', 'maxCnt_BR', 'maxStr_BEB', 'maxCnt_BEB', 'maxStr_SR', 'maxCnt_SR', 'maxStr_CR', 'maxCnt_CR', 'maxConditionType',
+    'maxCycles', 'takeProfit', 'maxLossLimit', 'stopHandNum', 'maxPlayHands',
+    'moneySystem', 'vlLimit', 'martingaleStr', 'betMode'
+];
+const settingCheckIds = [
+    'min_BR', 'min_BEB', 'min_SR', 'min_CR', 
+    'max_BR', 'max_BEB', 'max_SR', 'max_CR', 'stopOnBust'
+];
+
+function exportSettings() {
+    let settings = { values: {}, checks: {} };
+    settingValueIds.forEach(id => { if (document.getElementById(id)) settings.values[id] = document.getElementById(id).value; });
+    settingCheckIds.forEach(id => { if (document.getElementById(id)) settings.checks[id] = document.getElementById(id).checked; });
+    
+    let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(settings, null, 2));
+    let downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "aegis_settings.json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+}
+
+function importSettings(event) {
+    let file = event.target.files[0];
+    if (!file) return;
+    let reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            let settings = JSON.parse(e.target.result);
+            if (settings.values) {
+                for (let id in settings.values) {
+                    if (document.getElementById(id)) document.getElementById(id).value = settings.values[id];
+                }
+            }
+            if (settings.checks) {
+                for (let id in settings.checks) {
+                    if (document.getElementById(id)) document.getElementById(id).checked = settings.checks[id];
+                }
+            }
+            toggleStartHand(); 
+            alert('✅ โหลดการตั้งค่าสำเร็จ!');
+            localStorage.setItem('aegis_pro_settings', JSON.stringify(settings)); 
+        } catch(err) {
+            alert('❌ ไฟล์ไม่ถูกต้อง โปรดใช้ไฟล์ .json ที่ดาวน์โหลดจากระบบ');
+        }
+    };
+    reader.readAsText(file);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+    let saved = localStorage.getItem('aegis_pro_settings');
+    if (saved) {
+        try {
+            let settings = JSON.parse(saved);
+            if (settings.values) {
+                for (let id in settings.values) {
+                    if (document.getElementById(id)) document.getElementById(id).value = settings.values[id];
+                }
+            }
+            if (settings.checks) {
+                for (let id in settings.checks) {
+                    if (document.getElementById(id)) document.getElementById(id).checked = settings.checks[id];
+                }
+            }
+            toggleStartHand();
+        } catch(e) {}
+    }
+});
+
+document.querySelector('.sidebar').addEventListener('change', () => {
+    let settings = { values: {}, checks: {} };
+    settingValueIds.forEach(id => { if (document.getElementById(id)) settings.values[id] = document.getElementById(id).value; });
+    settingCheckIds.forEach(id => { if (document.getElementById(id)) settings.checks[id] = document.getElementById(id).checked; });
+    localStorage.setItem('aegis_pro_settings', JSON.stringify(settings));
+});
+
+// --- ฟังก์ชัน Backtest หลัก ---
 function getNum(id, defaultVal) {
     let val = document.getElementById(id).value.trim();
     if (val === "") return defaultVal;
@@ -371,12 +461,10 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let maxEntryHand = getNum('maxEntryHand', 50); 
     let triggerLen = getNum('triggerLen', 2); 
     
-    // Condition 1
     let minRoads = Array.from(document.querySelectorAll('.min-road:checked')).map(e => e.value);
     let minCondType = document.getElementById('minConditionType').value;
     let getMinSets = (r) => { return { s: getNum('minStr_'+r, 3), c: getNum('minCnt_'+r, 1) }; };
     
-    // Condition 2
     let maxRoads = Array.from(document.querySelectorAll('.max-road:checked')).map(e => e.value);
     let maxCondType = document.getElementById('maxConditionType').value;
     let getMaxSets = (r) => { return { s: getNum('maxStr_'+r, 4), c: getNum('maxCnt_'+r, 0) }; };
@@ -395,6 +483,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
 
     let qCount = 0, wonCount = 0, bustCount = 0, netTotal = 0;
     let globalMaxLossStreak = 0; 
+    let globalTotalBetsCount = 0; // 🚨 ตัวแปรสำหรับนับจำนวนตาที่เล่นทั้งหมด
     let winCountChart = new Array(mSteps.length).fill(0);
     let lossStreakFreq = {}; 
     let shoeLogs = [];
@@ -436,7 +525,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
                 handsPlayedSinceAction++;
             }
 
-            // เงื่อนไขสแกนขอน
             if (!isReady) {
                 if (startTrigger === 'CR' && roads.CR.length > 0) isReady = true;
                 else if (startTrigger === 'HAND' && flat.length >= startHandNum) isReady = true;
@@ -490,7 +578,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
                     let target = (betMode === "Reverse") ? (sigData.signal === 'B' ? 'P' : 'B') : sigData.signal;
                     let isWin = (actual === target);
 
-                    // จังหวะรอ VL
                     if (!inRealPlay && vlLimit > 0) {
                         let betRecord = {
                             hand: flat.length + 1,
@@ -509,10 +596,10 @@ document.getElementById('runBtn').addEventListener('click', function() {
                             if (vlCount >= vlLimit) { inRealPlay = true; consStep = 0; vlCount = 0; }
                         } else { vlCount = 0; }
                     } 
-                    // จังหวะลงเงินจริง
                     else {
                         inRealPlay = true; 
                         let currentBet = mSteps[consStep];
+                        globalTotalBetsCount++; // 🚨 นับจำนวนตาที่เล่นจริงตรงนี้!
                         
                         let betRecord = {
                             hand: flat.length + 1,
@@ -590,7 +677,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
             if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
             qCount++; netTotal += netThisShoe;
             
-            // 🚨 อัปเดตลอจิกสรุปผลขอน ให้แสดง "กู้ทุนสำเร็จ" ถ้าเคยแตกแล้วกลับมาบวกได้!
             let statusText = "";
             if (hitMaxLoss) {
                 bustCount++; statusText = "🛑 ชน Max Loss";
@@ -616,7 +702,9 @@ document.getElementById('runBtn').addEventListener('click', function() {
 
     globalShoeLogs = shoeLogs; 
 
+    // 🚨 อัปเดตตัวเลขขึ้นหน้าปัด
     document.getElementById('resQualified').innerText = qCount;
+    document.getElementById('resTotalBets').innerText = globalTotalBetsCount; 
     document.getElementById('resWon').innerText = wonCount;
     document.getElementById('resBusted').innerText = bustCount;
     document.getElementById('resMaxLoss').innerText = globalMaxLossStreak; 
