@@ -385,7 +385,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let takeProfit = getNum('takeProfit', 0); 
     let stopHandNum = getNum('stopHandNum', 70);
     let maxPlayHands = getNum('maxPlayHands', 6); 
-    let maxLossLimit = getNum('maxLossLimit', 0); // 🚨 ดึงค่า Max Loss
+    let maxLossLimit = getNum('maxLossLimit', 0); 
     let stopOnBust = document.getElementById('stopOnBust').checked;
     
     let moneySystem = document.getElementById('moneySystem').value;
@@ -406,7 +406,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
         
         let inRealPlay = false; 
         let actualBusted = false; 
-        let hitMaxLoss = false; // ตัวแปรเช็คว่าชน Stop Loss ไหม
+        let hitMaxLoss = false; 
         let betHistory = []; 
         
         let hasStartedAction = false; 
@@ -415,13 +415,11 @@ document.getElementById('runBtn').addEventListener('click', function() {
         for (let i = 0; i < shoe.length; i++) {
             if (isShoeTerminated) break; 
 
-            // ตรวจสอบ Exit Trigger ตอนที่ว่างอยู่
             if (consStep === 0) {
                 if (maxCycles > 0 && cyclesPlayed >= maxCycles) break; 
                 if (takeProfit > 0 && netThisShoe >= takeProfit) break; 
                 if (stopHandNum > 0 && flat.length >= stopHandNum) break; 
                 
-                // 🚨 เช็ค Max Loss (Stop Loss)
                 if (maxLossLimit > 0 && netThisShoe <= -maxLossLimit) {
                     hitMaxLoss = true;
                     break;
@@ -469,7 +467,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                                 let sets = getMaxSets(r);
                                 return roads[r].filter(col => col.length > sets.s).length <= sets.c;
                             });
-                        } else { // AND
+                        } else { 
                             passMax = maxRoads.every(r => {
                                 if (!roads[r]) return true;
                                 let sets = getMaxSets(r);
@@ -592,23 +590,24 @@ document.getElementById('runBtn').addEventListener('click', function() {
             if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
             qCount++; netTotal += netThisShoe;
             
+            // 🚨 อัปเดตลอจิกสรุปผลขอน ให้แสดง "กู้ทุนสำเร็จ" ถ้าเคยแตกแล้วกลับมาบวกได้!
             let statusText = "";
-            if (actualBusted) {
-                bustCount++; statusText = "🚨 พอร์ตแตก";
-            } else if (hitMaxLoss) {
+            if (hitMaxLoss) {
                 bustCount++; statusText = "🛑 ชน Max Loss";
+            } else if (actualBusted && stopOnBust) {
+                bustCount++; statusText = "🚨 พอร์ตแตก";
             } else if (takeProfit > 0 && netThisShoe >= takeProfit) {
-                wonCount++; statusText = "✅ ถึงเป้า (TP)";
+                wonCount++; statusText = actualBusted ? "⚠️ กู้ทุนจนถึงเป้า" : "✅ ถึงเป้า (TP)";
             } else if (maxCycles > 0 && cyclesPlayed >= maxCycles && netThisShoe > 0) {
-                wonCount++; statusText = "✅ ครบชุด/มีกำไร";
+                wonCount++; statusText = actualBusted ? "⚠️ กู้ทุนจนบวก" : "✅ ครบชุด/มีกำไร";
             } else if (maxPlayHands > 0 && handsPlayedSinceAction >= maxPlayHands && netThisShoe > 0) {
-                wonCount++; statusText = "⏱️ หมดเวลา/มีกำไร";
+                wonCount++; statusText = actualBusted ? "⚠️ กู้ทุนจนบวก" : "⏱️ หมดเวลา/มีกำไร";
             } else if (netThisShoe > 0) {
-                wonCount++; statusText = "✅ จบขอน/มีกำไร"; 
+                wonCount++; statusText = actualBusted ? "⚠️ กู้ทุนจนบวก" : "✅ จบขอน/มีกำไร"; 
             } else if (netThisShoe === 0) {
                 statusText = "➖ เสมอ/ไม่ได้เล่น";
             } else {
-                bustCount++; statusText = "📉 ขาดทุน";
+                bustCount++; statusText = actualBusted ? "🚨 พอร์ตแตก/ขาดทุน" : "📉 ขาดทุน";
             }
             
             shoeLogs.push({ id: idx, status: statusText, net: netThisShoe, history: betHistory });
