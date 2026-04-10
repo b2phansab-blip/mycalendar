@@ -107,12 +107,12 @@
                     </div>
                     <div class="row g-1 align-items-center mb-1">
                         <div class="col-4"><div class="form-check mb-0"><input class="form-check-input max-road" type="checkbox" value="BR" id="max_BR" checked><label class="form-check-label" for="max_BR" style="font-size: 0.8rem;">BR</label></div></div>
-                        <div class="col-4"><input type="number" id="maxStr_BR" class="form-control form-control-sm text-center" value="4" min="1"></div>
+                        <div class="col-4"><input type="number" id="maxStr_BR" class="form-control form-control-sm text-center" value="2" min="1"></div>
                         <div class="col-4"><input type="number" id="maxCnt_BR" class="form-control form-control-sm text-center" value="0" min="0"></div>
                     </div>
                     <div class="row g-1 align-items-center mb-1">
                         <div class="col-4"><div class="form-check mb-0"><input class="form-check-input max-road" type="checkbox" value="BEB" id="max_BEB" checked><label class="form-check-label" for="max_BEB" style="font-size: 0.8rem;">BEB</label></div></div>
-                        <div class="col-4"><input type="number" id="maxStr_BEB" class="form-control form-control-sm text-center" value="4" min="1"></div>
+                        <div class="col-4"><input type="number" id="maxStr_BEB" class="form-control form-control-sm text-center" value="2" min="1"></div>
                         <div class="col-4"><input type="number" id="maxCnt_BEB" class="form-control form-control-sm text-center" value="0" min="0"></div>
                     </div>
                     <div class="row g-1 align-items-center mb-1">
@@ -134,10 +134,11 @@
                 <div class="p-2 mb-3 bg-light border rounded border-danger">
                     <label class="form-label fw-bold text-danger d-block" style="font-size: 0.9rem;">🛑 จังหวะหยุดเล่น <span class="text-muted" style="font-size: 0.7rem;">(0 = ไม่จำกัด)</span></label>
                     <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="form-label mb-0" style="font-size: 0.75rem;">เล่นกี่ชุด (Cycles):</label><input type="number" id="maxCycles" class="form-control form-control-sm" value="0" min="0"></div>
-                        <div class="col-6"><label class="form-label mb-0" style="font-size: 0.75rem;">กำไรครบ (TP):</label><input type="number" id="takeProfit" class="form-control form-control-sm" value="0" min="0"></div>
+                        <div class="col-4"><label class="form-label mb-0" style="font-size: 0.75rem;">ชุด (Cycles):</label><input type="number" id="maxCycles" class="form-control form-control-sm" value="0" min="0"></div>
+                        <div class="col-4"><label class="form-label mb-0" style="font-size: 0.75rem;">กำไร (TP):</label><input type="number" id="takeProfit" class="form-control form-control-sm text-success fw-bold" value="0" min="0"></div>
+                        <div class="col-4"><label class="form-label mb-0" style="font-size: 0.75rem;">ขาดทุน (SL):</label><input type="number" id="maxLossLimit" class="form-control form-control-sm text-danger fw-bold" value="0" min="0" placeholder="หน่วย"></div>
                     </div>
-                    <div class="row g-2 mb-2">
+                    <div class="row g-2 mb-2 border-top pt-2">
                         <div class="col-12">
                             <label class="form-label mb-0" style="font-size: 0.75rem;">ไพ่เกินตาที่ (Stop Hand):</label>
                             <input type="number" id="stopHandNum" class="form-control form-control-sm" value="70" min="0">
@@ -179,7 +180,7 @@
             <div class="row row-cols-1 row-cols-md-5 g-3">
                 <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value text-primary">0</div></div></div>
                 <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">ถึงเป้า / มีกำไร</div><div id="resWon" class="metric-value text-success">0</div></div></div>
-                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">พอร์ตแตก / ขาดทุน</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
+                <div class="col"><div class="dashboard-card"><div class="text-muted" style="font-size: 0.9rem;">แตก / ชน SL</div><div id="resBusted" class="metric-value text-danger">0</div></div></div>
                 <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold text-warning" style="font-size: 0.9rem;">ผิดติดกันสูงสุด</div><div id="resMaxLoss" class="metric-value text-warning">0</div></div></div>
                 <div class="col"><div class="dashboard-card"><div class="text-muted fw-bold" style="font-size: 0.9rem;">กำไรสุทธิรวม</div><div id="resNet" class="metric-value text-dark">0</div></div></div>
             </div>
@@ -383,8 +384,9 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let maxCycles = getNum('maxCycles', 0);
     let takeProfit = getNum('takeProfit', 0); 
     let stopHandNum = getNum('stopHandNum', 70);
-    let stopOnBust = document.getElementById('stopOnBust').checked;
     let maxPlayHands = getNum('maxPlayHands', 6); 
+    let maxLossLimit = getNum('maxLossLimit', 0); // 🚨 ดึงค่า Max Loss
+    let stopOnBust = document.getElementById('stopOnBust').checked;
     
     let moneySystem = document.getElementById('moneySystem').value;
     let vlLimit = getNum('vlLimit', 2);
@@ -404,6 +406,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
         
         let inRealPlay = false; 
         let actualBusted = false; 
+        let hitMaxLoss = false; // ตัวแปรเช็คว่าชน Stop Loss ไหม
         let betHistory = []; 
         
         let hasStartedAction = false; 
@@ -412,19 +415,20 @@ document.getElementById('runBtn').addEventListener('click', function() {
         for (let i = 0; i < shoe.length; i++) {
             if (isShoeTerminated) break; 
 
-            // ตรวจสอบ Exit Trigger ตอนที่ว่างอยู่ (ไม่ได้ค้างทบไม้)
+            // ตรวจสอบ Exit Trigger ตอนที่ว่างอยู่
             if (consStep === 0) {
                 if (maxCycles > 0 && cyclesPlayed >= maxCycles) break; 
                 if (takeProfit > 0 && netThisShoe >= takeProfit) break; 
                 if (stopHandNum > 0 && flat.length >= stopHandNum) break; 
                 
-                if (maxEntryHand > 0 && !hasStartedAction && flat.length >= maxEntryHand) {
+                // 🚨 เช็ค Max Loss (Stop Loss)
+                if (maxLossLimit > 0 && netThisShoe <= -maxLossLimit) {
+                    hitMaxLoss = true;
                     break;
                 }
                 
-                if (maxPlayHands > 0 && hasStartedAction && handsPlayedSinceAction >= maxPlayHands) {
-                    break;
-                }
+                if (maxEntryHand > 0 && !hasStartedAction && flat.length >= maxEntryHand) break;
+                if (maxPlayHands > 0 && hasStartedAction && handsPlayedSinceAction >= maxPlayHands) break;
             }
 
             let actual = shoe[i];
@@ -490,8 +494,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
 
                     // จังหวะรอ VL
                     if (!inRealPlay && vlLimit > 0) {
-                        
-                        // 🚨 บันทึกตารางที่อ้างอิง (sigData.road) เข้าไปใน Object ให้เรียบร้อย!
                         let betRecord = {
                             hand: flat.length + 1,
                             road: sigData.road, 
@@ -514,7 +516,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
                         inRealPlay = true; 
                         let currentBet = mSteps[consStep];
                         
-                        // 🚨 บันทึกตารางที่อ้างอิงในไม้ลงเงินจริงด้วย!
                         let betRecord = {
                             hand: flat.length + 1,
                             road: sigData.road, 
@@ -594,6 +595,8 @@ document.getElementById('runBtn').addEventListener('click', function() {
             let statusText = "";
             if (actualBusted) {
                 bustCount++; statusText = "🚨 พอร์ตแตก";
+            } else if (hitMaxLoss) {
+                bustCount++; statusText = "🛑 ชน Max Loss";
             } else if (takeProfit > 0 && netThisShoe >= takeProfit) {
                 wonCount++; statusText = "✅ ถึงเป้า (TP)";
             } else if (maxCycles > 0 && cyclesPlayed >= maxCycles && netThisShoe > 0) {
@@ -689,7 +692,6 @@ document.getElementById('shoeSelector').addEventListener('change', function(e) {
             let targetHtml = b.target === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
             let actualHtml = b.actual === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
             
-            // 🚨 แสดงป้ายสีตารางอ้างอิงให้ชัดเจน
             let roadBadge = '';
             if(b.road === 'BR') roadBadge = '<span class="badge bg-dark">BR</span>';
             else if(b.road === 'BEB') roadBadge = '<span class="badge bg-info text-dark">BEB</span>';
