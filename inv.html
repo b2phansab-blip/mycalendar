@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aggregator Dashboard Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .hidden-tab { display: none; }
+        @media print {
+            body { background: #ffffff !important; -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+            #invoiceDocument { box-shadow: none !important; border: none !important; padding: 0 !important; max-width: 100% !important; margin: 0 !important; }
+        }
+    </style>
+</head>
+<body class="bg-[#0b132b] text-white min-h-screen p-4 md:p-8 font-sans">
+
+    <div class="max-w-6xl mx-auto mb-8 flex justify-center space-x-2 md:space-x-4 no-print flex-wrap gap-y-2">
+        <button onclick="switchTab('partnerTab')" id="btn-partnerTab" class="px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-gray-300 text-sm font-semibold transition-all hover:bg-white/10">👥 Partners</button>
+        <button onclick="switchTab('walletTab')" id="btn-walletTab" class="px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-gray-300 text-sm font-semibold transition-all hover:bg-white/10">💳 Wallets</button>
+        <button onclick="switchTab('formTab')" id="btn-formTab" class="px-5 py-2 rounded-full bg-blue-600/80 backdrop-blur-md border border-blue-400/50 text-white text-sm font-semibold transition-all">📝 Ledger Entry</button>
+        <button onclick="switchTab('reportTab')" id="btn-reportTab" class="px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-gray-300 text-sm font-semibold transition-all hover:bg-white/10">📊 System Report</button>
+        <button onclick="switchTab('invoiceTab')" id="btn-invoiceTab" class="px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-gray-300 text-sm font-semibold transition-all hover:bg-white/10">🧾 Invoice</button>
+    </div>
+
+    <div id="partnerTab" class="max-w-xl mx-auto bg-gradient-to-br from-[#1c2541]/80 to-[#0b132b]/90 backdrop-blur-xl border border-blue-500/30 p-8 rounded-3xl shadow-lg hidden-tab no-print">
+        <h2 class="text-2xl font-bold text-[#5bc0be] mb-6 text-center">Manage Partners</h2>
+        <form id="partnerForm" class="space-y-5">
+            <div class="flex gap-2">
+                <input type="text" id="newPartnerName" required placeholder="Partner name..." class="flex-1 bg-[#0b132b]/50 border border-blue-900 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#5bc0be]">
+                <button type="submit" class="bg-[#5bc0be] hover:bg-[#3a506b] text-[#0b132b] hover:text-white font-bold px-6 rounded-xl transition-all">Add</button>
+            </div>
+        </form>
+        <div id="partnerResult" class="mt-4 text-center text-sm text-green-400 hidden">✅ Partner added!</div>
+        <ul id="partnerListUI" class="mt-6 space-y-2 text-gray-400 text-sm max-h-48 overflow-y-auto"></ul>
+    </div>
+
+    <div id="walletTab" class="max-w-xl mx-auto bg-gradient-to-br from-[#1c2541]/80 to-[#0b132b]/90 backdrop-blur-xl border border-blue-500/30 p-8 rounded-3xl shadow-lg hidden-tab no-print">
+        <h2 class="text-2xl font-bold text-[#5bc0be] mb-6 text-center">Manage Receive Wallets</h2>
+        <form id="walletForm" class="space-y-4">
+            <input type="text" id="newWalletNetwork" required placeholder="Network (e.g. TRC20)" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#5bc0be]">
+            <input type="text" id="newWalletAddress" required placeholder="Wallet Address" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#5bc0be]">
+            <button type="submit" class="w-full bg-[#5bc0be] hover:bg-[#3a506b] text-[#0b132b] hover:text-white font-bold py-3 rounded-xl transition-all">Add Wallet</button>
+        </form>
+        <div id="walletResult" class="mt-4 text-center text-sm text-green-400 hidden">✅ Wallet added!</div>
+        <ul id="walletListUI" class="mt-6 space-y-3 text-gray-400 text-sm max-h-48 overflow-y-auto"></ul>
+    </div>
+
+    <div id="formTab" class="max-w-xl mx-auto bg-gradient-to-br from-[#1c2541]/80 to-[#0b132b]/90 backdrop-blur-xl border border-blue-500/30 p-8 rounded-3xl shadow-lg no-print">
+        <h2 class="text-2xl font-bold text-[#5bc0be] mb-6 text-center">Ledger Entry</h2>
+        <form id="ledgerForm" class="space-y-5">
+            <div>
+                <label class="block text-sm text-[#5bc0be] mb-1">Partner</label>
+                <select id="partnerName" required class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-xl px-4 py-3 text-white dropdown-partners"></select>
+            </div>
+            <div>
+                <label class="block text-sm text-[#5bc0be] mb-1">Type</label>
+                <select id="actionType" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-xl px-4 py-3 text-white">
+                    <option value="new_deposit">🟢 New Deposit (15%)</option>
+                    <option value="topup">🔵 Top-up Deposit</option>
+                    <option value="settlement">🔴 Monthly Settlement (Win/Loss)</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm text-[#5bc0be] mb-1" id="amountLabel">Amount (THB)</label>
+                <input type="number" id="amount" required class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-xl px-4 py-3 text-white">
+                <p class="text-xs text-blue-300 mt-2" id="previewCredit">Credit Limit: 0.00 THB</p>
+            </div>
+            <button type="submit" class="w-full bg-gradient-to-r from-[#1c2541] to-[#3a506b] hover:from-[#3a506b] text-white font-bold py-4 rounded-xl shadow-lg">Submit Record</button>
+        </form>
+    </div>
+
+    <div id="reportTab" class="max-w-7xl mx-auto bg-gradient-to-br from-[#1c2541]/80 to-[#0b132b]/90 backdrop-blur-xl border border-blue-500/30 p-8 rounded-3xl shadow-lg hidden-tab no-print">
+        <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+            <h2 class="text-2xl font-bold text-[#5bc0be]">System Report</h2>
+            <div class="flex gap-2 w-full md:w-auto">
+                <select id="filterPartner" onchange="renderReportTable()" class="bg-[#0b132b]/80 border border-blue-900 text-sm rounded-lg px-3 py-2 text-white dropdown-partners flex-1"><option value="ALL">All Partners</option></select>
+                <select id="filterMonth" onchange="renderReportTable()" class="bg-[#0b132b]/80 border border-blue-900 text-sm rounded-lg px-3 py-2 text-white flex-1"><option value="ALL">All Months</option></select>
+                <button onclick="loadReport()" class="bg-[#3a506b] hover:bg-[#5bc0be] px-4 py-2 rounded-lg text-sm text-white transition-colors whitespace-nowrap">🔄 Refresh</button>
+            </div>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-blue-900/50">
+            <table class="w-full text-left text-sm text-gray-300 min-w-max">
+                <thead class="bg-[#0b132b]/80 text-[#5bc0be] border-b border-blue-900/50">
+                    <tr><th class="px-4 py-3">Date</th><th class="px-4 py-3">Partner</th><th class="px-4 py-3">Type</th><th class="px-4 py-3 text-right">Amount</th><th class="px-4 py-3 text-right">Credit</th><th class="px-4 py-3 text-center">Status</th></tr>
+                </thead>
+                <tbody id="reportTableBody" class="divide-y divide-blue-900/30"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="invoiceTab" class="max-w-5xl mx-auto hidden-tab">
+        <div class="bg-[#1c2541]/80 backdrop-blur-xl border border-blue-500/30 p-6 rounded-3xl mb-8 no-print shadow-lg">
+            <h2 class="text-xl font-bold text-[#5bc0be] mb-4">⚙️ Invoice Generator</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <div><label class="block text-sm text-gray-300 mb-1">Partner</label><select id="invPartnerName" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-lg px-3 py-2 text-white dropdown-partners"></select></div>
+                <div><label class="block text-sm text-gray-300 mb-1">Period</label><input type="text" id="invPeriod" placeholder="e.g., April 2026" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-lg px-3 py-2 text-white"></div>
+                <div><label class="block text-sm text-gray-300 mb-1">Total Net Win (THB)</label><input type="number" id="invWinAmount" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-lg px-3 py-2 text-white"></div>
+                <div><label class="block text-sm text-yellow-400 mb-1 font-bold">Fee Due (THB)</label><input type="number" id="invFeeAmount" class="w-full bg-yellow-900/30 border border-yellow-600 rounded-lg px-3 py-2 text-yellow-300"></div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-blue-900/50 pt-4">
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">Exchange Rate (THB/USDT)</label>
+                    <input type="number" id="invExchangeRate" step="0.01" value="35.00" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-lg px-3 py-2 text-white">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-300 mb-1">Receive Wallet</label>
+                    <select id="invWalletSelect" class="w-full bg-[#0b132b]/50 border border-blue-900 rounded-lg px-3 py-2 text-white"></select>
+                </div>
+            </div>
+            <div class="flex gap-4 mt-6">
+                <button onclick="generateInvoice()" class="flex-1 bg-green-600 hover:bg-green-500 py-3 rounded-lg font-bold text-white transition-colors">Generate</button>
+                <button onclick="window.print()" class="flex-1 bg-blue-600 hover:bg-blue-500 py-3 rounded-lg font-bold text-white transition-colors">Print PDF</button>
+            </div>
+        </div>
+
+        <div id="invoiceDocument" class="bg-white text-gray-800 p-10 rounded-xl shadow-2xl mx-auto hidden">
+            <div class="flex justify-between items-start border-b-2 border-gray-200 pb-6 mb-6">
+                <div><h1 class="text-3xl font-extrabold text-blue-900">STATEMENT</h1></div>
+                <div class="text-right"><h2 class="text-2xl font-bold text-gray-800" id="docHeaderPartnerName">Partner</h2><p class="text-gray-500">Account Summary</p></div>
+            </div>
+            <div class="flex justify-between mb-8">
+                <div><p class="text-sm text-gray-500 font-semibold mb-1">Statement For:</p><h3 class="text-lg font-bold text-gray-800" id="docPartnerName">Partner Name</h3></div>
+                <div class="text-right text-sm"><p><span class="font-semibold">Issue Date:</span> <span id="docDate"></span></p><p><span class="font-semibold">Billing Period:</span> <span id="docPeriod"></span></p><p><span class="font-semibold">Due Date:</span> Upon Receipt</p></div>
+            </div>
+            <table class="w-full mb-8">
+                <thead class="bg-gray-100 border-y border-gray-300"><tr><th class="py-3 px-4 text-left font-semibold">Description</th><th class="py-3 px-4 text-right font-semibold">Amount (THB)</th></tr></thead>
+                <tbody class="divide-y divide-gray-200">
+                    <tr>
+                        <td class="py-4 px-4"><p class="font-bold">API Integration Fee</p><p class="text-sm text-gray-500">Net Win: <span id="docTotalWin">0</span></p></td>
+                        <td class="py-4 px-4 text-right font-bold text-red-600" id="docApiFee">-0.00</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="flex justify-end mb-8">
+                <div class="w-1/2 bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="flex justify-between font-semibold text-gray-600 mb-2"><span>Balance Due (THB):</span><span id="docTotalDueTHB" class="text-red-600">-0.00 THB</span></div>
+                    <div class="flex justify-between text-xl font-bold text-gray-900 border-t pt-2"><span>Total Due (USDT):</span><span id="docTotalDueUSDT" class="text-blue-600">0.00 USDT</span></div>
+                    <p class="text-right text-xs text-gray-500 mt-1">Exchange Rate: 1 USDT = <span id="docRate">0</span> THB</p>
+                </div>
+            </div>
+            <div class="border-t pt-6">
+                <h4 class="font-bold text-gray-700 mb-2">Cryptocurrency Payment Details:</h4>
+                <div class="bg-gray-50 p-4 rounded text-sm text-gray-600 border border-gray-200">
+                    <p><span class="font-semibold">Coin:</span> USDT (Tether)</p>
+                    <p><span class="font-semibold">Network:</span> <span id="docNetwork" class="font-bold text-gray-800"></span></p>
+                    <p><span class="font-semibold">Wallet Address:</span> <span id="docWalletAddress" class="break-all font-mono font-bold text-gray-800"></span></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // *** วาง URL ของ Web App จาก Google Apps Script ตรงนี้ ***
+        const API_URL = "https://script.google.com/macros/s/AKfycbxGchME_ZDWdxqROqaGRPJHCp8y82ZAfrRn6QmId06q9fyt2MZFjC2qnSjZxxadxYUT2A/exec";
+        let allReportData = [];
+        let allWallets = [];
+
+        window.onload = async () => { await loadPartners(); await loadWallets(); };
+
+        function switchTab(tabId) {
+            ['partnerTab', 'walletTab', 'formTab', 'reportTab', 'invoiceTab'].forEach(id => {
+                document.getElementById(id).classList.add('hidden-tab');
+                document.getElementById('btn-' + id).className = "px-5 py-2 rounded-full bg-white/5 backdrop-blur-md border border-white/10 text-gray-300 text-sm font-semibold transition-all hover:bg-white/10";
+            });
+            document.getElementById(tabId).classList.remove('hidden-tab');
+            document.getElementById('btn-' + tabId).className = "px-5 py-2 rounded-full bg-blue-600/80 backdrop-blur-md border border-blue-400/50 text-white text-sm font-semibold transition-all";
+            if(tabId === 'reportTab') loadReport();
+        }
+
+        async function loadPartners() {
+            try {
+                const res = await fetch(API_URL + "?action=getPartners");
+                const partners = await res.json();
+                document.querySelectorAll('.dropdown-partners').forEach(select => {
+                    const isFilter = select.id === 'filterPartner';
+                    select.innerHTML = isFilter ? '<option value="ALL">All Partners</option>' : '<option value="" disabled selected>-- Select Partner --</option>';
+                    partners.forEach(p => select.innerHTML += `<option value="${p}">${p}</option>`);
+                });
+                document.getElementById('partnerListUI').innerHTML = partners.length ? partners.map(p => `<li>• ${p}</li>`).join('') : '<li>No partners yet.</li>';
+            } catch(e) { console.error("Error loading partners", e); }
+        }
+
+        async function loadWallets() {
+            try {
+                const res = await fetch(API_URL + "?action=getWallets");
+                allWallets = await res.json();
+                const select = document.getElementById('invWalletSelect');
+                select.innerHTML = '<option value="" disabled selected>-- Select Network --</option>';
+                document.getElementById('walletListUI').innerHTML = '';
+                allWallets.forEach((w, i) => {
+                    select.innerHTML += `<option value="${i}">${w.network} (${w.address.substring(0,6)}...)</option>`;
+                    document.getElementById('walletListUI').innerHTML += `<li class="bg-white/5 p-2 rounded"><b>${w.network}</b><br><span class="text-xs break-all">${w.address}</span></li>`;
+                });
+            } catch(e) { console.error("Error loading wallets", e); }
+        }
+
+        // --- Form Submissions ---
+        document.getElementById('partnerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button'); btn.innerText = "..."; btn.disabled = true;
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ actionType: 'add_partner', partnerName: document.getElementById('newPartnerName').value }) });
+            document.getElementById('newPartnerName').value = ''; btn.innerText = "Add"; btn.disabled = false;
+            await loadPartners();
+        });
+
+        document.getElementById('walletForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button'); btn.innerText = "..."; btn.disabled = true;
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ actionType: 'add_wallet', network: document.getElementById('newWalletNetwork').value, walletAddress: document.getElementById('newWalletAddress').value }) });
+            document.getElementById('newWalletNetwork').value = ''; document.getElementById('newWalletAddress').value = '';
+            btn.innerText = "Add Wallet"; btn.disabled = false;
+            await loadWallets();
+        });
+
+        document.getElementById('ledgerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button'); btn.innerText = "Processing..."; btn.disabled = true;
+            await fetch(API_URL, { method: 'POST', body: JSON.stringify({ partnerName: document.getElementById('partnerName').value, actionType: document.getElementById('actionType').value, amount: document.getElementById('amount').value }) });
+            document.getElementById('amount').value = ''; btn.innerText = "Submit Record"; btn.disabled = false; alert("Saved successfully!");
+        });
+
+        // UI Interactions
+        document.getElementById('actionType').addEventListener('change', (e) => {
+            document.getElementById('amountLabel').innerText = e.target.value === 'settlement' ? 'Net Win/Loss (+Win, -Loss)' : 'Deposit (THB)';
+            document.getElementById('previewCredit').style.display = e.target.value === 'settlement' ? 'none' : 'block';
+        });
+
+        document.getElementById('amount').addEventListener('input', (e) => {
+            if(document.getElementById('actionType').value !== 'settlement') {
+                document.getElementById('previewCredit').innerText = `Credit Limit: ${(e.target.value*6.67).toLocaleString(undefined,{maximumFractionDigits:2})} THB`;
+            }
+        });
+
+        // --- Report System & Paid Status ---
+        async function loadReport() {
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-[#5bc0be] animate-pulse">Syncing data...</td></tr>';
+            try {
+                const res = await fetch(API_URL);
+                allReportData = await res.json();
+                
+                // Extract Months
+                const monthSet = new Set();
+                allReportData.forEach(r => {
+                    if(r.timestamp) {
+                        const parts = r.timestamp.split(' ')[0].split('/');
+                        if(parts.length === 3) monthSet.add(`${parts[1]}/${parts[2]}`);
+                    }
+                });
+                const monthFilter = document.getElementById('filterMonth');
+                monthFilter.innerHTML = '<option value="ALL">All Months</option>';
+                Array.from(monthSet).sort().reverse().forEach(m => monthFilter.innerHTML += `<option value="${m}">${m}</option>`);
+                
+                renderReportTable();
+            } catch(e) { tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-red-400">Failed to load data.</td></tr>'; }
+        }
+
+        async function markAsPaid(rowIndex) {
+            if(!confirm("Confirm receiving payment?")) return;
+            const btn = document.getElementById(`btn-pay-${rowIndex}`);
+            if(btn) { btn.innerText = "..."; btn.disabled = true; }
+            try {
+                await fetch(API_URL, { method: 'POST', body: JSON.stringify({ actionType: 'mark_paid', rowIndex: rowIndex }) });
+                await loadReport();
+            } catch (e) { alert("Error updating status"); if(btn) { btn.innerText = "Mark as Paid"; btn.disabled = false; } }
+        }
+
+        function renderReportTable() {
+            const pFilter = document.getElementById('filterPartner').value;
+            const mFilter = document.getElementById('filterMonth').value;
+            
+            let data = allReportData.filter(r => {
+                let matchP = pFilter === 'ALL' || r.partnerName === pFilter;
+                let matchM = mFilter === 'ALL';
+                if(!matchM && r.timestamp) {
+                    const parts = r.timestamp.split(' ')[0].split('/');
+                    matchM = (parts[1]+'/'+parts[2]) === mFilter;
+                }
+                return matchP && matchM;
+            });
+
+            const tbody = document.getElementById('reportTableBody');
+            if(!data.length) return tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-gray-500">No data found.</td></tr>';
+            
+            tbody.innerHTML = [...data].reverse().map(row => {
+                let statusUI = `<span class="text-gray-500 text-xs">-</span>`;
+                if(row.paymentStatus === "Pending") {
+                    statusUI = `<div class="flex items-center justify-center gap-2"><span class="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-xs font-bold border border-yellow-500/50">Pending</span><button id="btn-pay-${row.rowIndex}" onclick="markAsPaid(${row.rowIndex})" class="bg-green-600 hover:bg-green-500 text-white px-2 py-1 rounded text-[10px] font-bold">Mark Paid</button></div>`;
+                } else if (row.paymentStatus === "Paid") {
+                    statusUI = `<span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs font-bold border border-green-500/50">Paid ✅</span>`;
+                }
+
+                return `
+                <tr class="hover:bg-white/5 border-b border-white/10">
+                    <td class="px-4 py-3 whitespace-nowrap text-gray-300">${row.timestamp||'-'}</td>
+                    <td class="px-4 py-3 font-semibold">${row.partnerName||'-'}</td>
+                    <td class="px-4 py-3 text-xs text-gray-400">${row.actionType==='new_deposit'?'New':row.actionType==='topup'?'Topup':'Settle'} <br><span class="text-[10px]">${row.settlement||''}</span></td>
+                    <td class="px-4 py-3 text-right">${parseFloat(row.amount).toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+                    <td class="px-4 py-3 text-right text-[#5bc0be]">${row.creditLimit>0?parseFloat(row.creditLimit).toLocaleString(undefined,{maximumFractionDigits:2}):'-'}</td>
+                    <td class="px-4 py-3 text-center">${statusUI}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // --- Invoice Generation ---
+        function generateInvoice() {
+            const pName = document.getElementById('invPartnerName').value;
+            const period = document.getElementById('invPeriod').value;
+            const fee = parseFloat(document.getElementById('invFeeAmount').value) || 0;
+            const rate = parseFloat(document.getElementById('invExchangeRate').value) || 0;
+            const walletIdx = document.getElementById('invWalletSelect').value;
+
+            if(!pName || !fee || !rate || walletIdx === "") return alert("Please fill all fields and select a wallet.");
+            
+            const wallet = allWallets[walletIdx];
+            const usdt = fee / rate;
+            
+            document.getElementById('docHeaderPartnerName').innerText = pName;
+            document.getElementById('docPartnerName').innerText = pName;
+            document.getElementById('docDate').innerText = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('docPeriod').innerText = period;
+            document.getElementById('docTotalWin').innerText = document.getElementById('invWinAmount').value || "-";
+            document.getElementById('docApiFee').innerText = `-${fee.toLocaleString(undefined,{minimumFractionDigits:2})} THB`;
+            document.getElementById('docTotalDueTHB').innerText = `-${fee.toLocaleString(undefined,{minimumFractionDigits:2})} THB`;
+            document.getElementById('docTotalDueUSDT').innerText = `${usdt.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2})} USDT`;
+            document.getElementById('docRate').innerText = rate.toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2});
+            document.getElementById('docNetwork').innerText = wallet.network;
+            document.getElementById('docWalletAddress').innerText = wallet.address;
+            
+            document.getElementById('invoiceDocument').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
