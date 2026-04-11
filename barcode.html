@@ -78,8 +78,7 @@
         .barcode-preview {
             margin-top: 20px;
             padding: 20px;
-            background: #f8f9fa;
-            border: 2px dashed #ddd;
+            background: #dcdcdc; /* พื้นหลังสีเทาให้เห็นขอบสติกเกอร์ชัดเจน */
             border-radius: 8px;
             display: flex;
             justify-content: center;
@@ -88,25 +87,38 @@
             overflow: auto;
         }
 
-        /* กล่องจำลองสติกเกอร์ */
+        /* ขอบเขตของกระดาษสติกเกอร์ */
         .sticker-label {
             background: #fff;
-            padding: 15px;
-            text-align: center;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 2mm; /* ระยะห่างขอบด้านในสติกเกอร์ */
+            overflow: hidden;
         }
         
-        /* ข้อความรายละเอียดใต้บาร์โค้ด */
-        .details-text {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 5px;
-            color: #000;
+        /* ป้องกันบาร์โค้ดล้นขอบกระดาษ */
+        .sticker-label svg {
+            max-width: 100%;
+            max-height: 100%;
+            height: auto;
         }
 
-        /* ส่วนของประวัติ */
+        .details-text {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 12px;
+            font-weight: bold;
+            color: #000;
+            text-align: center;
+            width: 100%;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .history-list {
             list-style: none;
             padding: 0;
@@ -130,7 +142,7 @@
         .history-date { font-size: 12px; color: #888; text-align: right; }
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-        /* ====== ตั้งค่าสำหรับการปริ้น (Print Styles) ====== */
+        /* ====== ตั้งค่าสำหรับการปริ้น ====== */
         @media print {
             body * {
                 visibility: hidden;
@@ -146,11 +158,13 @@
                 padding: 0;
                 border: none;
                 background: transparent;
+                display: block;
             }
             .sticker-label {
-                box-shadow: none; /* เอาเงาออกตอนปริ้น */
-                padding: 0;
+                box-shadow: none;
+                margin: 0;
             }
+            /* ยกเลิก Header/Footer เริ่มต้นของเบราว์เซอร์ */
             @page { margin: 0; } 
         }
     </style>
@@ -159,46 +173,60 @@
 
     <div class="container">
         <div class="card">
-            <h2>ตั้งค่าบาร์โค้ด</h2>
+            <h2>ตั้งค่าบาร์โค้ด & กระดาษ</h2>
             
-            <div class="form-group">
-                <label>ข้อความ หรือ ตัวเลข (รหัสบาร์โค้ด):</label>
-                <input type="text" id="inputValue" placeholder="เช่น 123456789" value="123456789">
+            <div class="row">
+                <div class="form-group">
+                    <label>รหัสบาร์โค้ด:</label>
+                    <input type="text" id="inputValue" placeholder="เช่น 123456789" value="123456789">
+                </div>
+                <div class="form-group">
+                    <label>ประเภท:</label>
+                    <select id="barcodeType">
+                        <option value="CODE128">CODE128</option>
+                        <option value="EAN13">EAN-13 (12 หลัก)</option>
+                        <option value="UPC">UPC (11 หลัก)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="form-group">
                 <label>รายละเอียดสินค้า (แสดงใต้รหัส):</label>
-                <input type="text" id="inputDetails" placeholder="เช่น ชื่อสินค้า, ราคา, วันหมดอายุ">
+                <input type="text" id="inputDetails" placeholder="เช่น ชื่อสินค้า, ราคา">
             </div>
 
-            <div class="form-group">
-                <label>ประเภทบาร์โค้ด:</label>
-                <select id="barcodeType">
-                    <option value="CODE128">CODE128 (รองรับตัวอักษร/ตัวเลข)</option>
-                    <option value="EAN13">EAN-13 (ตัวเลข 12 หลัก)</option>
-                    <option value="UPC">UPC (ตัวเลข 11 หลัก)</option>
-                    <option value="CODE39">CODE39 (มาตรฐานเก่า)</option>
-                </select>
-            </div>
+            <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
 
+            <h3 style="font-size: 16px; color: #007bff; margin-bottom: 10px;">📏 ตั้งค่าขนาดกระดาษสติกเกอร์ (มิลลิเมตร)</h3>
             <div class="row">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>ความกว้างเส้น (px):</label>
-                    <input type="number" id="barWidth" value="2" min="1" step="1">
+                    <label>ความกว้างสติกเกอร์ (Width):</label>
+                    <input type="number" id="paperWidth" value="50" min="10" step="1" onchange="generate()">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label>ความสูงบาร์โค้ด (px):</label>
-                    <input type="number" id="barHeight" value="80" min="10" step="5">
+                    <label>ความสูงสติกเกอร์ (Height):</label>
+                    <input type="number" id="paperHeight" value="30" min="10" step="1" onchange="generate()">
+                </div>
+            </div>
+            
+            <div class="row" style="margin-top: 10px;">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px; font-weight: normal;">ขนาดเส้นบาร์โค้ด (ปรับหากบาร์โค้ดแน่นไป):</label>
+                    <input type="number" id="barWidth" value="2" min="1" step="1" onchange="generate()">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 12px; font-weight: normal;">ความสูงเส้นบาร์โค้ด:</label>
+                    <input type="number" id="barHeight" value="40" min="10" step="5" onchange="generate()">
                 </div>
             </div>
 
-            <div class="button-group" style="margin-top: 15px;">
-                <button class="btn-primary" onclick="generateAndSave()">สร้างบาร์โค้ด</button>
-                <button class="btn-success" onclick="printBarcode()">🖨️ ปริ้นบาร์โค้ด</button>
+            <div class="button-group" style="margin-top: 20px;">
+                <button class="btn-primary" onclick="generateAndSave()">รีเฟรชบาร์โค้ด</button>
+                <button class="btn-success" onclick="printBarcode()">🖨️ ปริ้นสติกเกอร์</button>
             </div>
 
             <div class="barcode-preview" id="print-area">
-                <div class="sticker-label">
+                <div class="sticker-label" id="stickerLabel">
                     <svg id="barcode"></svg>
                     <div id="displayDetails" class="details-text"></div>
                 </div>
@@ -213,6 +241,8 @@
             <ul class="history-list" id="historyList"></ul>
         </div>
     </div>
+
+    <style id="dynamic-page-style"></style>
 
     <script>
         window.onload = () => {
@@ -230,28 +260,43 @@
             const value = document.getElementById("inputValue").value.trim();
             const details = document.getElementById("inputDetails").value.trim();
             const type = document.getElementById("barcodeType").value;
+            const pWidth = document.getElementById("paperWidth").value;
+            const pHeight = document.getElementById("paperHeight").value;
             const bWidth = document.getElementById("barWidth").value;
             const bHeight = document.getElementById("barHeight").value;
 
-            if (!value) {
-                alert("กรุณากรอกรหัสบาร์โค้ดครับ");
-                return false;
-            }
+            if (!value) return false;
+
+            // 1. กำหนดขนาดกระดาษสติกเกอร์ในกล่องพรีวิว
+            const sticker = document.getElementById("stickerLabel");
+            sticker.style.width = pWidth + "mm";
+            sticker.style.height = pHeight + "mm";
+
+            // 2. อัปเดต CSS @page เพื่อส่งขนาดไปให้เครื่องปริ้น
+            const pageStyle = document.getElementById("dynamic-page-style");
+            pageStyle.innerHTML = `@page { size: ${pWidth}mm ${pHeight}mm; margin: 0; }`;
 
             try {
-                // สร้างเส้นบาร์โค้ด
+                // 3. สร้างเส้นบาร์โค้ด
                 JsBarcode("#barcode", value, {
                     format: type,
                     lineColor: "#000000",
                     width: parseInt(bWidth),
                     height: parseInt(bHeight),
-                    displayValue: true, // แสดงตัวเลขรหัสบาร์โค้ด
-                    fontSize: 16,
-                    margin: 5
+                    displayValue: true, 
+                    fontSize: 14,
+                    margin: 0
                 });
 
-                // นำข้อความรายละเอียดมาแสดงใต้บาร์โค้ด
                 document.getElementById("displayDetails").innerText = details;
+                
+                // ปรับขนาดฟอนต์รายละเอียดให้เล็กลงถ้ายาวเกิน
+                if(details.length > 20) {
+                    document.getElementById("displayDetails").style.fontSize = "10px";
+                } else {
+                    document.getElementById("displayDetails").style.fontSize = "12px";
+                }
+                
                 return true;
             } catch (error) {
                 alert("รูปแบบข้อมูลไม่รองรับกับบาร์โค้ดประเภทนี้ กรุณาตรวจสอบอีกครั้ง");
@@ -260,6 +305,8 @@
         }
 
         function printBarcode() {
+            // สร้างบาร์โค้ดให้ชัวร์ว่าอัปเดตล่าสุดก่อนปริ้น
+            generate();
             window.print();
         }
         
@@ -306,7 +353,6 @@
                     generate();
                 };
 
-                // แสดงรายละเอียดในรายการประวัติด้วย
                 const detailsHtml = item.details ? `<div class="history-details">📝 ${item.details}</div>` : '';
 
                 li.innerHTML = `
