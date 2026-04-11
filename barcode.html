@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Generator Webapp</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    
+    <style>
+        /* ตกแต่งหน้าตาของ Webapp ให้ดูสะอาดและทันสมัย */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 14px;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #007bff;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .barcode-container {
+            margin-top: 25px;
+            padding: 15px;
+            background: #fdfdfd;
+            border: 1px dashed #ccc;
+            border-radius: 8px;
+            min-height: 120px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        svg {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>สร้างบาร์โค้ดฟรี</h2>
+        
+        <div class="form-group">
+            <label for="inputValue">ข้อความ หรือ ตัวเลข:</label>
+            <input type="text" id="inputValue" placeholder="เช่น 123456789" value="123456789">
+        </div>
+
+        <div class="form-group">
+            <label for="barcodeType">ประเภทบาร์โค้ด:</label>
+            <select id="barcodeType">
+                <option value="CODE128">CODE128 (แนะนำ: รองรับตัวอักษรและตัวเลข)</option>
+                <option value="EAN13">EAN-13 (สำหรับสินค้า: ต้องเป็นตัวเลข 12 หลัก)</option>
+                <option value="UPC">UPC (สำหรับสินค้าสากล: ตัวเลข 11 หลัก)</option>
+                <option value="CODE39">CODE39 (มาตรฐานเก่า)</option>
+            </select>
+        </div>
+
+        <button onclick="generate()">สร้างบาร์โค้ด</button>
+
+        <div class="barcode-container">
+            <svg id="barcode"></svg>
+        </div>
+    </div>
+
+    <script>
+        // ฟังก์ชันสำหรับสร้างบาร์โค้ด
+        function generate() {
+            const value = document.getElementById("inputValue").value;
+            const type = document.getElementById("barcodeType").value;
+
+            // ตรวจสอบว่าผู้ใช้ใส่ข้อมูลหรือไม่
+            if (value.trim() === "") {
+                alert("กรุณากรอกข้อความหรือตัวเลขครับ");
+                return;
+            }
+
+            try {
+                // เรียกใช้ไลบรารี JsBarcode
+                JsBarcode("#barcode", value, {
+                    format: type,
+                    lineColor: "#000000",
+                    width: 2,
+                    height: 80,
+                    displayValue: true, // แสดงตัวอักษรใต้บาร์โค้ด
+                    fontSize: 16
+                });
+            } catch (error) {
+                // ดักจับ Error ในกรณีที่ผู้ใช้ใส่ข้อมูลไม่ตรงกับฟอร์แมตบาร์โค้ด
+                alert("เกิดข้อผิดพลาด: รูปแบบข้อมูลไม่รองรับกับบาร์โค้ดประเภทนี้\n(เช่น EAN-13 หรือ UPC ต้องใช้ตัวเลขและมีจำนวนหลักที่ถูกต้อง)");
+                console.error(error);
+            }
+        }
+
+        // สั่งให้สร้างบาร์โค้ดทันทีที่โหลดหน้าเว็บเสร็จ
+        window.onload = generate;
+    </script>
+
+</body>
+</html>
