@@ -6,6 +6,7 @@
     <title>Barcode Generator Webapp</title>
     
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
     <style>
         body {
@@ -73,12 +74,14 @@
         .btn-primary:hover { background-color: #0056b3; }
         .btn-success { background-color: #28a745; }
         .btn-success:hover { background-color: #218838; }
+        .btn-info { background-color: #17a2b8; }
+        .btn-info:hover { background-color: #138496; }
         .btn-danger { background-color: #dc3545; padding: 5px 10px; font-size: 12px; width: auto; }
         
         .barcode-preview {
             margin-top: 20px;
             padding: 20px;
-            background: #dcdcdc; /* พื้นหลังสีเทาให้เห็นขอบสติกเกอร์ชัดเจน */
+            background: #dcdcdc; 
             border-radius: 8px;
             display: flex;
             justify-content: center;
@@ -87,7 +90,6 @@
             overflow: auto;
         }
 
-        /* ขอบเขตของกระดาษสติกเกอร์ */
         .sticker-label {
             background: #fff;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -96,12 +98,12 @@
             justify-content: center;
             align-items: center;
             box-sizing: border-box;
-            padding: 2mm; /* ระยะห่างขอบด้านในสติกเกอร์ */
+            padding: 2mm; 
             overflow: hidden;
         }
         
-        /* ป้องกันบาร์โค้ดล้นขอบกระดาษ */
-        .sticker-label svg {
+        /* เปลี่ยนจาก svg เป็น img เพื่อให้เซฟรูปได้สมบูรณ์ขึ้น */
+        .sticker-label img {
             max-width: 100%;
             max-height: 100%;
             height: auto;
@@ -142,29 +144,14 @@
         .history-date { font-size: 12px; color: #888; text-align: right; }
         .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 
-        /* ====== ตั้งค่าสำหรับการปริ้น ====== */
         @media print {
-            body * {
-                visibility: hidden;
-            }
-            #print-area, #print-area * {
-                visibility: visible; 
-            }
+            body * { visibility: hidden; }
+            #print-area, #print-area * { visibility: visible; }
             #print-area {
-                position: absolute;
-                left: 0;
-                top: 0;
-                margin: 0;
-                padding: 0;
-                border: none;
-                background: transparent;
-                display: block;
+                position: absolute; left: 0; top: 0; margin: 0; padding: 0;
+                border: none; background: transparent; display: block;
             }
-            .sticker-label {
-                box-shadow: none;
-                margin: 0;
-            }
-            /* ยกเลิก Header/Footer เริ่มต้นของเบราว์เซอร์ */
+            .sticker-label { box-shadow: none; margin: 0; }
             @page { margin: 0; } 
         }
     </style>
@@ -211,7 +198,7 @@
             
             <div class="row" style="margin-top: 10px;">
                 <div class="form-group" style="margin-bottom: 0;">
-                    <label style="font-size: 12px; font-weight: normal;">ขนาดเส้นบาร์โค้ด (ปรับหากบาร์โค้ดแน่นไป):</label>
+                    <label style="font-size: 12px; font-weight: normal;">ขนาดเส้นบาร์โค้ด:</label>
                     <input type="number" id="barWidth" value="2" min="1" step="1" onchange="generate()">
                 </div>
                 <div class="form-group" style="margin-bottom: 0;">
@@ -222,12 +209,13 @@
 
             <div class="button-group" style="margin-top: 20px;">
                 <button class="btn-primary" onclick="generateAndSave()">รีเฟรชบาร์โค้ด</button>
+                <button class="btn-info" onclick="downloadImage()">💾 บันทึกรูปภาพ</button>
                 <button class="btn-success" onclick="printBarcode()">🖨️ ปริ้นสติกเกอร์</button>
             </div>
 
             <div class="barcode-preview" id="print-area">
                 <div class="sticker-label" id="stickerLabel">
-                    <svg id="barcode"></svg>
+                    <img id="barcode">
                     <div id="displayDetails" class="details-text"></div>
                 </div>
             </div>
@@ -267,17 +255,14 @@
 
             if (!value) return false;
 
-            // 1. กำหนดขนาดกระดาษสติกเกอร์ในกล่องพรีวิว
             const sticker = document.getElementById("stickerLabel");
             sticker.style.width = pWidth + "mm";
             sticker.style.height = pHeight + "mm";
 
-            // 2. อัปเดต CSS @page เพื่อส่งขนาดไปให้เครื่องปริ้น
             const pageStyle = document.getElementById("dynamic-page-style");
             pageStyle.innerHTML = `@page { size: ${pWidth}mm ${pHeight}mm; margin: 0; }`;
 
             try {
-                // 3. สร้างเส้นบาร์โค้ด
                 JsBarcode("#barcode", value, {
                     format: type,
                     lineColor: "#000000",
@@ -290,7 +275,6 @@
 
                 document.getElementById("displayDetails").innerText = details;
                 
-                // ปรับขนาดฟอนต์รายละเอียดให้เล็กลงถ้ายาวเกิน
                 if(details.length > 20) {
                     document.getElementById("displayDetails").style.fontSize = "10px";
                 } else {
@@ -304,8 +288,29 @@
             }
         }
 
+        // ฟังก์ชันใหม่: สำหรับบันทึกรูปภาพ
+        function downloadImage() {
+            // สร้างบาร์โค้ดล่าสุดก่อน
+            generate(); 
+            
+            const sticker = document.getElementById("stickerLabel");
+            const inputValue = document.getElementById("inputValue").value;
+            
+            // ใช้ html2canvas แปลง div เป็นภาพ
+            html2canvas(sticker, {
+                scale: 4, // เพิ่มความละเอียด (scale 4 เท่า) เพื่อให้ภาพคมชัดเวลาเอาไปใช้งานต่อ
+                backgroundColor: "#ffffff", // ให้พื้นหลังเป็นสีขาว
+                useCORS: true // อนุญาตให้อ่านข้อมูล cross-origin เผื่อไว้
+            }).then(canvas => {
+                // สร้างลิงก์ชั่วคราวเพื่อสั่งดาวน์โหลด
+                const link = document.createElement('a');
+                link.download = `barcode_${inputValue}.png`; // ตั้งชื่อไฟล์เป็น barcode_ตามด้วยรหัส
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+
         function printBarcode() {
-            // สร้างบาร์โค้ดให้ชัวร์ว่าอัปเดตล่าสุดก่อนปริ้น
             generate();
             window.print();
         }
