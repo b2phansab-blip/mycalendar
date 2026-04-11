@@ -209,9 +209,9 @@
         <div class="col-md-9">
             <div class="row row-cols-2 row-cols-md-3 row-cols-lg-6 g-2">
                 <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">ขอนที่ผ่านเกณฑ์</div><div id="resQualified" class="metric-value text-primary fs-3">0</div></div></div>
-                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">เล่นทั้งหมด (ตา)</div><div id="resTotalBets" class="metric-value text-info fs-3">0</div></div></div>
-                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">ถึงเป้า / มีกำไร</div><div id="resWon" class="metric-value text-success fs-3">0</div></div></div>
-                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">แตก / ชน SL</div><div id="resBusted" class="metric-value text-danger fs-3">0</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">ถึงเป้า / มีกำไร</div><div id="resWon" class="metric-value text-success fs-3">0</div><div id="resWonPct" class="text-success fw-bold" style="font-size: 0.75rem;">(Win: 0.00%)</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">แตก / ชน SL</div><div id="resBusted" class="metric-value text-danger fs-3">0</div><div id="resBustPct" class="text-danger fw-bold" style="font-size: 0.75rem;">(Loss: 0.00%)</div></div></div>
+                <div class="col"><div class="dashboard-card p-2"><div class="text-muted" style="font-size: 0.8rem;">เล่นทั้งหมด (ตา)</div><div id="resTotalBets" class="metric-value text-info fs-3">0</div><div id="resHandWinPct" class="text-info fw-bold" style="font-size: 0.75rem;">(Win: 0.00%)</div></div></div>
                 <div class="col"><div class="dashboard-card p-2"><div class="text-muted fw-bold text-warning" style="font-size: 0.8rem;">ผิดติดกันสูงสุด</div><div id="resMaxLoss" class="metric-value text-warning fs-3">0</div></div></div>
                 <div class="col"><div class="dashboard-card p-2"><div class="text-muted fw-bold" style="font-size: 0.8rem;">กำไรสุทธิรวม</div><div id="resNet" class="metric-value text-dark fs-3">0</div></div></div>
             </div>
@@ -513,11 +513,10 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let qCount = 0, wonCount = 0, bustCount = 0, netTotal = 0;
     let globalMaxLossStreak = 0; 
     let globalTotalBetsCount = 0; 
+    let globalTotalWinsCount = 0; // 🚨 นับจำนวนตาที่แทงชนะทั้งหมด
     let winCountChart = new Array(mSteps.length).fill(0);
     let lossStreakFreq = {}; 
     let shoeLogs = [];
-    
-    // 🚨 ตัวแปรเก็บยอดสรุปสถานะ
     let statusCounts = {};
 
     globalShoes.forEach((shoe, idx) => {
@@ -644,6 +643,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                         
                         if (moneySystem === 'loss') { 
                             if (isWin) { 
+                                globalTotalWinsCount++; // 🚨 นับตาที่ชนะ
                                 netThisShoe += currentBet; 
                                 winCountChart[consStep]++; 
                                 if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
@@ -672,6 +672,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                             }
                         } else { 
                             if (isWin) { 
+                                globalTotalWinsCount++; // 🚨 นับตาที่ชนะ
                                 netThisShoe += currentBet; 
                                 winCountChart[consStep]++; consStep++; 
                                 if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
@@ -729,15 +730,18 @@ document.getElementById('runBtn').addEventListener('click', function() {
             }
             
             shoeLogs.push({ id: idx, status: statusText, net: netThisShoe, history: betHistory });
-            
-            // เก็บยอดนับสถานะ
             statusCounts[statusText] = (statusCounts[statusText] || 0) + 1;
         }
     });
 
     globalShoeLogs = shoeLogs; 
 
-    // 🚨 อัปเดตตัวเลขขึ้นหน้าปัด
+    // 🚨 คำนวณเปอร์เซ็นต์
+    let shoeWinRate = qCount > 0 ? ((wonCount / qCount) * 100).toFixed(2) : "0.00";
+    let shoeBustRate = qCount > 0 ? ((bustCount / qCount) * 100).toFixed(2) : "0.00";
+    let handWinRate = globalTotalBetsCount > 0 ? ((globalTotalWinsCount / globalTotalBetsCount) * 100).toFixed(2) : "0.00";
+
+    // อัปเดตตัวเลขขึ้นหน้าปัด
     document.getElementById('resQualified').innerText = qCount;
     document.getElementById('resTotalBets').innerText = globalTotalBetsCount; 
     document.getElementById('resWon').innerText = wonCount;
@@ -745,7 +749,11 @@ document.getElementById('runBtn').addEventListener('click', function() {
     document.getElementById('resMaxLoss').innerText = globalMaxLossStreak; 
     document.getElementById('resNet').innerText = netTotal;
 
-    // 🚨 สร้างป้ายสรุปสถานะ
+    // อัปเดตเปอร์เซ็นต์
+    document.getElementById('resWonPct').innerText = `(Win: ${shoeWinRate}%)`;
+    document.getElementById('resBustPct').innerText = `(Loss: ${shoeBustRate}%)`;
+    document.getElementById('resHandWinPct').innerText = `(Win: ${globalTotalWinsCount} ตา / ${handWinRate}%)`;
+
     let summaryHtml = '';
     let sortedStatuses = Object.keys(statusCounts).sort((a,b) => statusCounts[b] - statusCounts[a]);
     for (let s of sortedStatuses) {
@@ -810,7 +818,6 @@ document.getElementById('shoeSelector').addEventListener('change', function(e) {
             let div = document.createElement('div'); div.className = 'road-col';
             col.forEach(val => {
                 let d = document.createElement('div');
-                // 🚨 เรียกใช้ CSS สัญลักษณ์ที่ถูกต้อง
                 if(type === 'BR') d.className = 'br-bead br-' + val;
                 else if(type === 'BEB') d.className = 'beb-bead beb-' + val;
                 else if(type === 'SR') d.className = 'sr-bead sr-' + val;
