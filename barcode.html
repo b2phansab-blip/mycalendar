@@ -8,138 +8,327 @@
     <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
     
     <style>
-        /* ตกแต่งหน้าตาของ Webapp ให้ดูสะอาดและทันสมัย */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+        }
+        .container {
+            width: 100%;
+            max-width: 600px;
+            display: grid;
+            gap: 20px;
         }
         .card {
             background: #ffffff;
-            padding: 30px;
+            padding: 25px;
             border-radius: 12px;
-            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 100%;
-            max-width: 400px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
-        h2 {
-            margin-top: 0;
-            color: #333;
+        h2, h3 { margin-top: 0; }
+        .row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
         }
         .form-group {
+            flex: 1;
             margin-bottom: 15px;
-            text-align: left;
         }
         label {
             display: block;
             margin-bottom: 5px;
-            color: #666;
             font-size: 14px;
+            color: #555;
+            font-weight: bold;
         }
         input, select, button {
             width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
+            padding: 10px;
+            border: 1px solid #ccc;
             border-radius: 6px;
             box-sizing: border-box;
-            font-size: 16px;
+            font-size: 15px;
         }
         input:focus, select:focus {
             outline: none;
             border-color: #007bff;
         }
+        .button-group {
+            display: flex;
+            gap: 10px;
+        }
         button {
-            background-color: #007bff;
-            color: white;
-            border: none;
             cursor: pointer;
             font-weight: bold;
-            margin-top: 10px;
-            transition: background-color 0.3s;
+            border: none;
+            color: white;
+            transition: 0.2s;
         }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .barcode-container {
-            margin-top: 25px;
-            padding: 15px;
-            background: #fdfdfd;
-            border: 1px dashed #ccc;
+        .btn-primary { background-color: #007bff; }
+        .btn-primary:hover { background-color: #0056b3; }
+        .btn-success { background-color: #28a745; }
+        .btn-success:hover { background-color: #218838; }
+        .btn-danger { background-color: #dc3545; padding: 5px 10px; font-size: 12px; width: auto; }
+        
+        .barcode-preview {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border: 2px dashed #ddd;
             border-radius: 8px;
-            min-height: 120px;
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 180px;
+            overflow: auto;
         }
-        svg {
-            max-width: 100%;
-            height: auto;
+
+        /* กล่องจำลองสติกเกอร์ */
+        .sticker-label {
+            background: #fff;
+            padding: 15px;
+            text-align: center;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* ข้อความรายละเอียดใต้บาร์โค้ด */
+        .details-text {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 5px;
+            color: #000;
+        }
+
+        /* ส่วนของประวัติ */
+        .history-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            background: #f9f9f9;
+            padding: 12px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+        .history-item:hover { background: #eef5ff; }
+        .history-info { font-size: 14px; }
+        .history-details { font-size: 13px; color: #555; margin-top: 4px; }
+        .history-date { font-size: 12px; color: #888; text-align: right; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+
+        /* ====== ตั้งค่าสำหรับการปริ้น (Print Styles) ====== */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible; 
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                margin: 0;
+                padding: 0;
+                border: none;
+                background: transparent;
+            }
+            .sticker-label {
+                box-shadow: none; /* เอาเงาออกตอนปริ้น */
+                padding: 0;
+            }
+            @page { margin: 0; } 
         }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h2>สร้างบาร์โค้ดฟรี</h2>
-        
-        <div class="form-group">
-            <label for="inputValue">ข้อความ หรือ ตัวเลข:</label>
-            <input type="text" id="inputValue" placeholder="เช่น 123456789" value="123456789">
+    <div class="container">
+        <div class="card">
+            <h2>ตั้งค่าบาร์โค้ด</h2>
+            
+            <div class="form-group">
+                <label>ข้อความ หรือ ตัวเลข (รหัสบาร์โค้ด):</label>
+                <input type="text" id="inputValue" placeholder="เช่น 123456789" value="123456789">
+            </div>
+
+            <div class="form-group">
+                <label>รายละเอียดสินค้า (แสดงใต้รหัส):</label>
+                <input type="text" id="inputDetails" placeholder="เช่น ชื่อสินค้า, ราคา, วันหมดอายุ">
+            </div>
+
+            <div class="form-group">
+                <label>ประเภทบาร์โค้ด:</label>
+                <select id="barcodeType">
+                    <option value="CODE128">CODE128 (รองรับตัวอักษร/ตัวเลข)</option>
+                    <option value="EAN13">EAN-13 (ตัวเลข 12 หลัก)</option>
+                    <option value="UPC">UPC (ตัวเลข 11 หลัก)</option>
+                    <option value="CODE39">CODE39 (มาตรฐานเก่า)</option>
+                </select>
+            </div>
+
+            <div class="row">
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>ความกว้างเส้น (px):</label>
+                    <input type="number" id="barWidth" value="2" min="1" step="1">
+                </div>
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label>ความสูงบาร์โค้ด (px):</label>
+                    <input type="number" id="barHeight" value="80" min="10" step="5">
+                </div>
+            </div>
+
+            <div class="button-group" style="margin-top: 15px;">
+                <button class="btn-primary" onclick="generateAndSave()">สร้างบาร์โค้ด</button>
+                <button class="btn-success" onclick="printBarcode()">🖨️ ปริ้นบาร์โค้ด</button>
+            </div>
+
+            <div class="barcode-preview" id="print-area">
+                <div class="sticker-label">
+                    <svg id="barcode"></svg>
+                    <div id="displayDetails" class="details-text"></div>
+                </div>
+            </div>
         </div>
 
-        <div class="form-group">
-            <label for="barcodeType">ประเภทบาร์โค้ด:</label>
-            <select id="barcodeType">
-                <option value="CODE128">CODE128 (แนะนำ: รองรับตัวอักษรและตัวเลข)</option>
-                <option value="EAN13">EAN-13 (สำหรับสินค้า: ต้องเป็นตัวเลข 12 หลัก)</option>
-                <option value="UPC">UPC (สำหรับสินค้าสากล: ตัวเลข 11 หลัก)</option>
-                <option value="CODE39">CODE39 (มาตรฐานเก่า)</option>
-            </select>
-        </div>
-
-        <button onclick="generate()">สร้างบาร์โค้ด</button>
-
-        <div class="barcode-container">
-            <svg id="barcode"></svg>
+        <div class="card">
+            <div class="history-header">
+                <h3>🕒 ประวัติการสร้าง</h3>
+                <button class="btn-danger" onclick="clearHistory()">ลบประวัติ</button>
+            </div>
+            <ul class="history-list" id="historyList"></ul>
         </div>
     </div>
 
     <script>
-        // ฟังก์ชันสำหรับสร้างบาร์โค้ด
-        function generate() {
-            const value = document.getElementById("inputValue").value;
-            const type = document.getElementById("barcodeType").value;
+        window.onload = () => {
+            generate();
+            loadHistory();
+        };
 
-            // ตรวจสอบว่าผู้ใช้ใส่ข้อมูลหรือไม่
-            if (value.trim() === "") {
-                alert("กรุณากรอกข้อความหรือตัวเลขครับ");
-                return;
-            }
-
-            try {
-                // เรียกใช้ไลบรารี JsBarcode
-                JsBarcode("#barcode", value, {
-                    format: type,
-                    lineColor: "#000000",
-                    width: 2,
-                    height: 80,
-                    displayValue: true, // แสดงตัวอักษรใต้บาร์โค้ด
-                    fontSize: 16
-                });
-            } catch (error) {
-                // ดักจับ Error ในกรณีที่ผู้ใช้ใส่ข้อมูลไม่ตรงกับฟอร์แมตบาร์โค้ด
-                alert("เกิดข้อผิดพลาด: รูปแบบข้อมูลไม่รองรับกับบาร์โค้ดประเภทนี้\n(เช่น EAN-13 หรือ UPC ต้องใช้ตัวเลขและมีจำนวนหลักที่ถูกต้อง)");
-                console.error(error);
+        function generateAndSave() {
+            if(generate()) {
+                saveToHistory();
             }
         }
 
-        // สั่งให้สร้างบาร์โค้ดทันทีที่โหลดหน้าเว็บเสร็จ
-        window.onload = generate;
+        function generate() {
+            const value = document.getElementById("inputValue").value.trim();
+            const details = document.getElementById("inputDetails").value.trim();
+            const type = document.getElementById("barcodeType").value;
+            const bWidth = document.getElementById("barWidth").value;
+            const bHeight = document.getElementById("barHeight").value;
+
+            if (!value) {
+                alert("กรุณากรอกรหัสบาร์โค้ดครับ");
+                return false;
+            }
+
+            try {
+                // สร้างเส้นบาร์โค้ด
+                JsBarcode("#barcode", value, {
+                    format: type,
+                    lineColor: "#000000",
+                    width: parseInt(bWidth),
+                    height: parseInt(bHeight),
+                    displayValue: true, // แสดงตัวเลขรหัสบาร์โค้ด
+                    fontSize: 16,
+                    margin: 5
+                });
+
+                // นำข้อความรายละเอียดมาแสดงใต้บาร์โค้ด
+                document.getElementById("displayDetails").innerText = details;
+                return true;
+            } catch (error) {
+                alert("รูปแบบข้อมูลไม่รองรับกับบาร์โค้ดประเภทนี้ กรุณาตรวจสอบอีกครั้ง");
+                return false;
+            }
+        }
+
+        function printBarcode() {
+            window.print();
+        }
+        
+        function saveToHistory() {
+            const value = document.getElementById("inputValue").value;
+            const details = document.getElementById("inputDetails").value;
+            const type = document.getElementById("barcodeType").value;
+            
+            let history = JSON.parse(localStorage.getItem("barcodeHistory")) || [];
+            
+            const newItem = {
+                value: value,
+                details: details,
+                type: type,
+                date: new Date().toLocaleString('th-TH')
+            };
+
+            history.unshift(newItem);
+            if (history.length > 20) history.pop();
+
+            localStorage.setItem("barcodeHistory", JSON.stringify(history));
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const list = document.getElementById("historyList");
+            list.innerHTML = ""; 
+
+            let history = JSON.parse(localStorage.getItem("barcodeHistory")) || [];
+            
+            if (history.length === 0) {
+                list.innerHTML = "<li style='color: #888; text-align: center; font-size: 14px;'>ยังไม่มีประวัติการสร้าง</li>";
+                return;
+            }
+
+            history.forEach(item => {
+                const li = document.createElement("li");
+                li.className = "history-item";
+                
+                li.onclick = () => {
+                    document.getElementById("inputValue").value = item.value;
+                    document.getElementById("inputDetails").value = item.details || "";
+                    document.getElementById("barcodeType").value = item.type;
+                    generate();
+                };
+
+                // แสดงรายละเอียดในรายการประวัติด้วย
+                const detailsHtml = item.details ? `<div class="history-details">📝 ${item.details}</div>` : '';
+
+                li.innerHTML = `
+                    <div>
+                        <div class="history-info">
+                            <strong>${item.value}</strong> 
+                            <span style="color:#007bff; font-size: 12px; margin-left:5px;">(${item.type})</span>
+                        </div>
+                        ${detailsHtml}
+                    </div>
+                    <div class="history-date">${item.date}</div>
+                `;
+                list.appendChild(li);
+            });
+        }
+
+        function clearHistory() {
+            if(confirm("คุณต้องการลบประวัติทั้งหมดใช่หรือไม่?")) {
+                localStorage.removeItem("barcodeHistory");
+                loadHistory();
+            }
+        }
     </script>
 
 </body>
