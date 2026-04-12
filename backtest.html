@@ -515,7 +515,6 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
     });
 });
 
-// 🚨 ฟังก์ชันสุ่มจำลองขอนไพ่ฉบับอัปเกรด (ความน่าจะเป็นจริง)
 function generateSimData() {
     let count = getNum('simCount', 2000);
     simShoes = [];
@@ -524,13 +523,11 @@ function generateSimData() {
         let shoeStr = "";
         for(let j=0; j<60; j++) {
             let r = Math.random();
-            // Baccarat Probability: T ~9.52%, B ~45.86%, P ~44.62%
             if (r < 0.0952) shoeStr += 'T';
             else if (r < 0.5538) shoeStr += 'B';
             else shoeStr += 'P';
         }
         simRaw.push(shoeStr);
-        // เก็บเฉพาะ B และ P เพื่อให้โค้ดการเดินถนนทำงานได้ถูกต้อง
         simShoes.push(shoeStr.replace(/T/g, '').split('')); 
     }
     document.getElementById('simDataStatus').innerText = `${simShoes.length} ขอน`;
@@ -542,7 +539,6 @@ function generateSimData() {
 // --- ฟังก์ชัน Backtest หลัก ---
 document.getElementById('runBtn').addEventListener('click', function() {
     
-    // 🚨 แก้ไขบั๊ก: เลือกว่าจะใช้ Array ของข้อมูลชุดไหนมาลูป
     let useSim = document.getElementById('dataSourceSelect').value === 'SIM';
     let targetShoes = useSim ? simShoes : realShoes;
     let targetRaw = useSim ? simRaw : realRaw;
@@ -586,7 +582,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let shoeLogs = [];
     let statusCounts = {};
 
-    // 🚨 ใช้ targetShoes ในการรันลูปแล้ว! ไม่มีปัญหา 0 ขอนแล้วครับ
     targetShoes.forEach((shoe, idx) => {
         let flat = [], isReady = false, qualified = false;
         let consStep = 0, vlCount = 0, netThisShoe = 0;
@@ -797,7 +792,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
                 bustCount++; statusText = actualBusted ? "🚨 พอร์ตแตก/ขาดทุน" : "📉 ขาดทุน";
             }
             
-            // 🚨 บันทึก string ดิบจาก targetRaw เพื่อให้ตอนวาดมีตัวอักษร T ติดไปด้วย
             shoeLogs.push({ id: idx, raw: targetRaw[idx], shoe: shoe, status: statusText, net: netThisShoe, history: betHistory });
             statusCounts[statusText] = (statusCounts[statusText] || 0) + 1;
         }
@@ -876,7 +870,6 @@ document.getElementById('shoeSelector').addEventListener('change', function(e) {
     if (!logRecord) return;
     
     let bCont = document.getElementById('beadPlate'); bCont.innerHTML = '';
-    // 🚨 อ่านค่า raw string ที่มีตัวอักษร T ปนอยู่เพื่อโชว์ใน Bead Plate ด้วย
     for (let c of logRecord.raw) { 
         let d = document.createElement('div');
         d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
