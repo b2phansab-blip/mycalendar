@@ -324,7 +324,7 @@ let globalShoeLogs = [];
 
 // --- ระบบ Export / Import Settings ---
 const settingValueIds = [
-    'dataSourceSelect', 'simCount', // เพิ่ม Setting ใหม่
+    'dataSourceSelect', 'simCount', 
     'startTrigger', 'startHandNum', 'maxEntryHand', 'triggerLen',
     'minStr_BR', 'minCnt_BR', 'minStr_BEB', 'minCnt_BEB', 'minStr_SR', 'minCnt_SR', 'minStr_CR', 'minCnt_CR', 'minConditionType',
     'maxStr_BR', 'maxCnt_BR', 'maxStr_BEB', 'maxCnt_BEB', 'maxStr_SR', 'maxCnt_SR', 'maxStr_CR', 'maxCnt_CR', 'maxConditionType',
@@ -509,13 +509,13 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
             });
             document.getElementById('realDataStatus').innerText = `${realShoes.length} ขอน`;
             document.getElementById('realDataStatus').className = "badge bg-success";
-            document.getElementById('dataSourceSelect').value = 'REAL'; // ออโต้เปลี่ยนเป็นโหมดข้อมูลจริง
+            document.getElementById('dataSourceSelect').value = 'REAL'; 
         };
         reader.readAsText(file);
     });
 });
 
-// ฟังก์ชันสร้างข้อมูลจำลองแบบสุ่ม (Monte Carlo)
+// 🚨 ฟังก์ชันสุ่มจำลองขอนไพ่ฉบับอัปเกรด (ความน่าจะเป็นจริง)
 function generateSimData() {
     let count = getNum('simCount', 2000);
     simShoes = [];
@@ -523,29 +523,32 @@ function generateSimData() {
     for(let i=0; i<count; i++) {
         let shoeStr = "";
         for(let j=0; j<60; j++) {
-            // ความน่าจะเป็น Baccarat แบบสากล (ตัด Tie ทิ้ง) B: ~50.68%, P: ~49.32%
-            shoeStr += (Math.random() < 0.5068) ? 'B' : 'P';
+            let r = Math.random();
+            // Baccarat Probability: T ~9.52%, B ~45.86%, P ~44.62%
+            if (r < 0.0952) shoeStr += 'T';
+            else if (r < 0.5538) shoeStr += 'B';
+            else shoeStr += 'P';
         }
         simRaw.push(shoeStr);
-        simShoes.push(shoeStr.split(''));
+        // เก็บเฉพาะ B และ P เพื่อให้โค้ดการเดินถนนทำงานได้ถูกต้อง
+        simShoes.push(shoeStr.replace(/T/g, '').split('')); 
     }
     document.getElementById('simDataStatus').innerText = `${simShoes.length} ขอน`;
     document.getElementById('simDataStatus').className = "badge bg-info text-dark";
-    document.getElementById('dataSourceSelect').value = 'SIM'; // ออโต้เปลี่ยนเป็นโหมดจำลอง
-    alert(`🎲 สร้างข้อมูลจำลอง ${count} ขอนสำเร็จแล้ว! ระบบจะสลับไปใช้ข้อมูลชุดนี้ในการรันครั้งต่อไป`);
+    document.getElementById('dataSourceSelect').value = 'SIM'; 
+    alert(`🎲 สร้างข้อมูลจำลองแบบสากล ${count} ขอนสำเร็จแล้ว!`);
 }
-
 
 // --- ฟังก์ชัน Backtest หลัก ---
 document.getElementById('runBtn').addEventListener('click', function() {
     
-    // 🚨 เช็คว่าเลือก Data Source ฝั่งไหน
+    // 🚨 แก้ไขบั๊ก: เลือกว่าจะใช้ Array ของข้อมูลชุดไหนมาลูป
     let useSim = document.getElementById('dataSourceSelect').value === 'SIM';
     let targetShoes = useSim ? simShoes : realShoes;
     let targetRaw = useSim ? simRaw : realRaw;
 
     if (targetShoes.length === 0) {
-        if(useSim) return alert("ยังไม่ได้สร้างข้อมูลจำลอง โปรดกดปุ่ม 'สุ่มใหม่' ก่อนครับ");
+        if(useSim) return alert("ยังไม่ได้สร้างข้อมูลจำลอง โปรดกดปุ่ม 'สุ่มใหม่' สีฟ้า ก่อนรันครับ");
         else return alert("ไม่มีข้อมูลจริงให้รัน โปรดโหลดไฟล์ก่อนครับ");
     }
 
@@ -583,6 +586,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let shoeLogs = [];
     let statusCounts = {};
 
+    // 🚨 ใช้ targetShoes ในการรันลูปแล้ว! ไม่มีปัญหา 0 ขอนแล้วครับ
     targetShoes.forEach((shoe, idx) => {
         let flat = [], isReady = false, qualified = false;
         let consStep = 0, vlCount = 0, netThisShoe = 0;
@@ -793,7 +797,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                 bustCount++; statusText = actualBusted ? "🚨 พอร์ตแตก/ขาดทุน" : "📉 ขาดทุน";
             }
             
-            // 🚨 เก็บ raw string ใส่ลงไปใน log ด้วย เพื่อให้ตอนวาดกราฟไม่เกิดบั๊กสลับข้อมูล
+            // 🚨 บันทึก string ดิบจาก targetRaw เพื่อให้ตอนวาดมีตัวอักษร T ติดไปด้วย
             shoeLogs.push({ id: idx, raw: targetRaw[idx], shoe: shoe, status: statusText, net: netThisShoe, history: betHistory });
             statusCounts[statusText] = (statusCounts[statusText] || 0) + 1;
         }
@@ -856,7 +860,6 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let sel = document.getElementById('shoeSelector');
     sel.innerHTML = '<option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>';
     
-    // 🚨 ใช้ Array Index เพื่อป้องกันการดึงผิดขอนเวลาสลับโหมด
     shoeLogs.forEach((log, index) => {
         let opt = document.createElement('option');
         opt.value = index; 
@@ -873,13 +876,14 @@ document.getElementById('shoeSelector').addEventListener('change', function(e) {
     if (!logRecord) return;
     
     let bCont = document.getElementById('beadPlate'); bCont.innerHTML = '';
-    for (let c of logRecord.raw) { // 🚨 ดึงจาก logRecord
+    // 🚨 อ่านค่า raw string ที่มีตัวอักษร T ปนอยู่เพื่อโชว์ใน Bead Plate ด้วย
+    for (let c of logRecord.raw) { 
         let d = document.createElement('div');
         d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
         d.innerText = c; bCont.appendChild(d);
     }
     
-    let rData = getRoads(logRecord.shoe); // 🚨 ดึงจาก logRecord
+    let rData = getRoads(logRecord.shoe); 
     function drawR(contId, rCols, type) {
         let c = document.getElementById(contId); c.innerHTML = '';
         rCols.forEach(col => {
