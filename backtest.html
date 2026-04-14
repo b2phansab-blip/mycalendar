@@ -61,36 +61,9 @@
     <div class="row">
         <div class="col-md-3">
             <div class="sidebar">
-                
                 <h5 class="text-secondary mb-3">📂 1. Data Hub</h5>
-                
-                <div class="mb-3 p-2 border rounded bg-white border-primary shadow-sm">
-                    <label class="form-label fw-bold text-primary d-block mb-1" style="font-size: 0.85rem;">📊 แหล่งข้อมูลที่จะใช้รัน (Data Source)</label>
-                    <select id="dataSourceSelect" class="form-select form-select-sm mb-1 fw-bold text-dark">
-                        <option value="REAL">📈 ใช้ข้อมูลจริง (Real Data)</option>
-                        <option value="SIM">🎲 ใช้ข้อมูลจำลอง (Simulation)</option>
-                    </select>
-                </div>
-
-                <div class="mb-2 p-2 border rounded bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <span class="fw-bold" style="font-size: 0.8rem;">📈 ข้อมูลจริง (ไฟล์)</span>
-                        <span id="realDataStatus" class="badge bg-secondary">0 ขอน</span>
-                    </div>
-                    <input type="file" id="fileInput" class="form-control form-control-sm mt-2" accept=".txt,.csv" multiple>
-                </div>
-
-                <div class="mb-4 p-2 border rounded bg-light">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="fw-bold" style="font-size: 0.8rem;">🎲 ข้อมูลจำลอง (สุ่ม)</span>
-                        <span id="simDataStatus" class="badge bg-secondary">0 ขอน</span>
-                    </div>
-                    <div class="input-group input-group-sm">
-                        <span class="input-group-text bg-white">จำนวน</span>
-                        <input type="number" id="simCount" class="form-control text-center fw-bold text-info" value="2000" min="1">
-                        <button class="btn btn-info fw-bold text-white px-2" onclick="generateSimData()">สุ่มใหม่</button>
-                    </div>
-                </div>
+                <div id="dataStatus" class="alert alert-info py-2 mb-2" style="font-size: 0.85rem;">กำลังโหลดข้อมูล...</div>
+                <input type="file" id="fileInput" class="form-control form-control-sm mb-4" accept=".txt,.csv" multiple>
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h5 class="text-secondary mb-0">⚙️ 2. Strategy</h5>
@@ -317,14 +290,8 @@
 </div>
 
 <script>
-// --- ตัวแปรสำหรับเก็บข้อมูลทั้ง 2 แหล่ง ---
-let realShoes = [], realRaw = [];
-let simShoes = [], simRaw = [];
-let globalShoeLogs = [];
-
 // --- ระบบ Export / Import Settings ---
 const settingValueIds = [
-    'dataSourceSelect', 'simCount', 
     'startTrigger', 'startHandNum', 'maxEntryHand', 'triggerLen',
     'minStr_BR', 'minCnt_BR', 'minStr_BEB', 'minCnt_BEB', 'minStr_SR', 'minCnt_SR', 'minStr_CR', 'minCnt_CR', 'minConditionType',
     'maxStr_BR', 'maxCnt_BR', 'maxStr_BEB', 'maxCnt_BEB', 'maxStr_SR', 'maxCnt_SR', 'maxStr_CR', 'maxCnt_CR', 'maxConditionType',
@@ -404,7 +371,7 @@ document.querySelector('.sidebar').addEventListener('change', () => {
     localStorage.setItem('aegis_pro_settings', JSON.stringify(settings));
 });
 
-// --- ฟังก์ชันช่วยเหลือทั่วไป ---
+// --- ฟังก์ชัน Backtest หลัก ---
 function getNum(id, defaultVal) {
     let val = document.getElementById(id).value.trim();
     if (val === "") return defaultVal;
@@ -424,8 +391,7 @@ function parseShoeLine(line) {
 }
 
 function toggleStartHand() {
-    let el = document.getElementById('handInputDiv');
-    if(el) el.style.display = (document.getElementById('startTrigger').value === 'HAND') ? 'block' : 'none';
+    document.getElementById('handInputDiv').style.display = (document.getElementById('startTrigger').value === 'HAND') ? 'block' : 'none';
 }
 
 function getRoads(history) {
@@ -483,16 +449,19 @@ function getSignal(flatHistory, triggerLen) {
     return {signal: null, p: -1, road: null};
 }
 
-// --- ฟังก์ชันจัดการ Data Hub ---
+let globalShoes = [], rawShoesList = [];
+let myChart = null, lossChartObj = null;
+let globalShoeLogs = [];
+
 function loadMasterData() {
     if (typeof masterDataCSV !== 'undefined' && masterDataCSV.trim().length > 0) {
         let lines = masterDataCSV.trim().split('\n');
         lines.forEach(line => {
             let sStr = parseShoeLine(line);
-            if (sStr) { realRaw.push(sStr); realShoes.push(sStr.replace(/T/g, '').split('')); }
+            if (sStr) { rawShoesList.push(sStr); globalShoes.push(sStr.replace(/T/g, '').split('')); }
         });
-        document.getElementById('realDataStatus').innerText = `${realShoes.length} ขอน`;
-        document.getElementById('realDataStatus').className = "badge bg-success";
+        document.getElementById('dataStatus').innerText = `✅ โหลดฐานข้อมูลหลักแล้ว ${globalShoes.length} ขอน`;
+        document.getElementById('dataStatus').className = "alert alert-success py-2 mb-2 text-center fw-bold";
     }
 }
 window.onload = loadMasterData;
@@ -505,48 +474,16 @@ document.getElementById('fileInput').addEventListener('change', function(e) {
             let content = evt.target.result.trim().split('\n');
             content.forEach(line => {
                 let sStr = parseShoeLine(line);
-                if (sStr) { realRaw.push(sStr); realShoes.push(sStr.replace(/T/g, '').split('')); }
+                if (sStr) { rawShoesList.push(sStr); globalShoes.push(sStr.replace(/T/g, '').split('')); }
             });
-            document.getElementById('realDataStatus').innerText = `${realShoes.length} ขอน`;
-            document.getElementById('realDataStatus').className = "badge bg-success";
-            document.getElementById('dataSourceSelect').value = 'REAL'; 
+            document.getElementById('dataStatus').innerText = `✅ ฐานข้อมูลปัจจุบัน: ${globalShoes.length} ขอน`;
         };
         reader.readAsText(file);
     });
 });
 
-function generateSimData() {
-    let count = getNum('simCount', 2000);
-    simShoes = [];
-    simRaw = [];
-    for(let i=0; i<count; i++) {
-        let shoeStr = "";
-        for(let j=0; j<60; j++) {
-            let r = Math.random();
-            if (r < 0.0952) shoeStr += 'T';
-            else if (r < 0.5538) shoeStr += 'B';
-            else shoeStr += 'P';
-        }
-        simRaw.push(shoeStr);
-        simShoes.push(shoeStr.replace(/T/g, '').split('')); 
-    }
-    document.getElementById('simDataStatus').innerText = `${simShoes.length} ขอน`;
-    document.getElementById('simDataStatus').className = "badge bg-info text-dark";
-    document.getElementById('dataSourceSelect').value = 'SIM'; 
-    alert(`🎲 สร้างข้อมูลจำลองแบบสากล ${count} ขอนสำเร็จแล้ว!`);
-}
-
-// --- ฟังก์ชัน Backtest หลัก ---
 document.getElementById('runBtn').addEventListener('click', function() {
-    
-    let useSim = document.getElementById('dataSourceSelect').value === 'SIM';
-    let targetShoes = useSim ? simShoes : realShoes;
-    let targetRaw = useSim ? simRaw : realRaw;
-
-    if (targetShoes.length === 0) {
-        if(useSim) return alert("ยังไม่ได้สร้างข้อมูลจำลอง โปรดกดปุ่ม 'สุ่มใหม่' สีฟ้า ก่อนรันครับ");
-        else return alert("ไม่มีข้อมูลจริงให้รัน โปรดโหลดไฟล์ก่อนครับ");
-    }
+    if (globalShoes.length === 0) return alert("ไม่มีข้อมูลให้รันครับ!");
 
     let startTrigger = document.getElementById('startTrigger').value;
     let startHandNum = getNum('startHandNum', 20);
@@ -576,13 +513,13 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let qCount = 0, wonCount = 0, bustCount = 0, netTotal = 0;
     let globalMaxLossStreak = 0; 
     let globalTotalBetsCount = 0; 
-    let globalTotalWinsCount = 0; 
+    let globalTotalWinsCount = 0; // 🚨 นับจำนวนตาที่แทงชนะทั้งหมด
     let winCountChart = new Array(mSteps.length).fill(0);
     let lossStreakFreq = {}; 
     let shoeLogs = [];
     let statusCounts = {};
 
-    targetShoes.forEach((shoe, idx) => {
+    globalShoes.forEach((shoe, idx) => {
         let flat = [], isReady = false, qualified = false;
         let consStep = 0, vlCount = 0, netThisShoe = 0;
         let cyclesPlayed = 0, isShoeTerminated = false, currentLossStreak = 0; 
@@ -706,7 +643,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                         
                         if (moneySystem === 'loss') { 
                             if (isWin) { 
-                                globalTotalWinsCount++; 
+                                globalTotalWinsCount++; // 🚨 นับตาที่ชนะ
                                 netThisShoe += currentBet; 
                                 winCountChart[consStep]++; 
                                 if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
@@ -735,7 +672,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
                             }
                         } else { 
                             if (isWin) { 
-                                globalTotalWinsCount++; 
+                                globalTotalWinsCount++; // 🚨 นับตาที่ชนะ
                                 netThisShoe += currentBet; 
                                 winCountChart[consStep]++; consStep++; 
                                 if (currentLossStreak > 0) lossStreakFreq[currentLossStreak] = (lossStreakFreq[currentLossStreak] || 0) + 1;
@@ -792,17 +729,19 @@ document.getElementById('runBtn').addEventListener('click', function() {
                 bustCount++; statusText = actualBusted ? "🚨 พอร์ตแตก/ขาดทุน" : "📉 ขาดทุน";
             }
             
-            shoeLogs.push({ id: idx, raw: targetRaw[idx], shoe: shoe, status: statusText, net: netThisShoe, history: betHistory });
+            shoeLogs.push({ id: idx, status: statusText, net: netThisShoe, history: betHistory });
             statusCounts[statusText] = (statusCounts[statusText] || 0) + 1;
         }
     });
 
     globalShoeLogs = shoeLogs; 
 
+    // 🚨 คำนวณเปอร์เซ็นต์
     let shoeWinRate = qCount > 0 ? ((wonCount / qCount) * 100).toFixed(2) : "0.00";
     let shoeBustRate = qCount > 0 ? ((bustCount / qCount) * 100).toFixed(2) : "0.00";
     let handWinRate = globalTotalBetsCount > 0 ? ((globalTotalWinsCount / globalTotalBetsCount) * 100).toFixed(2) : "0.00";
 
+    // อัปเดตตัวเลขขึ้นหน้าปัด
     document.getElementById('resQualified').innerText = qCount;
     document.getElementById('resTotalBets').innerText = globalTotalBetsCount; 
     document.getElementById('resWon').innerText = wonCount;
@@ -810,6 +749,7 @@ document.getElementById('runBtn').addEventListener('click', function() {
     document.getElementById('resMaxLoss').innerText = globalMaxLossStreak; 
     document.getElementById('resNet').innerText = netTotal;
 
+    // อัปเดตเปอร์เซ็นต์
     document.getElementById('resWonPct').innerText = `(Win: ${shoeWinRate}%)`;
     document.getElementById('resBustPct').innerText = `(Loss: ${shoeBustRate}%)`;
     document.getElementById('resHandWinPct').innerText = `(Win: ${globalTotalWinsCount} ตา / ${handWinRate}%)`;
@@ -853,98 +793,77 @@ document.getElementById('runBtn').addEventListener('click', function() {
 
     let sel = document.getElementById('shoeSelector');
     sel.innerHTML = '<option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>';
-    
-    // 🚨 ใช้งาน .find ด้วย id ที่แท้จริงของขอน
-    shoeLogs.forEach((log) => {
+    shoeLogs.forEach(log => {
         let opt = document.createElement('option');
-        opt.value = log.id; 
-        opt.innerText = `ลำดับขอนที่ ${log.id + 1} | ${log.status} | Net: ${log.net}`;
+        opt.value = log.id; opt.innerText = `ลำดับขอนที่ ${log.id + 1} | ${log.status} | Net: ${log.net}`;
         sel.appendChild(opt);
     });
 });
 
 document.getElementById('shoeSelector').addEventListener('change', function(e) {
-    try {
-        let selectedId = e.target.value;
-        if (selectedId === "") return;
-        
-        // 🚨 ดึงข้อมูลโดยหาจาก ID โดยตรง ป้องกันการชี้ Index ผิดพลาด
-        let logRecord = globalShoeLogs.find(x => x.id == selectedId);
-        
-        if (!logRecord) {
-            console.error("ไม่พบประวัติของขอนที่เลือก:", selectedId);
-            return;
-        }
-        
-        let bCont = document.getElementById('beadPlate'); 
-        bCont.innerHTML = '';
-        
-        if (logRecord.raw) {
-            for (let c of logRecord.raw) { 
+    let id = e.target.value;
+    if (id === "") return;
+    
+    let bCont = document.getElementById('beadPlate'); bCont.innerHTML = '';
+    for (let c of rawShoesList[id]) {
+        let d = document.createElement('div');
+        d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
+        d.innerText = c; bCont.appendChild(d);
+    }
+    
+    let rData = getRoads(globalShoes[id]);
+    function drawR(contId, rCols, type) {
+        let c = document.getElementById(contId); c.innerHTML = '';
+        rCols.forEach(col => {
+            let div = document.createElement('div'); div.className = 'road-col';
+            col.forEach(val => {
                 let d = document.createElement('div');
-                d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
-                d.innerText = c; 
-                bCont.appendChild(d);
-            }
-        }
-        
-        let rData = getRoads(logRecord.shoe); 
-        function drawR(contId, rCols, type) {
-            let c = document.getElementById(contId); 
-            c.innerHTML = '';
-            if (!rCols) return;
-            rCols.forEach(col => {
-                let div = document.createElement('div'); div.className = 'road-col';
-                col.forEach(val => {
-                    let d = document.createElement('div');
-                    if(type === 'BR') d.className = 'br-bead br-' + val;
-                    else if(type === 'BEB') d.className = 'beb-bead beb-' + val;
-                    else if(type === 'SR') d.className = 'sr-bead sr-' + val;
-                    else if(type === 'CR') d.className = 'cr-bead cr-' + val;
-                    div.appendChild(d);
-                });
-                c.appendChild(div);
+                if(type === 'BR') d.className = 'br-bead br-' + val;
+                else if(type === 'BEB') d.className = 'beb-bead beb-' + val;
+                else if(type === 'SR') d.className = 'sr-bead sr-' + val;
+                else if(type === 'CR') d.className = 'cr-bead cr-' + val;
+                div.appendChild(d);
             });
-        }
-        drawR('bigRoad', rData.BR, 'BR');
-        drawR('bigEyeBoy', rData.BEB, 'BEB');
-        drawR('smallRoad', rData.SR, 'SR');
-        drawR('cockroach', rData.CR, 'CR');
+            c.appendChild(div);
+        });
+    }
+    drawR('bigRoad', rData.BR, 'BR');
+    drawR('bigEyeBoy', rData.BEB, 'BEB');
+    drawR('smallRoad', rData.SR, 'SR');
+    drawR('cockroach', rData.CR, 'CR');
 
-        let tbody = document.getElementById('betHistoryBody');
-        tbody.innerHTML = '';
-        
-        if (logRecord.history && logRecord.history.length > 0) {
-            logRecord.history.forEach(b => {
-                let row = document.createElement('tr');
-                
-                let resClass = (b.result && b.result.includes('WIN')) ? 'text-success fw-bold' : 'text-danger fw-bold';
-                let targetHtml = b.target === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
-                let actualHtml = b.actual === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
-                
-                let roadBadge = '';
-                if(b.road === 'BR') roadBadge = '<span class="badge bg-dark">BR</span>';
-                else if(b.road === 'BEB') roadBadge = '<span class="badge bg-info text-dark">BEB</span>';
-                else if(b.road === 'SR') roadBadge = '<span class="badge bg-secondary">SR</span>';
-                else if(b.road === 'CR') roadBadge = '<span class="badge bg-warning text-dark">CR</span>';
+    let logRecord = globalShoeLogs.find(x => x.id == id);
+    let tbody = document.getElementById('betHistoryBody');
+    tbody.innerHTML = '';
+    
+    if (logRecord && logRecord.history && logRecord.history.length > 0) {
+        logRecord.history.forEach(b => {
+            let row = document.createElement('tr');
+            
+            let resClass = b.result.includes('WIN') ? 'text-success fw-bold' : 'text-danger fw-bold';
+            let targetHtml = b.target === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
+            let actualHtml = b.actual === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
+            
+            let roadBadge = '';
+            if(b.road === 'BR') roadBadge = '<span class="badge bg-dark">BR</span>';
+            else if(b.road === 'BEB') roadBadge = '<span class="badge bg-info text-dark">BEB</span>';
+            else if(b.road === 'SR') roadBadge = '<span class="badge bg-secondary">SR</span>';
+            else if(b.road === 'CR') roadBadge = '<span class="badge bg-warning text-dark">CR</span>';
 
-                row.innerHTML = `
-                    <td>ตาที่ ${b.hand}</td>
-                    <td>${roadBadge}</td>
-                    <td>${targetHtml}</td>
-                    <td>${actualHtml}</td>
-                    <td>${b.step}</td>
-                    <td>${b.betAmount} หน่วย</td>
-                    <td class="${resClass}">${b.result || '-'}</td>
-                    <td class="fw-bold">${b.net > 0 ? '+'+b.net : b.net}</td>
-                `;
-                tbody.appendChild(row);
-            });
-        } else {
-            tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-4">ไม่มีประวัติการลงเงินจริงในขอนนี้ (อาจจะไพ่หมดก่อน หรือรอดักทิพย์ไม่สำเร็จ)</td></tr>`;
-        }
-    } catch(err) {
-        console.error("Error drawing shoe:", err);
+            row.innerHTML = `
+                <td>ตาที่ ${b.hand}</td>
+                <td>${roadBadge}</td>
+                <td>${targetHtml}</td>
+                <td>${actualHtml}</td>
+                <td>${b.step}</td>
+                <td>${b.betAmount} หน่วย</td>
+                <td class="${resClass}">${b.result}</td>
+                <td class="fw-bold">${b.net > 0 ? '+'+b.net : b.net}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    } else {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-4">ไม่มีประวัติการลงเงินจริงในขอนนี้ (อาจจะไพ่หมดก่อน หรือรอดักทิพย์ไม่สำเร็จ)</td></tr>`;
     }
 });
 </script>
