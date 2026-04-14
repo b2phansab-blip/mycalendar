@@ -854,80 +854,97 @@ document.getElementById('runBtn').addEventListener('click', function() {
     let sel = document.getElementById('shoeSelector');
     sel.innerHTML = '<option value="">-- เลือกขอนเพื่อดูหน้าไพ่ --</option>';
     
-    shoeLogs.forEach((log, index) => {
+    // 🚨 ใช้งาน .find ด้วย id ที่แท้จริงของขอน
+    shoeLogs.forEach((log) => {
         let opt = document.createElement('option');
-        opt.value = index; 
+        opt.value = log.id; 
         opt.innerText = `ลำดับขอนที่ ${log.id + 1} | ${log.status} | Net: ${log.net}`;
         sel.appendChild(opt);
     });
 });
 
 document.getElementById('shoeSelector').addEventListener('change', function(e) {
-    let logIndex = e.target.value;
-    if (logIndex === "") return;
-    
-    let logRecord = globalShoeLogs[logIndex];
-    if (!logRecord) return;
-    
-    let bCont = document.getElementById('beadPlate'); bCont.innerHTML = '';
-    for (let c of logRecord.raw) { 
-        let d = document.createElement('div');
-        d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
-        d.innerText = c; bCont.appendChild(d);
-    }
-    
-    let rData = getRoads(logRecord.shoe); 
-    function drawR(contId, rCols, type) {
-        let c = document.getElementById(contId); c.innerHTML = '';
-        rCols.forEach(col => {
-            let div = document.createElement('div'); div.className = 'road-col';
-            col.forEach(val => {
+    try {
+        let selectedId = e.target.value;
+        if (selectedId === "") return;
+        
+        // 🚨 ดึงข้อมูลโดยหาจาก ID โดยตรง ป้องกันการชี้ Index ผิดพลาด
+        let logRecord = globalShoeLogs.find(x => x.id == selectedId);
+        
+        if (!logRecord) {
+            console.error("ไม่พบประวัติของขอนที่เลือก:", selectedId);
+            return;
+        }
+        
+        let bCont = document.getElementById('beadPlate'); 
+        bCont.innerHTML = '';
+        
+        if (logRecord.raw) {
+            for (let c of logRecord.raw) { 
                 let d = document.createElement('div');
-                if(type === 'BR') d.className = 'br-bead br-' + val;
-                else if(type === 'BEB') d.className = 'beb-bead beb-' + val;
-                else if(type === 'SR') d.className = 'sr-bead sr-' + val;
-                else if(type === 'CR') d.className = 'cr-bead cr-' + val;
-                div.appendChild(d);
+                d.classList.add('bead', c==='B' ? 'bead-b' : c==='P' ? 'bead-p' : 'bead-t');
+                d.innerText = c; 
+                bCont.appendChild(d);
+            }
+        }
+        
+        let rData = getRoads(logRecord.shoe); 
+        function drawR(contId, rCols, type) {
+            let c = document.getElementById(contId); 
+            c.innerHTML = '';
+            if (!rCols) return;
+            rCols.forEach(col => {
+                let div = document.createElement('div'); div.className = 'road-col';
+                col.forEach(val => {
+                    let d = document.createElement('div');
+                    if(type === 'BR') d.className = 'br-bead br-' + val;
+                    else if(type === 'BEB') d.className = 'beb-bead beb-' + val;
+                    else if(type === 'SR') d.className = 'sr-bead sr-' + val;
+                    else if(type === 'CR') d.className = 'cr-bead cr-' + val;
+                    div.appendChild(d);
+                });
+                c.appendChild(div);
             });
-            c.appendChild(div);
-        });
-    }
-    drawR('bigRoad', rData.BR, 'BR');
-    drawR('bigEyeBoy', rData.BEB, 'BEB');
-    drawR('smallRoad', rData.SR, 'SR');
-    drawR('cockroach', rData.CR, 'CR');
+        }
+        drawR('bigRoad', rData.BR, 'BR');
+        drawR('bigEyeBoy', rData.BEB, 'BEB');
+        drawR('smallRoad', rData.SR, 'SR');
+        drawR('cockroach', rData.CR, 'CR');
 
-    let tbody = document.getElementById('betHistoryBody');
-    tbody.innerHTML = '';
-    
-    if (logRecord.history && logRecord.history.length > 0) {
-        logRecord.history.forEach(b => {
-            let row = document.createElement('tr');
-            
-            let resClass = b.result.includes('WIN') ? 'text-success fw-bold' : 'text-danger fw-bold';
-            let targetHtml = b.target === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
-            let actualHtml = b.actual === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
-            
-            let roadBadge = '';
-            if(b.road === 'BR') roadBadge = '<span class="badge bg-dark">BR</span>';
-            else if(b.road === 'BEB') roadBadge = '<span class="badge bg-info text-dark">BEB</span>';
-            else if(b.road === 'SR') roadBadge = '<span class="badge bg-secondary">SR</span>';
-            else if(b.road === 'CR') roadBadge = '<span class="badge bg-warning text-dark">CR</span>';
+        let tbody = document.getElementById('betHistoryBody');
+        tbody.innerHTML = '';
+        
+        if (logRecord.history && logRecord.history.length > 0) {
+            logRecord.history.forEach(b => {
+                let row = document.createElement('tr');
+                
+                let resClass = (b.result && b.result.includes('WIN')) ? 'text-success fw-bold' : 'text-danger fw-bold';
+                let targetHtml = b.target === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
+                let actualHtml = b.actual === 'B' ? '<span class="badge bg-danger">Banker</span>' : '<span class="badge bg-primary">Player</span>';
+                
+                let roadBadge = '';
+                if(b.road === 'BR') roadBadge = '<span class="badge bg-dark">BR</span>';
+                else if(b.road === 'BEB') roadBadge = '<span class="badge bg-info text-dark">BEB</span>';
+                else if(b.road === 'SR') roadBadge = '<span class="badge bg-secondary">SR</span>';
+                else if(b.road === 'CR') roadBadge = '<span class="badge bg-warning text-dark">CR</span>';
 
-            row.innerHTML = `
-                <td>ตาที่ ${b.hand}</td>
-                <td>${roadBadge}</td>
-                <td>${targetHtml}</td>
-                <td>${actualHtml}</td>
-                <td>${b.step}</td>
-                <td>${b.betAmount} หน่วย</td>
-                <td class="${resClass}">${b.result}</td>
-                <td class="fw-bold">${b.net > 0 ? '+'+b.net : b.net}</td>
-            `;
-            tbody.appendChild(row);
-        });
-    } else {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-4">ไม่มีประวัติการลงเงินจริงในขอนนี้ (อาจจะไพ่หมดก่อน หรือรอดักทิพย์ไม่สำเร็จ)</td></tr>`;
+                row.innerHTML = `
+                    <td>ตาที่ ${b.hand}</td>
+                    <td>${roadBadge}</td>
+                    <td>${targetHtml}</td>
+                    <td>${actualHtml}</td>
+                    <td>${b.step}</td>
+                    <td>${b.betAmount} หน่วย</td>
+                    <td class="${resClass}">${b.result || '-'}</td>
+                    <td class="fw-bold">${b.net > 0 ? '+'+b.net : b.net}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            tbody.innerHTML = `<tr><td colspan="8" class="text-muted py-4">ไม่มีประวัติการลงเงินจริงในขอนนี้ (อาจจะไพ่หมดก่อน หรือรอดักทิพย์ไม่สำเร็จ)</td></tr>`;
+        }
+    } catch(err) {
+        console.error("Error drawing shoe:", err);
     }
 });
 </script>
